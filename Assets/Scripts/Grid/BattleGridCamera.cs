@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using System;
 
+[RequireComponent(typeof(Camera))]
 public class BattleGridCamera : MonoBehaviour
 {
     [SerializeField]
@@ -90,29 +90,7 @@ battleGridManager.gameObject.transform.position.z + (battleGridManager.RealHeigh
     }
 
 
-    public void UpdateCameraOrientation(InputAction.CallbackContext context)
-    {
 
-        Vector2 value = context.ReadValue<Vector2>();
-        if (value.x > 0.5)
-        {
-            PrevHorizontalOrientation();
-        }
-        else if (value.x < -0.5)
-        {
-            NextHorizontalOrientation();
-        }
-        if (value.y > 0.5)
-        {
-            NextVerticalOrientation();
-        }
-        else if (value.y < -0.5)
-        {
-            PrevVerticalOrientation();
-        }
-
-
-    }
     public void NextHorizontalOrientation()
     {
         int angle = ((((int)horizontalAngle) + 1) % horizontalRotations);
