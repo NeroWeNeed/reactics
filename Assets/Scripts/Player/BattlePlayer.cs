@@ -31,4 +31,8 @@ public class BattlePlayer : MonoBehaviour
             camera.PrevVerticalOrientation();
         }
     }
+    public void TileHover(InputAction.CallbackContext context)
+    {
+        Debug.Log(context.ReadValue<Vector2>());
+    }
 }
