@@ -10,6 +10,13 @@ public class BattleGridCamera : MonoBehaviour
     private float cameraSpeed = 5f;
 
     [SerializeField]
+    private float maxCameraRotationTime = 0.3f; //Time in seconds the camera takes to rotate from one position to the next
+    [SerializeField]
+    private float currentCameraRotationTime = 0f; //Current time in seconds that the camera has been rotating
+    [SerializeField]
+    private Vector3 lastCameraPosition;
+
+    [SerializeField]
     private BattleGridCameraHorizontalAngle horizontalAngle = BattleGridCameraHorizontalAngle.NORTH;
 
     [SerializeField]
@@ -37,36 +44,34 @@ public class BattleGridCamera : MonoBehaviour
     {
         if (!moving)
         {
-            //TODO Camera doesn't display properly when doing topdown view
-
             double horizontalAngle = (Math.PI / 180.0) * ((int)cameraHorizontalAngle * (360 / horizontalRotations));
-            double verticalAngle = (Math.PI / 180.0) * ((int)cameraVerticalAngle * (90 / (verticalRotations - 1)));
+            double verticalAngle = (Math.PI / 180.0) * (Mathf.Clamp((int)cameraVerticalAngle * (90 / (verticalRotations - 1)), 0, 89.9f));
 
             double magnitude = Math.Sqrt(Math.Pow((double)battleGridManager.RealWidth, 2.0) + Math.Pow((double)battleGridManager.RealHeight, 2.0)) / 2.0;
             magnitude *= 1.25;
             Vector3 center = battleGridManager.Center();
-
+            
             Vector3 newPosition = new Vector3(
                 (float)(center.x + Math.Cos(horizontalAngle) * Math.Cos(verticalAngle) * magnitude),
-            (float)(center.y + Math.Sin(verticalAngle) * magnitude),
-            (float)(center.z - Math.Sin(horizontalAngle) * Math.Cos(verticalAngle) * magnitude)
+                (float)(center.y + Math.Sin(verticalAngle) * magnitude),
+                (float)(center.z - Math.Sin(horizontalAngle) * Math.Cos(verticalAngle) * magnitude)
             );
-            //Debug.Log($"ANGLE: {Math.Atan2(newPosition.z - center.z, newPosition.x - center.x) * (180 / Math.PI) }");
+
             if (immediate)
             {
                 targetPosition = newPosition;
                 transform.position = targetPosition;
                 transform.LookAt(new Vector3(
-battleGridManager.gameObject.transform.position.x + (battleGridManager.RealWidth / 2),
-battleGridManager.gameObject.transform.position.y,
-battleGridManager.gameObject.transform.position.z + (battleGridManager.RealHeight / 2)
-));
+                    battleGridManager.gameObject.transform.position.x + (battleGridManager.RealWidth / 2),
+                    battleGridManager.gameObject.transform.position.y,
+                    battleGridManager.gameObject.transform.position.z + (battleGridManager.RealHeight / 2)
+                ));
             }
             else
             {
-
                 moving = newPosition != targetPosition;
                 targetPosition = newPosition;
+                lastCameraPosition = transform.position;
             }
             this.horizontalAngle = cameraHorizontalAngle;
             this.verticalAngle = cameraVerticalAngle;
@@ -76,7 +81,6 @@ battleGridManager.gameObject.transform.position.z + (battleGridManager.RealHeigh
     void Start()
     {
         targetPosition = transform.position;
-        targetRotation = transform.rotation;
         battleGridManager = GetComponentInParent<BattleGridManager>();
         AlignCamera(horizontalAngle, verticalAngle, true);
         CenterCamera();
@@ -135,17 +139,19 @@ battleGridManager.gameObject.transform.position.z + (battleGridManager.RealHeigh
                             lastUpdate++; */
         if (moving)
         {
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, cameraSpeed * Time.deltaTime);
+            currentCameraRotationTime += Time.deltaTime;
+
+            transform.position = Vector3.Lerp(lastCameraPosition, targetPosition, currentCameraRotationTime/maxCameraRotationTime);
             transform.LookAt(new Vector3(
-            battleGridManager.gameObject.transform.position.x + (battleGridManager.RealWidth / 2),
-        battleGridManager.gameObject.transform.position.y,
-        battleGridManager.gameObject.transform.position.z + (battleGridManager.RealHeight / 2)
-        ));
+                battleGridManager.gameObject.transform.position.x + (battleGridManager.RealWidth / 2),
+                battleGridManager.gameObject.transform.position.y,
+                battleGridManager.gameObject.transform.position.z + (battleGridManager.RealHeight / 2)
+            ));
 
             if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
             {
-
                 moving = false;
+                currentCameraRotationTime = 0;
             }
         }
     }
