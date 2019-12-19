@@ -7,7 +7,7 @@ using System;
 public class BattleGridCamera : MonoBehaviour
 {
     [SerializeField]
-    private float cameraSpeed = 5f;
+    private float cameraSpeed = 10f; //Speed of camera pan
 
     [SerializeField]
     private float maxCameraRotationTime = 0.3f; //Time in seconds the camera takes to rotate from one position to the next
@@ -15,6 +15,16 @@ public class BattleGridCamera : MonoBehaviour
     private float currentCameraRotationTime = 0f; //Current time in seconds that the camera has been rotating
     [SerializeField]
     private Vector3 lastCameraPosition;
+    [SerializeField]
+    private BattleGridCameraFocus cameraFocus;
+
+    private float maxCameraZoom = 1f;
+
+    private float minCameraZoom = 0.1f;
+
+    private Vector3 offset;
+
+    private float currentCameraZoom = 0.5f;
 
     [SerializeField]
     private BattleGridCameraHorizontalAngle horizontalAngle = BattleGridCameraHorizontalAngle.NORTH;
@@ -23,8 +33,7 @@ public class BattleGridCamera : MonoBehaviour
     private BattleGridCameraVerticalAngle verticalAngle = BattleGridCameraVerticalAngle.LOW;
 
     private Vector3 targetPosition;
-    private Quaternion targetRotation;
-    private bool moving = false;
+    public bool rotating = false; //I made this public to fix an issue temporarily but that feels grimy and like there's a better way to go about this
     private BattleGridManager battleGridManager;
 
     private int horizontalRotations = Enum.GetValues(typeof(BattleGridCameraHorizontalAngle)).Length;
@@ -33,46 +42,47 @@ public class BattleGridCamera : MonoBehaviour
 
     public void CenterCamera()
     {
-        transform.LookAt(new Vector3(
+        //keeping this in case we need it for some reason? idk I feel weird backspacing this code specifically for w/e reason
+
+        /*transform.LookAt(new Vector3(
             battleGridManager.gameObject.transform.position.x + (battleGridManager.RealWidth / 2),
         battleGridManager.gameObject.transform.position.y,
         battleGridManager.gameObject.transform.position.z + (battleGridManager.RealHeight / 2)
-        ));
+        ));*/
 
     }
     public void AlignCamera(BattleGridCameraHorizontalAngle cameraHorizontalAngle, BattleGridCameraVerticalAngle cameraVerticalAngle = BattleGridCameraVerticalAngle.LOW, bool immediate = true)
     {
-        if (!moving)
+        if (!rotating)
         {
             double horizontalAngle = (Math.PI / 180.0) * ((int)cameraHorizontalAngle * (360 / horizontalRotations));
             double verticalAngle = (Math.PI / 180.0) * (Mathf.Clamp((int)cameraVerticalAngle * (90 / (verticalRotations - 1)), 0, 89.9f));
 
+            //Not sure what the point of calculating magnitude this way is. Assuming it's in a way that makes sense based on the size of the map.
             double magnitude = Math.Sqrt(Math.Pow((double)battleGridManager.RealWidth, 2.0) + Math.Pow((double)battleGridManager.RealHeight, 2.0)) / 2.0;
-            magnitude *= 1.25;
-            Vector3 center = battleGridManager.Center();
+            //Apply camera zoom
+            magnitude *= 1.25 * currentCameraZoom;
             
+            //Get target position for camera to start moving to
             Vector3 newPosition = new Vector3(
-                (float)(center.x + Math.Cos(horizontalAngle) * Math.Cos(verticalAngle) * magnitude),
-                (float)(center.y + Math.Sin(verticalAngle) * magnitude),
-                (float)(center.z - Math.Sin(horizontalAngle) * Math.Cos(verticalAngle) * magnitude)
+                (float)(cameraFocus.transform.position.x + Math.Cos(horizontalAngle) * Math.Cos(verticalAngle) * magnitude),
+                (float)(cameraFocus.transform.position.y + Math.Sin(verticalAngle) * magnitude),
+                (float)(cameraFocus.transform.position.z - Math.Sin(horizontalAngle) * Math.Cos(verticalAngle) * magnitude)
             );
 
-            if (immediate)
+            if (immediate) //Move the camera to the position immediately
             {
                 targetPosition = newPosition;
                 transform.position = targetPosition;
-                transform.LookAt(new Vector3(
-                    battleGridManager.gameObject.transform.position.x + (battleGridManager.RealWidth / 2),
-                    battleGridManager.gameObject.transform.position.y,
-                    battleGridManager.gameObject.transform.position.z + (battleGridManager.RealHeight / 2)
-                ));
+                offset = transform.position - cameraFocus.transform.position;
             }
-            else
+            else //Move the camera to the position over time
             {
-                moving = newPosition != targetPosition;
+                rotating = newPosition != targetPosition;
                 targetPosition = newPosition;
                 lastCameraPosition = transform.position;
             }
+            //I don't remember what these two lines of code are for. they're probably useless? i'll look into that later when I'm not in the middle of something
             this.horizontalAngle = cameraHorizontalAngle;
             this.verticalAngle = cameraVerticalAngle;
         }
@@ -80,6 +90,9 @@ public class BattleGridCamera : MonoBehaviour
 
     void Start()
     {
+        //Calculate the offset from the point in space the camera is looking at
+        offset = transform.position - cameraFocus.transform.position;
+
         targetPosition = transform.position;
         battleGridManager = GetComponentInParent<BattleGridManager>();
         AlignCamera(horizontalAngle, verticalAngle, true);
@@ -128,32 +141,53 @@ public class BattleGridCamera : MonoBehaviour
         AlignCamera(horizontalAngle, (BattleGridCameraVerticalAngle)angle, false);
     }
 
+    public void NextZoomLevel()
+    {
+        if (!rotating && currentCameraZoom < maxCameraZoom)
+        {
+            currentCameraZoom += 0.05f;
+            AlignCamera(horizontalAngle, verticalAngle, true);
+        }
+    }
+
+    public void PreviousZoomLevel()
+    {
+        if (!rotating && currentCameraZoom > minCameraZoom)
+        {
+            currentCameraZoom -= 0.05f;
+            AlignCamera(horizontalAngle, verticalAngle, true);
+        }
+    }
+
     private void FixedUpdate()
     {
-
+        
+        //idk what this unformatted abomination is but it was here so I'm leaving it here I guess
         /*                 if ((lastUpdate + 1) % 120 == 0)
                         {
                             NextHorizontalOrientation();
                         }
                         else
                             lastUpdate++; */
-        if (moving)
+        if (rotating)
         {
             currentCameraRotationTime += Time.deltaTime;
-
             transform.position = Vector3.Lerp(lastCameraPosition, targetPosition, currentCameraRotationTime/maxCameraRotationTime);
-            transform.LookAt(new Vector3(
-                battleGridManager.gameObject.transform.position.x + (battleGridManager.RealWidth / 2),
-                battleGridManager.gameObject.transform.position.y,
-                battleGridManager.gameObject.transform.position.z + (battleGridManager.RealHeight / 2)
-            ));
 
             if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
             {
-                moving = false;
+                rotating = false;
+                offset = transform.position - cameraFocus.transform.position;
                 currentCameraRotationTime = 0;
             }
         }
+        else
+        {
+            //If not rotating, move with the camera focus in case it's moving.wait.whatifthisisthething.
+            transform.position = cameraFocus.transform.position + offset;
+        }
+        
+        transform.LookAt(cameraFocus.transform);
     }
 
 }

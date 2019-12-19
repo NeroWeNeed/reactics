@@ -33,6 +33,14 @@ public class @Controls : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Camera Zoom"",
+                    ""type"": ""Value"",
+                    ""id"": ""19bf0dcc-b4b2-4747-a460-c858ea85bffc"",
+                    ""expectedControlType"": ""Axis"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -101,6 +109,17 @@ public class @Controls : IInputActionCollection, IDisposable
                     ""action"": ""Hover"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""acff6732-c684-4cc0-9fe5-9115cd12b6c3"",
+                    ""path"": ""<Mouse>/scroll/y"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard + Mouse"",
+                    ""action"": ""Camera Zoom"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -121,6 +140,17 @@ public class @Controls : IInputActionCollection, IDisposable
                     ""isOR"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Gamepad"",
+            ""bindingGroup"": ""Gamepad"",
+            ""devices"": [
+                {
+                    ""devicePath"": ""<Gamepad>"",
+                    ""isOptional"": false,
+                    ""isOR"": false
+                }
+            ]
         }
     ]
 }");
@@ -128,6 +158,7 @@ public class @Controls : IInputActionCollection, IDisposable
         m_BattleControls = asset.FindActionMap("Battle Controls", throwIfNotFound: true);
         m_BattleControls_Camera = m_BattleControls.FindAction("Camera", throwIfNotFound: true);
         m_BattleControls_Hover = m_BattleControls.FindAction("Hover", throwIfNotFound: true);
+        m_BattleControls_CameraZoom = m_BattleControls.FindAction("Camera Zoom", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -179,12 +210,14 @@ public class @Controls : IInputActionCollection, IDisposable
     private IBattleControlsActions m_BattleControlsActionsCallbackInterface;
     private readonly InputAction m_BattleControls_Camera;
     private readonly InputAction m_BattleControls_Hover;
+    private readonly InputAction m_BattleControls_CameraZoom;
     public struct BattleControlsActions
     {
         private @Controls m_Wrapper;
         public BattleControlsActions(@Controls wrapper) { m_Wrapper = wrapper; }
         public InputAction @Camera => m_Wrapper.m_BattleControls_Camera;
         public InputAction @Hover => m_Wrapper.m_BattleControls_Hover;
+        public InputAction @CameraZoom => m_Wrapper.m_BattleControls_CameraZoom;
         public InputActionMap Get() { return m_Wrapper.m_BattleControls; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -200,6 +233,9 @@ public class @Controls : IInputActionCollection, IDisposable
                 @Hover.started -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnHover;
                 @Hover.performed -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnHover;
                 @Hover.canceled -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnHover;
+                @CameraZoom.started -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnCameraZoom;
+                @CameraZoom.performed -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnCameraZoom;
+                @CameraZoom.canceled -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnCameraZoom;
             }
             m_Wrapper.m_BattleControlsActionsCallbackInterface = instance;
             if (instance != null)
@@ -210,6 +246,9 @@ public class @Controls : IInputActionCollection, IDisposable
                 @Hover.started += instance.OnHover;
                 @Hover.performed += instance.OnHover;
                 @Hover.canceled += instance.OnHover;
+                @CameraZoom.started += instance.OnCameraZoom;
+                @CameraZoom.performed += instance.OnCameraZoom;
+                @CameraZoom.canceled += instance.OnCameraZoom;
             }
         }
     }
@@ -223,9 +262,19 @@ public class @Controls : IInputActionCollection, IDisposable
             return asset.controlSchemes[m_KeyboardMouseSchemeIndex];
         }
     }
+    private int m_GamepadSchemeIndex = -1;
+    public InputControlScheme GamepadScheme
+    {
+        get
+        {
+            if (m_GamepadSchemeIndex == -1) m_GamepadSchemeIndex = asset.FindControlSchemeIndex("Gamepad");
+            return asset.controlSchemes[m_GamepadSchemeIndex];
+        }
+    }
     public interface IBattleControlsActions
     {
         void OnCamera(InputAction.CallbackContext context);
         void OnHover(InputAction.CallbackContext context);
+        void OnCameraZoom(InputAction.CallbackContext context);
     }
 }
