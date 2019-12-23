@@ -27,7 +27,7 @@ public class BattleGridCameraFocus : MonoBehaviour
     ///This function just moves the camera focus (the thing the camera looks at) along the xz plane when the mouse hits the edges of the screen.
     ///It also causes this object to rotate around the Y axis with the camera so the movement calculations are easy
     ///Right now there's no limit to how far the camera can pan. Should clamp this at some point.
-    void FixedUpdate()
+    void Update()
     {
         if (!camera.rotating) //temporary fix, I don't like setting this to public (I don't actually know why that's a terrible idea, but something tells me this is like wrong in principle and can be done better)
         {

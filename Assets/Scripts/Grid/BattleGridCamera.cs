@@ -42,24 +42,23 @@ public class BattleGridCamera : MonoBehaviour
 
     public void CenterCamera()
     {
-        //keeping this in case we need it for some reason? idk I feel weird backspacing this code specifically for w/e reason
-
-        /*transform.LookAt(new Vector3(
+        transform.LookAt(new Vector3(
             battleGridManager.gameObject.transform.position.x + (battleGridManager.RealWidth / 2),
         battleGridManager.gameObject.transform.position.y,
         battleGridManager.gameObject.transform.position.z + (battleGridManager.RealHeight / 2)
-        ));*/
-
+        ));
     }
+
     public void AlignCamera(BattleGridCameraHorizontalAngle cameraHorizontalAngle, BattleGridCameraVerticalAngle cameraVerticalAngle = BattleGridCameraVerticalAngle.LOW, bool immediate = true)
     {
         if (!rotating)
         {
+            transform.position = cameraFocus.transform.position + offset;
             double horizontalAngle = (Math.PI / 180.0) * ((int)cameraHorizontalAngle * (360 / horizontalRotations));
             double verticalAngle = (Math.PI / 180.0) * (Mathf.Clamp((int)cameraVerticalAngle * (90 / (verticalRotations - 1)), 0, 89.9f));
 
-            //Not sure what the point of calculating magnitude this way is. Assuming it's in a way that makes sense based on the size of the map.
-            double magnitude = Math.Sqrt(Math.Pow((double)battleGridManager.RealWidth, 2.0) + Math.Pow((double)battleGridManager.RealHeight, 2.0)) / 2.0;
+            //Sets the camera's maximum zoom value (1 * magnitude) to a reasonable distance based on the size of the map.
+            double magnitude = Math.Sqrt(Math.Pow(battleGridManager.RealWidth, 2.0) + Math.Pow(battleGridManager.RealHeight, 2.0)) / 2.0;
             //Apply camera zoom
             magnitude *= 1.25 * currentCameraZoom;
             
@@ -70,19 +69,20 @@ public class BattleGridCamera : MonoBehaviour
                 (float)(cameraFocus.transform.position.z - Math.Sin(horizontalAngle) * Math.Cos(verticalAngle) * magnitude)
             );
 
-            if (immediate) //Move the camera to the position immediately
+            if (immediate) //Move the camera to the position immediately (used for zooming, etc.)
             {
                 targetPosition = newPosition;
                 transform.position = targetPosition;
                 offset = transform.position - cameraFocus.transform.position;
             }
-            else //Move the camera to the position over time
+            else //Move the camera to the position over time (used for camera rotation, etc.)
             {
                 rotating = newPosition != targetPosition;
                 targetPosition = newPosition;
                 lastCameraPosition = transform.position;
             }
-            //I don't remember what these two lines of code are for. they're probably useless? i'll look into that later when I'm not in the middle of something
+
+            //Set the new horizontal and vertical angles, if they changed.
             this.horizontalAngle = cameraHorizontalAngle;
             this.verticalAngle = cameraVerticalAngle;
         }
@@ -96,17 +96,13 @@ public class BattleGridCamera : MonoBehaviour
         targetPosition = transform.position;
         battleGridManager = GetComponentInParent<BattleGridManager>();
         AlignCamera(horizontalAngle, verticalAngle, true);
-        CenterCamera();
     }
     private void OnValidate()
     {
         if (battleGridManager == null)
             battleGridManager = GetComponentInParent<BattleGridManager>();
         AlignCamera(horizontalAngle, verticalAngle, true);
-        CenterCamera();
     }
-
-
 
     public void NextHorizontalOrientation()
     {
@@ -128,7 +124,8 @@ public class BattleGridCamera : MonoBehaviour
             angle = verticalRotations - 1;
         if (angle < 0)
             angle = 0;
-        AlignCamera(horizontalAngle, (BattleGridCameraVerticalAngle)angle, false);
+        if (angle != (int)verticalAngle)
+            AlignCamera(horizontalAngle, (BattleGridCameraVerticalAngle)angle, false);
     }
 
     public void PrevVerticalOrientation()
@@ -138,7 +135,8 @@ public class BattleGridCamera : MonoBehaviour
             angle = verticalRotations - 1;
         if (angle < 0)
             angle = 0;
-        AlignCamera(horizontalAngle, (BattleGridCameraVerticalAngle)angle, false);
+        if (angle != (int)verticalAngle)
+            AlignCamera(horizontalAngle, (BattleGridCameraVerticalAngle)angle, false);
     }
 
     public void NextZoomLevel()
@@ -159,16 +157,8 @@ public class BattleGridCamera : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
-        
-        //idk what this unformatted abomination is but it was here so I'm leaving it here I guess
-        /*                 if ((lastUpdate + 1) % 120 == 0)
-                        {
-                            NextHorizontalOrientation();
-                        }
-                        else
-                            lastUpdate++; */
         if (rotating)
         {
             currentCameraRotationTime += Time.deltaTime;
@@ -177,13 +167,13 @@ public class BattleGridCamera : MonoBehaviour
             if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
             {
                 rotating = false;
-                offset = transform.position - cameraFocus.transform.position;
+                offset = targetPosition - cameraFocus.transform.position;
                 currentCameraRotationTime = 0;
             }
         }
         else
         {
-            //If not rotating, move with the camera focus in case it's moving.wait.whatifthisisthething.
+            //If not rotating, move with the camera focus in case it's moving.
             transform.position = cameraFocus.transform.position + offset;
         }
         
