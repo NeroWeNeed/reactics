@@ -48,29 +48,29 @@ namespace Reactics.Battle
 
 
     [AttributeUsage(AttributeTargets.Method, Inherited = true)]
-    public class PacketHandler : Attribute
+    public class PacketRoute : Attribute
     {
         public Type PacketType { get; private set; }
 
-        public PacketHandler(Type packetType)
+        public PacketRoute(Type packetType)
         {
             this.PacketType = packetType;
         }
     }
 
-    public abstract class PacketManager
+    public abstract class PacketRouter
     {
         public delegate void PacketHandlerDelegate(PacketSenderDelegate packetSender, IPacket packet);
 
         protected Dictionary<Type, PacketHandlerDelegate> handlerMap = new Dictionary<Type, PacketHandlerDelegate>();
-        public PacketManager()
+        public PacketRouter()
         {
 
-            PacketHandler handlerAttr;
+            PacketRoute handlerAttr;
 
             foreach (var item in this.GetType().GetMethods())
             {
-                handlerAttr = (PacketHandler)Attribute.GetCustomAttribute(item, typeof(PacketHandler));
+                handlerAttr = (PacketRoute)Attribute.GetCustomAttribute(item, typeof(PacketRoute));
                 if (handlerAttr != null)
                 {
 

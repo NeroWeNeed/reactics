@@ -1,22 +1,29 @@
 using System;
+using System.Threading;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Reactics.Battle
 {
 
-    public class Server : PacketManager
+    public class Server : PacketRouter
     {
 
 
         public ServerStatus Status { get; private set; }
         public int MaxPlayers { get; private set; }
+
         public int CurrentPlayers { get; private set; }
+
+        private readonly object joiningPlayerLock = new object();
 
         private List<ServerPlayer> players;
 
         private IConnectionFactory connectionFactory;
 
         private List<IConnection> connections;
+
+        private ConcurrentQueue<IPacket> packets;
 
         public Server(IConnectionFactory connectionFactory, int maxPlayers = 2) : base()
         {
@@ -36,16 +43,26 @@ namespace Reactics.Battle
 
 
 
-        [PacketHandler(typeof(JoinPacket))]
+        [PacketRoute(typeof(JoinPacket))]
         public void ProcessJoin(PacketSenderDelegate packetSender, JoinPacket packet)
         {
             ServerPlayer player;
-            if (packet.PlayerType == ServerPlayerType.PLAYER)
+            lock (joiningPlayerLock)
             {
-                if (CurrentPlayers < MaxPlayers && Status == ServerStatus.ACCEPTING_PLAYERS)
+
+                if (packet.PlayerType == ServerPlayerType.PLAYER && Status == ServerStatus.ACCEPTING_PLAYERS)
                 {
-                    CurrentPlayers++;
-                    player = new ServerPlayer(ServerPlayerType.PLAYER);
+
+                    
+                    if (CurrentPlayers < MaxPlayers)
+                    {
+                        CurrentPlayers++;
+                        player = new ServerPlayer(ServerPlayerType.PLAYER);
+                    }
+                    else
+                    {
+                        player = new ServerPlayer(ServerPlayerType.OBSERVER);
+                    }
                 }
                 else
                 {
@@ -53,13 +70,10 @@ namespace Reactics.Battle
                 }
 
             }
-            else
-            {
-                player = new ServerPlayer(ServerPlayerType.OBSERVER);
-            }
             players.Add(player);
             packetSender.Invoke(new JoinResponsePacket(player.Type, player.Id));
         }
+
 
 
     }
@@ -86,6 +100,10 @@ namespace Reactics.Battle
     public enum ServerStatus
     {
         ACCEPTING_PLAYERS, PLAYING, FINISHED
+    }
+    public struct PacketLog
+    {
+        public readonly long Timestamp;
     }
 
 

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Reactics.Battle
 {
-    public class Client : PacketManager
+    public class Client : PacketRouter
     {
         public Client() : base()
         {
@@ -18,7 +18,7 @@ namespace Reactics.Battle
             
         }
 
-        [PacketHandler(typeof(JoinResponsePacket))]
+        [PacketRoute(typeof(JoinResponsePacket))]
         public void ProcessJoinResponsePacket(PacketSenderDelegate packetSender, JoinResponsePacket packet)
         {
             Debug.Log($"Joined as {packet.PlayerType} with id {packet.Id} ");
