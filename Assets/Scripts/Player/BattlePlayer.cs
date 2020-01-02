@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Users;
 
 [RequireComponent(typeof(PlayerInput))]
 public class BattlePlayer : MonoBehaviour
@@ -10,15 +11,54 @@ public class BattlePlayer : MonoBehaviour
 
     [SerializeField]
     private BattleGridCameraFocus cameraFocus;
+    
+    [SerializeField]
+    private Cursor cursor;
+
+    private Controls controls;
+
+    private PlayerInput input;
 
     private void Start()
     {
+        input = GetComponent<PlayerInput>();
+        if (controls == null)
+            controls = new Controls();
 
+        if (input.currentControlScheme == "Keyboard + Mouse")
+        {
+            cameraFocus.TogglePointer(true);
+            cursor.TogglePointer(true);
+        }
+        else
+        {
+            cameraFocus.TogglePointer(false);
+            cursor.TogglePointer(false);
+        }
+
+        //Stops camera from moving if control scheme set to gamepad (probably a better way to do this?)
+        InputUser.onChange += (user, change, device) => {
+            if (change == InputUserChange.ControlSchemeChanged)
+            {
+                if (input.currentControlScheme == "Keyboard + Mouse")
+                {
+                    cameraFocus.TogglePointer(true);
+                    cursor.TogglePointer(true);
+                }
+                else
+                {
+                    cameraFocus.TogglePointer(false);
+                    cursor.TogglePointer(false);
+                }
+            }
+        };
+        //actionMap = controls.BattleControls.Get();
     }
 
     //TODO: Figure out why all these methods get called twice for one input
     public void UpdateCameraOrientation(InputAction.CallbackContext context)
     {
+        //TODO: Add center camera button for keyboard/mouse
         Vector2 value = context.ReadValue<Vector2>();
         if (value.x > 0.5)
         {
@@ -37,19 +77,27 @@ public class BattlePlayer : MonoBehaviour
             camera.PrevVerticalOrientation();
         }
     }
-    public void TileHover(InputAction.CallbackContext context)
+    public void MouseHover(InputAction.CallbackContext context)
     {
-        cameraFocus.SetCurrentMousePosition(context.ReadValue<Vector2>());
+        Vector2 value = context.ReadValue<Vector2>();
         Debug.Log(context.ReadValue<Vector2>());
-        /*do cursor stuff as well? these being two functions is maybe a better idea.
-        like this function just holds the other two, one that deals with camera pans and one that deals with cursor positioning.
-        just cohesion stuff I guess.*/
+        if (input.currentControlScheme == "Keyboard + Mouse")
+        {
+            cameraFocus.SetCurrentMousePosition(value);
+            cursor.SetCurrentMousePosition(value);
+        }
+        else if (input.currentControlScheme == "Gamepad")
+        {
+            cameraFocus.SetLeftStickStrength(value);
+        }
     }
 
     public void UpdateCameraZoom(InputAction.CallbackContext context)
     {
-        //TODO: Figure out how to stop this from being called, or reset it when the camera gets to its spot, or just have it zoom AS the camera is rotating. last one seems best.
-        float value = context.ReadValue<float>();
+        //TODO: Figure out how we want controller zoom to work because this is really gross tbh
+        //NOTE THAT THIS AFFECTS MOUSE, GET RID FO THIS AND FIGURE OUT HOW TO GET MAX/MIN TO WORK PROPERLY
+        float value = context.ReadValue<float>() * 10f; //this is here because it's -1 to 1 despite the min/max being set to -120 to 120 (for gamepad triggers)
+        Debug.Log(value);
         if (value > 1) //mouse scroll inputs set it to +/-120 (this number is arbitrary probably, in terms of scroll wheeling)
         {
             camera.PreviousZoomLevel();

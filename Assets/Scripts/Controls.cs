@@ -45,7 +45,7 @@ public class @Controls : IInputActionCollection, IDisposable
             ],
             ""bindings"": [
                 {
-                    ""name"": ""2D Vector"",
+                    ""name"": ""2D Vector (Keyboard)"",
                     ""id"": ""23614920-d281-4d26-abfd-ea8203e902f8"",
                     ""path"": ""2DVector"",
                     ""interactions"": """",
@@ -101,11 +101,33 @@ public class @Controls : IInputActionCollection, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""61f33c33-f9d3-4a3e-a8b3-8c80bf9369a0"",
+                    ""path"": ""<Gamepad>/rightStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Camera"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""7f649279-8b24-416f-9909-3139fa815f1e"",
                     ""path"": ""<Mouse>/position"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard + Mouse"",
+                    ""action"": ""Hover"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ad897f85-0fd8-49d6-a295-d2aca105c273"",
+                    ""path"": ""<Gamepad>/leftStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
                     ""action"": ""Hover"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
@@ -120,6 +142,39 @@ public class @Controls : IInputActionCollection, IDisposable
                     ""action"": ""Camera Zoom"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""1D Axis"",
+                    ""id"": ""35ad860a-006d-4ea1-99ef-677362a477c9"",
+                    ""path"": ""1DAxis(minValue=-120,maxValue=120)"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Camera Zoom"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""negative"",
+                    ""id"": ""fedbc333-c2ce-423c-ade0-ce8e6ab7026f"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Camera Zoom"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""positive"",
+                    ""id"": ""3adc8d29-d601-4377-82cd-0094fdaeae0f"",
+                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Camera Zoom"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 }
             ]
         }

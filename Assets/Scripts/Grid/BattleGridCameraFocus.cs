@@ -10,12 +10,16 @@ public class BattleGridCameraFocus : MonoBehaviour
     [SerializeField]
     private BattleGridCamera camera;
 
-    private float cameraSpeed = 10f;
+    private float cameraSpeed = 15f;
 
-    private float screenEdgeLength = 30f;
+    private Vector2 leftStickVector = new Vector2(0, 0);
+
+    private float screenEdgeLength = 40f;
+    
+    private bool pointerPresent = false;
     void Start()
     {
-        //Maybe add a reference to the battle grid and make it start in the center?
+        //TODO: Maybe add a reference to the battle grid or map or w/e and make it start in the center
     }
 
 
@@ -24,25 +28,43 @@ public class BattleGridCameraFocus : MonoBehaviour
         currentMousePosition = mousePosition;
     }
 
+
+    public void SetLeftStickStrength(Vector2 stickStrength)
+    {
+        leftStickVector = stickStrength;
+    }
+
+    public void TogglePointer(bool toggle)
+    {
+        pointerPresent = toggle;
+    }
+
     ///This function just moves the camera focus (the thing the camera looks at) along the xz plane when the mouse hits the edges of the screen.
     ///It also causes this object to rotate around the Y axis with the camera so the movement calculations are easy
     ///Right now there's no limit to how far the camera can pan. Should clamp this at some point.
     void Update()
     {
-        if (!camera.rotating) //temporary fix, I don't like setting this to public (I don't actually know why that's a terrible idea, but something tells me this is like wrong in principle and can be done better)
+        if (!camera.rotating)
         {
-            //Rotate around y axis same as camera
+            //Rotate around same axis as camera
             transform.forward = new Vector3(camera.transform.forward.x, transform.forward.y, camera.transform.forward.z);
 
-            //Pan based on mouse position
-            if (currentMousePosition.y >= Screen.height - screenEdgeLength)
-                transform.Translate(0, 0, cameraSpeed, Space.Self);
-            if (currentMousePosition.y <= screenEdgeLength)
-                transform.Translate(0, 0, -cameraSpeed, Space.Self);
-            if (currentMousePosition.x >= Screen.width - screenEdgeLength)
-                transform.Translate(cameraSpeed, 0, 0, Space.Self);
-            if (currentMousePosition.x <= screenEdgeLength)
-                transform.Translate(-cameraSpeed, 0, 0, Space.Self);
+            if (pointerPresent)
+            {
+                //Pan based on mouse position
+                if (currentMousePosition.y >= Screen.height - screenEdgeLength)
+                    transform.Translate(0, 0, cameraSpeed, Space.Self);
+                if (currentMousePosition.y <= screenEdgeLength)
+                    transform.Translate(0, 0, -cameraSpeed, Space.Self);
+                if (currentMousePosition.x >= Screen.width - screenEdgeLength)
+                    transform.Translate(cameraSpeed, 0, 0, Space.Self);
+                if (currentMousePosition.x <= screenEdgeLength)
+                    transform.Translate(-cameraSpeed, 0, 0, Space.Self);
+            }
+            else
+            {
+                transform.Translate(leftStickVector.x * cameraSpeed, 0, leftStickVector.y * cameraSpeed, Space.Self);
+            }
         }
     }
 }
