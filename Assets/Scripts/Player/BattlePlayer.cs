@@ -15,12 +15,16 @@ public class BattlePlayer : MonoBehaviour
     [SerializeField]
     private Cursor cursor;
 
+    private BattleGridManager battleGridManager;
+
     private Controls controls;
 
     private PlayerInput input;
 
     private void Start()
     {
+        battleGridManager = GetComponentInParent<BattleGridManager>();
+        //Debug.Log("REAL WIDTH:" + battleGridManager.RealWidth);
         input = GetComponent<PlayerInput>();
         if (controls == null)
             controls = new Controls();
@@ -80,16 +84,26 @@ public class BattlePlayer : MonoBehaviour
     public void MouseHover(InputAction.CallbackContext context)
     {
         Vector2 value = context.ReadValue<Vector2>();
-        Debug.Log(context.ReadValue<Vector2>());
+        //Debug.Log(context.ReadValue<Vector2>());
         if (input.currentControlScheme == "Keyboard + Mouse")
         {
             cameraFocus.SetCurrentMousePosition(value);
             cursor.SetCurrentMousePosition(value);
+            Vector2Int value2 = new Vector2Int((int)value.x, (int)value.y);
+            Debug.Log(battleGridManager.Grid.GetTile(value2));
         }
         else if (input.currentControlScheme == "Gamepad")
         {
             cameraFocus.SetLeftStickStrength(value);
         }
+        
+    }
+
+    public void TileMovement(InputAction.CallbackContext context)
+    {
+        /*Vector2 value = context.ReadValue<Vector2>();
+        Vector2Int value2 = new Vector2Int((int)value.x, (int)value.y);
+        battleGridManager.Grid.GetTile(value2);*/
     }
 
     public void UpdateCameraZoom(InputAction.CallbackContext context)
@@ -97,7 +111,7 @@ public class BattlePlayer : MonoBehaviour
         //TODO: Figure out how we want controller zoom to work because this is really gross tbh
         //NOTE THAT THIS AFFECTS MOUSE, GET RID FO THIS AND FIGURE OUT HOW TO GET MAX/MIN TO WORK PROPERLY
         float value = context.ReadValue<float>() * 10f; //this is here because it's -1 to 1 despite the min/max being set to -120 to 120 (for gamepad triggers)
-        Debug.Log(value);
+        //Debug.Log(value);
         if (value > 1) //mouse scroll inputs set it to +/-120 (this number is arbitrary probably, in terms of scroll wheeling)
         {
             camera.PreviousZoomLevel();

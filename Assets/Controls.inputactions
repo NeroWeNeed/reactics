@@ -28,6 +28,14 @@
                     "expectedControlType": "Axis",
                     "processors": "",
                     "interactions": ""
+                },
+                {
+                    "name": "Tile Movement",
+                    "type": "Value",
+                    "id": "bded49ca-aeba-4234-b0f2-79ee2340e246",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": ""
                 }
             ],
             "bindings": [
@@ -110,7 +118,7 @@
                 },
                 {
                     "name": "",
-                    "id": "ad897f85-0fd8-49d6-a295-d2aca105c273",
+                    "id": "03851877-34d6-493b-ac66-2218776c0ed8",
                     "path": "<Gamepad>/leftStick",
                     "interactions": "",
                     "processors": "",
@@ -162,6 +170,17 @@
                     "action": "Camera Zoom",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "f5af0945-cedf-4fed-9aff-9649a5a5f53c",
+                    "path": "<Gamepad>/dpad",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "Tile Movement",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         }

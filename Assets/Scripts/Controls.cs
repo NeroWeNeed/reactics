@@ -41,6 +41,14 @@ public class @Controls : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Axis"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Tile Movement"",
+                    ""type"": ""Value"",
+                    ""id"": ""bded49ca-aeba-4234-b0f2-79ee2340e246"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -123,7 +131,7 @@ public class @Controls : IInputActionCollection, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""ad897f85-0fd8-49d6-a295-d2aca105c273"",
+                    ""id"": ""03851877-34d6-493b-ac66-2218776c0ed8"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -175,6 +183,17 @@ public class @Controls : IInputActionCollection, IDisposable
                     ""action"": ""Camera Zoom"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f5af0945-cedf-4fed-9aff-9649a5a5f53c"",
+                    ""path"": ""<Gamepad>/dpad"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Tile Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -214,6 +233,7 @@ public class @Controls : IInputActionCollection, IDisposable
         m_BattleControls_Camera = m_BattleControls.FindAction("Camera", throwIfNotFound: true);
         m_BattleControls_Hover = m_BattleControls.FindAction("Hover", throwIfNotFound: true);
         m_BattleControls_CameraZoom = m_BattleControls.FindAction("Camera Zoom", throwIfNotFound: true);
+        m_BattleControls_TileMovement = m_BattleControls.FindAction("Tile Movement", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -266,6 +286,7 @@ public class @Controls : IInputActionCollection, IDisposable
     private readonly InputAction m_BattleControls_Camera;
     private readonly InputAction m_BattleControls_Hover;
     private readonly InputAction m_BattleControls_CameraZoom;
+    private readonly InputAction m_BattleControls_TileMovement;
     public struct BattleControlsActions
     {
         private @Controls m_Wrapper;
@@ -273,6 +294,7 @@ public class @Controls : IInputActionCollection, IDisposable
         public InputAction @Camera => m_Wrapper.m_BattleControls_Camera;
         public InputAction @Hover => m_Wrapper.m_BattleControls_Hover;
         public InputAction @CameraZoom => m_Wrapper.m_BattleControls_CameraZoom;
+        public InputAction @TileMovement => m_Wrapper.m_BattleControls_TileMovement;
         public InputActionMap Get() { return m_Wrapper.m_BattleControls; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -291,6 +313,9 @@ public class @Controls : IInputActionCollection, IDisposable
                 @CameraZoom.started -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnCameraZoom;
                 @CameraZoom.performed -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnCameraZoom;
                 @CameraZoom.canceled -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnCameraZoom;
+                @TileMovement.started -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnTileMovement;
+                @TileMovement.performed -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnTileMovement;
+                @TileMovement.canceled -= m_Wrapper.m_BattleControlsActionsCallbackInterface.OnTileMovement;
             }
             m_Wrapper.m_BattleControlsActionsCallbackInterface = instance;
             if (instance != null)
@@ -304,6 +329,9 @@ public class @Controls : IInputActionCollection, IDisposable
                 @CameraZoom.started += instance.OnCameraZoom;
                 @CameraZoom.performed += instance.OnCameraZoom;
                 @CameraZoom.canceled += instance.OnCameraZoom;
+                @TileMovement.started += instance.OnTileMovement;
+                @TileMovement.performed += instance.OnTileMovement;
+                @TileMovement.canceled += instance.OnTileMovement;
             }
         }
     }
@@ -331,5 +359,6 @@ public class @Controls : IInputActionCollection, IDisposable
         void OnCamera(InputAction.CallbackContext context);
         void OnHover(InputAction.CallbackContext context);
         void OnCameraZoom(InputAction.CallbackContext context);
+        void OnTileMovement(InputAction.CallbackContext context);
     }
 }
