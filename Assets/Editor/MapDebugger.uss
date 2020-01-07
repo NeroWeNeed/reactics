@@ -1,0 +1,15 @@
+#map-properties Label {
+    width: auto;
+    max-width: none;
+    -unity-font-style: normal;
+    flex-shrink: 0;
+    flex-basis: auto;
+}
+
+#map-properties #unity-text-input {
+    width: auto;
+    max-width: none;
+    -unity-font-style: normal;
+    flex-grow: 1;
+    flex-shrink: 0;
+}

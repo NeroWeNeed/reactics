@@ -1,7 +1,3 @@
-
-
-
-
 using UnityEngine;
 
 namespace Reactics.Battle
@@ -10,6 +6,7 @@ namespace Reactics.Battle
     {
         public Client() : base()
         {
+            
             Debug.Log(handlerMap.Count);
             foreach (var item in this.handlerMap.Keys)
             {
