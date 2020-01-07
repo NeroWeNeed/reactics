@@ -1,9 +1,0 @@
-<UXML xmlns="UnityEngine.UIElements" xmlns:e="UnityEditor.UIElements">
-<VisualElement>
-<VisualElement>
-<IMGUIContainer focusable=false name="grid-preview"/>
-</VisualElement>
-<VisualElement>
-
-</VisualElement>
-</VisualElement>
