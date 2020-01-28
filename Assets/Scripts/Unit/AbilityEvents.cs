@@ -1,6 +1,6 @@
 using UnityEngine.Events;
 
-namespace Reactics.Battle.Unit
+namespace Reactics.Battle
 {
 
 }

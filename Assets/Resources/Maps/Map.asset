@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e5c7a95761477794aab2e6a3d38caae0, type: 3}
-  m_Name: SampleMap
+  m_Name: Map
   m_EditorClassIdentifier: 
   name: Sample Map
-  width: 30
-  length: 30
+  width: 20
+  length: 20
   tiles: []

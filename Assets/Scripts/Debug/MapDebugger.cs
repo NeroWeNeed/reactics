@@ -1,6 +1,6 @@
-using Reactics.Battle.Map;
+using Reactics.Battle;
 using UnityEngine;
-namespace Reactics.Debugger.Battle.Map
+namespace Reactics.Debugger.Battle
 {
 
 

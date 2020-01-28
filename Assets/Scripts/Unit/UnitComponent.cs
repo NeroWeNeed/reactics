@@ -1,8 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
-namespace Reactics.Battle.Unit
+namespace Reactics.Battle
 {
-    public class UnitContainer : MonoBehaviour
+    public class UnitComponent : MonoBehaviour
     {
         [SerializeField]
         private Unit unit;

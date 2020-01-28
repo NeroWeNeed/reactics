@@ -1,10 +1,11 @@
 using System;
-namespace Reactics.Battle.Map
+namespace Reactics.Battle
 {
 
     [Serializable]
     public class Tile
     {
+        
         readonly int elevation;
         public int Elevation { get => elevation; }
 
