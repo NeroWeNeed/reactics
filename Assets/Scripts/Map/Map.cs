@@ -56,6 +56,7 @@ namespace Reactics.Battle.Map
             return index / Width;
         }
 
+
         public IEnumerator GetEnumerator()
         {
             return tiles.GetEnumerator();
@@ -63,7 +64,6 @@ namespace Reactics.Battle.Map
 
         public Tile this[int x, int y] => tiles[IndexOf(x, y)];
         public Tile this[Vector2Int coordinates] => tiles[IndexOf(coordinates)];
-
 
     }
 }

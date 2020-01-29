@@ -15,6 +15,8 @@ public class Cursor : MonoBehaviour
 
     [SerializeField]
     BattleGridCameraFocus cameraFocus;
+    [SerializeField]
+    Reactics.Battle.Map.MapRenderer mapRenderer;
 
     private BattleGridManager battleGridManager;
 
@@ -24,7 +26,7 @@ public class Cursor : MonoBehaviour
     {
         battleGridManager = GetComponentInParent<BattleGridManager>();
         //there's probably a better way to do this but right now this works soooooooooo yeah, math it up later
-        rayDistance = (float)(Math.Sqrt(Math.Pow(battleGridManager.RealWidth, 2.0) + Math.Pow(battleGridManager.RealHeight, 2.0)) * 2);
+        rayDistance = Mathf.Infinity;
     }
 
     public void SetCurrentMousePosition(Vector2 mousePosition)
@@ -46,7 +48,7 @@ public class Cursor : MonoBehaviour
         if (pointerPresent)
         {
             Ray ray = camera.GetComponent<Camera>().ScreenPointToRay(currentMousePosition);
-            if (battleGridManager.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitInfo, rayDistance))
+            if (mapRenderer.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitInfo, rayDistance))
             {
                 transform.position = ray.GetPoint(hitInfo.distance);
             }

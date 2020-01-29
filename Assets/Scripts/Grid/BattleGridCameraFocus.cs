@@ -14,6 +14,8 @@ public class BattleGridCameraFocus : MonoBehaviour
 
     private Vector2 leftStickVector = new Vector2(0, 0);
 
+    public Vector3 targetPos = new Vector3();
+
     private float screenEdgeLength = 40f;
     
     private bool pointerPresent = false;
@@ -63,7 +65,20 @@ public class BattleGridCameraFocus : MonoBehaviour
             }
             else
             {
-                transform.Translate(leftStickVector.x * cameraSpeed, 0, leftStickVector.y * cameraSpeed, Space.Self);
+                //technically could add a bool to this so that when it stops being true, the bool gets set and applies the "center to a tile" code.
+                //seems like a hack though, maybe unnecessary when I integrate this nonsense to DOTS and it becomes clean and friendly and cool
+                if (leftStickVector.magnitude > 0.1f)
+                    transform.Translate(leftStickVector.x * cameraSpeed, 0, leftStickVector.y * cameraSpeed, Space.Self);
+                else
+                {
+                    //first apply the Dpad input to move it a set distance
+                    if (targetPos != null && targetPos.magnitude > 0)
+                    {
+                        transform.position = targetPos;
+                        targetPos = new Vector3();
+                    }
+                    //then center it on that tile (which it should already be, if the last input was dpad.)
+                }
             }
         }
     }

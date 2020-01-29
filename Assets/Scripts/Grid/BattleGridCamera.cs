@@ -29,6 +29,9 @@ public class BattleGridCamera : MonoBehaviour
     [SerializeField]
     private BattleGridCameraHorizontalAngle horizontalAngle = BattleGridCameraHorizontalAngle.NORTH;
 
+    public BattleGridCameraHorizontalAngle horizAngle => horizontalAngle;
+    
+
     [SerializeField]
     private BattleGridCameraVerticalAngle verticalAngle = BattleGridCameraVerticalAngle.LOW;
 
@@ -55,6 +58,13 @@ public class BattleGridCamera : MonoBehaviour
         {
             transform.position = cameraFocus.transform.position + offset;
             double horizontalAngle = (Math.PI / 180.0) * ((int)cameraHorizontalAngle * (360 / horizontalRotations));
+            if (cameraHorizontalAngle == BattleGridCameraHorizontalAngle.NORTHEAST ||
+                (cameraHorizontalAngle == BattleGridCameraHorizontalAngle.NORTHWEST) ||
+                (cameraHorizontalAngle == BattleGridCameraHorizontalAngle.SOUTHEAST) ||
+                (cameraHorizontalAngle == BattleGridCameraHorizontalAngle.SOUTHWEST))
+            {
+                horizontalAngle += 0.22; //FE3H rule, could do a % here instead for less code but this seems more like... proper. idk
+            }
             double verticalAngle = (Math.PI / 180.0) * (Mathf.Clamp((int)cameraVerticalAngle * (90 / (verticalRotations - 1)), 0, 89.9f));
 
             //Sets the camera's maximum zoom value (1 * magnitude) to a reasonable distance based on the size of the map.

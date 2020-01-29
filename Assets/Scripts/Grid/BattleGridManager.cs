@@ -9,6 +9,8 @@ public class BattleGridManager : MonoBehaviour
     [SerializeField]
     private BattleGrid grid;
 
+    GameObject Map;
+
     public BattleGrid Grid
     {
         get => grid;
@@ -46,14 +48,16 @@ public class BattleGridManager : MonoBehaviour
 
     void Start()
     {
-
-        GetComponent<MeshFilter>().mesh = GenerateMesh(grid);
-        GetComponent<Renderer>().sharedMaterial.mainTexture = GenerateTexture(grid);
+        //mapRenderer = gameObject.AddComponent<Reactics.Battle.Map.MapRenderer>() as Reactics.Battle.Map.MapRenderer;
+        //mapRenderer.Map.Width = 128;
+        //GetComponent<MapRenderer>().GenerateMesh();
+        //GetComponent<MeshFilter>().mesh = GenerateMesh(grid);
+        //GetComponent<Renderer>().sharedMaterial.mainTexture = GenerateTexture(grid);
     }
     private void OnRenderObject()
     {
 
-        GetComponent<MeshFilter>().mesh = GenerateMesh(grid);
+        //GetComponent<MeshFilter>().mesh = GenerateMesh(grid);
     }
     private Mesh GenerateMesh(BattleGrid grid)
     {
