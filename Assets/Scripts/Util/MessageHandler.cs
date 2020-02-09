@@ -87,7 +87,7 @@ namespace Reactics.Util
         }
     }
     [AttributeUsage(AttributeTargets.Method)]
-    public class MessageSubscriber : Attribute
+    public sealed class MessageSubscriber : Attribute
     {
     }
 

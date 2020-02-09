@@ -1,0 +1,8 @@
+IntegerField > Label {
+    min-width: auto;
+    flex-grow: 1;
+}
+
+IntegerField > #unity-text-input {
+    min-width: 50px;
+}

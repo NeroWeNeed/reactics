@@ -23,7 +23,6 @@ namespace Reactics.Util
     public class InjectActivator
     {
         private Dictionary<string, Dictionary<InjectionProperty, dynamic>> properties = new Dictionary<string, Dictionary<InjectionProperty, dynamic>>();
-
         public T CreateInstance<T>()
         {
             return (T)CreateInstance(typeof(T));
@@ -69,7 +68,6 @@ namespace Reactics.Util
             }).ToArray();
             return constructor.Invoke(arguments);
         }
-
         public void Inject(string contextName, string injectionName, object value)
         {
             if (!properties.ContainsKey(contextName))
@@ -111,4 +109,6 @@ namespace Reactics.Util
             }
         }
     }
+
+
 }

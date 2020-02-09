@@ -2,133 +2,225 @@ using System;
 using System.Linq;
 using Reactics.Util;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Reactics.Battle
 {
 
-    [RequireComponent(typeof(MeshFilter), typeof(MeshCollider),typeof(MeshRenderer))]
+    [RequireComponent(typeof(MeshFilter), typeof(MeshCollider), typeof(MeshRenderer))]
+    [ExecuteInEditMode]
     public class MapRenderer : MonoBehaviour
     {
-        [SerializeField]
-        private Map map;
-
-        public Map Map => map;
 
         [SerializeField]
-        private float tileSize;
+        private MapAsset map;
+
+
+
+        public MapAsset Map
+        {
+            get => map; set
+            {
+                map = value;
+                UpdateMesh(map);
+            }
+        }
+
+        [SerializeField]
+        private float tileSize = 1f;
 
         public float TileSize => tileSize;
 
         [SerializeField]
-        private float tileElevationDelta;
+        private float tileElevationDelta = 0.5f;
 
         public float TileElevationDelta => tileElevationDelta;
+
+        [SerializeField]
+        [ResourceField("Materials/Map/MapMaterial.mat")]
+        private Material mapMaterial;
+
+        [SerializeField]
+        [ResourceField("Materials/Map/HoverMaterial.mat")]
+        private Material hoverMaterial;
         private Mesh mesh;
 
-
-
-
+        public ushort Width { get; private set; }
+        public ushort Length { get; private set; }
 
         private void Awake()
         {
-            RefreshMesh();
-        }
-        private void OnDrawGizmosSelected()
-        {
-            RefreshMesh(true);
-            Gizmos.DrawWireMesh(mesh);
+            this.InjectResources();
+            mesh = GenerateMesh(Map?.Width ?? 0, Map?.Length ?? 0, tileSize);
 
         }
-
-        private void RefreshMesh(bool force = false)
+        private void Start()
         {
-            bool shouldUpdate = force || mesh == null;
-            if (mesh == null)
-                mesh = new Mesh();
+            GetComponent<MeshRenderer>().sharedMaterials = new Material[] { mapMaterial, hoverMaterial };
+        }
 
-            if (shouldUpdate)
+        public bool UpdateMesh(MapAsset map)
+        {
+            if (UpdateMesh(map, false))
             {
-                UpdateMesh(mesh);
-                GetComponent<MeshFilter>().sharedMesh = mesh;
+                this.map = map;
+                return true;
             }
+            else
+                return false;
+        }
+        private bool UpdateMesh(MapAsset map, bool force) => UpdateMesh(map?.Width ?? 0, map?.Length ?? 0, 1, force);
+        private bool UpdateMesh(MapAsset map, float newTileSize, bool force = false) => UpdateMesh(map?.Width ?? 0, map?.Length ?? 0, newTileSize, force);
+        private bool UpdateMesh(ushort newWidth, ushort newLength, float newTileSize, bool force = false)
+        {
+            if (Width != newWidth || Length != newLength || tileSize != newTileSize || force || mesh == null)
+            {
+                mesh = GenerateMesh(mesh ?? new Mesh(), newWidth, newLength, newTileSize);
+                return true;
+            }
+            else
+                return false;
+        }
+        private Mesh GenerateMesh(ushort width, ushort length, float tileSize) => GenerateMesh(new Mesh(), width, length, tileSize);
+        private Mesh GenerateMesh(Mesh mesh, ushort width, ushort length, float tileSize)
+        {
 
-        }
-        private void UpdateMesh(Mesh mesh)
-        {
-            UpdateMesh(map, TileSize, mesh);
-        }
-        public static Mesh GenerateMesh(Map map, float tileSize)
-        {
-            Mesh mesh = new Mesh();
-            UpdateMesh(map, tileSize, mesh);
-            return mesh;
-        }
-        public static void UpdateMesh(Map map, float tileSize, Mesh mesh)
-        {
-            int vertexCount = (map.Width + 1) * (map.Length + 1);
+            int vertexCount = (width + 1) * (length + 1);
             Vector3[] vertices = new Vector3[vertexCount];
             Vector2[] uv = new Vector2[vertexCount];
             Vector3[] normals = new Vector3[vertexCount];
-            int[] triangles = new int[map.Width * map.Length * 6];
+            int[] triangles = new int[width * length * 6];
             int x, y, index;
-            for (y = 0; y <= map.Length; y++)
+            for (y = 0; y <= length; y++)
             {
-                for (x = 0; x <= map.Width; x++)
+                for (x = 0; x <= width; x++)
                 {
-                    index = y * (map.Width + 1) + x;
+                    index = y * (width + 1) + x;
                     vertices[index] = new Vector3(x * tileSize, 0, y * tileSize);
-                    uv[index] = new Vector2((float)x / (map.Width), (float)y / (map.Length));
+                    uv[index] = new Vector2((float)x / (width), (float)y / (length));
                     normals[index] = Vector3.up;
-
                 }
             }
 
-            for (y = 0; y < map.Length; y++)
+            for (y = 0; y < length; y++)
             {
-                for (x = 0; x < map.Width; x++)
+                for (x = 0; x < width; x++)
                 {
-                    index = (y * map.Width + x) * 6;
-                    triangles[index] = y * (map.Width + 1) + x;
-                    triangles[index + 1] = y * (map.Width + 1) + x + (map.Width + 1);
-                    triangles[index + 2] = y * (map.Width + 1) + x + (map.Width + 2);
-                    triangles[index + 3] = y * (map.Width + 1) + x;
-                    triangles[index + 4] = y * (map.Width + 1) + x + (map.Width + 2);
-                    triangles[index + 5] = y * (map.Width + 1) + x + 1;
+                    index = (y * width + x) * 6;
+                    triangles[index] = y * (width + 1) + x;
+                    triangles[index + 1] = y * (width + 1) + x + width + 1;
+                    triangles[index + 2] = y * (width + 1) + x + width + 2;
+                    triangles[index + 3] = y * (width + 1) + x;
+                    triangles[index + 4] = y * (width + 1) + x + width + 2;
+                    triangles[index + 5] = y * (width + 1) + x + 1;
                 }
             }
+            mesh.Clear();
             mesh.vertices = vertices;
             mesh.uv = uv;
             mesh.triangles = triangles;
-
+            mesh.subMeshCount = 2;
             mesh.normals = normals;
+            Width = width;
+            Length = length;
+            this.tileSize = tileSize;
+            GetComponent<MeshFilter>().sharedMesh = mesh;
+            GetComponent<MeshCollider>().sharedMesh = mesh;
+            return mesh;
         }
-        public Vector2Int? CoordinateFromWorldPoint(Vector3 worldPoint) => CoordinateFromWorldPoint(worldPoint.x, worldPoint.z);
-        public Vector2Int? CoordinateFromWorldPoint(Vector2 worldPoint) => CoordinateFromWorldPoint(worldPoint.x, worldPoint.y);
-        public Vector2Int? CoordinateFromWorldPoint(float x, float z) => CoordinateFromWorldPoint(map, tileSize, transform.position, x, z);
-        public static Vector2Int? CoordinateFromWorldPoint(Map map, float tileSize, Vector3 offset, Vector3 worldPoint) => CoordinateFromWorldPoint(map, tileSize, offset, worldPoint.x, worldPoint.z);
-        public static Vector2Int? CoordinateFromWorldPoint(Map map, float tileSize, Vector3 offset, Vector2 worldPoint) => CoordinateFromWorldPoint(map, tileSize, offset, worldPoint.x, worldPoint.y);
+        /// <summary>
+        /// Tries to approximate a <c>Point</c> from the provided World Point.
+        /// </summary>
+        /// <param name="worldPoint">The World Point</param>
+        /// <param name="pointInfo">The Point to store the results in. Will be default if unable to approximate from the world point.</param>
+        /// <return> True if Point could be approximated, and stores the result in the pointInfo parameter, otherwise false and the point parameter will be default.</return>
+        public bool GetPoint(Vector3 worldPoint, out Point pointInfo) => GetPoint(worldPoint.x, worldPoint.z, out pointInfo);
 
-        public static Vector2Int? CoordinateFromWorldPoint(Map map, float tileSize, Vector3 worldPoint) => CoordinateFromWorldPoint(map, tileSize, Vector3.zero, worldPoint.x, worldPoint.z);
-        public static Vector2Int? CoordinateFromWorldPoint(Map map, float tileSize, Vector2 worldPoint) => CoordinateFromWorldPoint(map, tileSize, Vector3.zero, worldPoint.x, worldPoint.y);
-        public static Vector2Int? CoordinateFromWorldPoint(Map map, Vector3 offset, Vector3 worldPoint) => CoordinateFromWorldPoint(map, 1f, offset, worldPoint.x, worldPoint.z);
-        public static Vector2Int? CoordinateFromWorldPoint(Map map, Vector3 offset, Vector2 worldPoint) => CoordinateFromWorldPoint(map, 1f, offset, worldPoint.x, worldPoint.y);
-        public static Vector2Int? CoordinateFromWorldPoint(Map map, Vector3 worldPoint) => CoordinateFromWorldPoint(map, 1f, Vector3.zero, worldPoint.x, worldPoint.z);
-        public static Vector2Int? CoordinateFromWorldPoint(Map map, Vector2 worldPoint) => CoordinateFromWorldPoint(map, 1f, Vector3.zero, worldPoint.x, worldPoint.y);
-        public static Vector2Int? CoordinateFromWorldPoint(Map map, float tileSize, Vector3 offset, float x, float z)
+        /// <summary>
+        /// Tries to approximate a <c>Point</c> from the provided x and z coordinates in world space.
+        /// </summary>
+        /// <param name="x">The x coordinate in world space.</param>
+        /// <param name="x">The y coordinate in world space.</param>
+        /// <param name="pointInfo">The Point to store the results in. Will be default if unable to approximate from the world point.</param>
+        /// <return> True if Point could be approximated, and stores the result in the pointInfo parameter, otherwise false and the point parameter will be default.</return>
+        public bool GetPoint(float x, float z, out Point pointInfo)
         {
-            if (map == null || x < offset.x || x >= (map.Width * tileSize) + offset.x || z < offset.z || z >= (map.Length * tileSize) + offset.z)
-                return null;
-            return new Vector2Int((int)((x - offset.x) / tileSize), (int)((z - offset.z) / tileSize));
-        }
-
-        public static MapRenderer CreateInstance(Map map)
-        {
-            
-            return new GameObject("Map Renderer").AddComponent<MapRenderer>().Apply(x =>
+            if (map == null || x < transform.position.x || x >= ((map.Width) * tileSize) + transform.position.x || z < transform.position.z || z >= ((map.Length) * tileSize) + transform.position.z)
             {
-                x.map = map;
-            });
-            
+                pointInfo = default;
+                return false;
+            }
+            pointInfo = new Point((ushort)((x - transform.position.x) / tileSize), (ushort)((z - transform.position.z) / tileSize));
+            return true;
         }
+        /// <summary>
+        /// The Center of the grid in world coordinates.
+        /// </summary>
+        /// <returns>The center of the grid in world coordinates.</returns>
+        public Vector3 GetCenter() => mesh?.bounds.center ?? Vector3.zero;
+        /// <summary>
+        /// The maximum distance the camera can be from the map, or the diagonal of the map.
+        /// </summary>
+        /// <returns>The maximum distance the camera can be from the map</returns>
+        public float GetMaxCameraDistance() => map == null ? 0f : Mathf.Sqrt(Mathf.Pow(map.Width * tileSize, 2f) + Mathf.Pow(map.Length * tileSize, 2f));
+        /// <summary>
+        /// Focuses the camera on the center of the grid (in world coordinates). The camera is moved to be within the maximum distance, and a minimum height above the map (10% of the max distance). The direction from the center to the camera remains the same.
+        /// </summary>
+        public void FocusCamera(Camera camera)
+        {
+            float maxDistance = GetMaxCameraDistance();
+            Vector3 center = GetCenter();
+            if (Vector3.Distance(center, camera.transform.position) > maxDistance)
+                camera.transform.position = (camera.transform.position - center).normalized * maxDistance;
+            if (camera.transform.position.y < center.y + maxDistance * 0.1f)
+                camera.transform.position = new Vector3(camera.transform.position.x, center.y + maxDistance * 0.1f, camera.transform.position.z);
+            camera.transform.rotation = Quaternion.LookRotation((center - camera.transform.position).normalized, Vector3.up);
+        }
+        /// <summary>
+        /// Checks to see if the provided point is within the map bounds.
+        /// </summary>
+        /// <returns>True if the map is within bounds, false otherwise.</returns>
+        public bool Contains(Point? point)
+        {
+            return point != null && point.Value.x < map.Width && point.Value.y < Map.Length;
+        }
+        /// <inheritsdoc>
+        public bool Contains(Point point)
+        {
+            return point.x < map.Width && point.y < Map.Length;
+        }
+        /// <summary>
+        /// Signals the renderer to hover the selected tile. This updates the submesh that uses the hover material.
+        /// </summary>
+        /// <param name="point">The point to hover</param>
+        public void Hover(Point point)
+        {
+            if (!Contains(point))
+            {
+                mesh.SetTriangles(Array.Empty<int>(), 1);
+            }
+            else
+            {
+
+                mesh.SetTriangles(new int[6] {
+                point.y * (Width + 1) + point.x,
+                point.y * (Width + 1) + point.x + Width + 1,
+                point.y * (Width + 1) + point.x + Width + 2,
+                point.y * (Width + 1) + point.x,
+                point.y * (Width + 1) + point.x + Width + 2,
+                point.y * (Width + 1) + point.x + 1
+            }, 1);
+            }
+        }
+        /// <summary>
+        /// Clears the hover tile.
+        /// </summary>
+        public void UnHover()
+        {
+            mesh.SetTriangles(Array.Empty<int>(), 1);
+        }
+
+
+
     }
 }

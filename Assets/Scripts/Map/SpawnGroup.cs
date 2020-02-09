@@ -1,16 +1,16 @@
 using System;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 namespace Reactics.Battle
 {
-
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Tile
+    public struct SpawnGroup
     {
-        public int elevation;
-        public bool inaccessible;
-    }
+        [SerializeField]
+        public Point[] points;
 
+    }
 
 }

@@ -12,7 +12,138 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5c7a95761477794aab2e6a3d38caae0, type: 3}
   m_Name: Map
   m_EditorClassIdentifier: 
-  name: Sample Map
-  width: 20
-  length: 20
-  tiles: []
+  _name: Untitled Map
+  _width: 8
+  _length: 8
+  _tiles:
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  - elevation: 0
+    inaccessible: 0
+  _elevation: 0
+  backgroundHandler: {fileID: 0}
+  _spawnGroups: []
