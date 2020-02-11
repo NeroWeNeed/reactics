@@ -13,11 +13,11 @@ namespace Reactics.Battle
     {
 
         [SerializeField]
-        private MapAsset map;
+        private Map map;
 
 
 
-        public MapAsset Map
+        public Map Map
         {
             get => map; set
             {
@@ -59,7 +59,7 @@ namespace Reactics.Battle
             GetComponent<MeshRenderer>().sharedMaterials = new Material[] { mapMaterial, hoverMaterial };
         }
 
-        public bool UpdateMesh(MapAsset map)
+        public bool UpdateMesh(Map map)
         {
             if (UpdateMesh(map, false))
             {
@@ -69,8 +69,8 @@ namespace Reactics.Battle
             else
                 return false;
         }
-        private bool UpdateMesh(MapAsset map, bool force) => UpdateMesh(map?.Width ?? 0, map?.Length ?? 0, 1, force);
-        private bool UpdateMesh(MapAsset map, float newTileSize, bool force = false) => UpdateMesh(map?.Width ?? 0, map?.Length ?? 0, newTileSize, force);
+        private bool UpdateMesh(Map map, bool force) => UpdateMesh(map?.Width ?? 0, map?.Length ?? 0, 1, force);
+        private bool UpdateMesh(Map map, float newTileSize, bool force = false) => UpdateMesh(map?.Width ?? 0, map?.Length ?? 0, newTileSize, force);
         private bool UpdateMesh(ushort newWidth, ushort newLength, float newTileSize, bool force = false)
         {
             if (Width != newWidth || Length != newLength || tileSize != newTileSize || force || mesh == null)

@@ -1,14 +1,15 @@
+using Reactics.Battle;
+using Unity.Entities;
+using UnityEngine;
 namespace Reactics.Util
 {
-    using Reactics.Battle;
-    using Unity.Entities;
-    using UnityEngine;
+
 
     public class EntityDebugger : MonoBehaviour
     {
 
         [SerializeField]
-        private MapAsset map;
+        private Map map;
         private void Start()
         {
             EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
@@ -16,6 +17,8 @@ namespace Reactics.Util
 #if UNITY_EDITOR
             entityManager.SetName(mapEntity, "Map Entity");
 #endif
+            DynamicBuffer<HighlightTile> highlights = entityManager.AddBuffer<HighlightTile>(mapEntity);
+            highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
         }
     }
 }

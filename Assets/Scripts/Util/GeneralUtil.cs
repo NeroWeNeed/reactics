@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using Unity.Entities;
+
 namespace Reactics.Util
 {
     public interface IMutableExchangeable<T>
@@ -15,10 +20,39 @@ namespace Reactics.Util
             apply.Invoke(target);
             return target;
         }
-        public static R Let<T,R>(this T target, LetDelegate<T,R> let)
+        public static R Let<T, R>(this T target, LetDelegate<T, R> let)
         {
             return let.Invoke(target);
-            
+
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Find<T>(this IEnumerable<T> target, out T output, Func<T, bool> testFunc)
+        {
+
+            foreach (var item in target)
+            {
+                if (testFunc(item))
+                {
+                    output = item;
+                    return true;
+                }
+            }
+            output = default;
+            return false;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Find<T>(this DynamicBuffer<T> target, out T output, Func<T, bool> testFunc) where T : struct
+        {
+            for (int i = 0; i < target.Length; i++)
+            {
+                if (testFunc(target[i]))
+                {
+                    output = target[i];
+                    return true;
+                }
+            }
+            output = default;
+            return false;
         }
     }
 

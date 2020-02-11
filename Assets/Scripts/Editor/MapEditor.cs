@@ -30,9 +30,9 @@ namespace Reactics.Editors
         [UnityEditor.Callbacks.OnOpenAsset(1)]
         private static bool OnOpenAsset(int instanceID, int line)
         {
-            if (Selection.activeObject as MapAsset != null)
+            if (Selection.activeObject as Map != null)
             {
-                GetSceneView<MapEditor>(Selection.activeObject as MapAsset);
+                GetSceneView<MapEditor>(Selection.activeObject as Map);
                 return true;
             }
             return false;
@@ -100,10 +100,10 @@ namespace Reactics.Editors
                 }
                 if (serializedObject.UpdateIfRequiredOrScript())
                 {
-                    if (debugger.MapRenderer.UpdateMesh(Target as MapAsset))
+                    if (debugger.MapRenderer.UpdateMesh(Target as Map))
                     {
                         Window.rootElement.Query<VisualElement>("tile-properties-container").ForEach(x => x.Clear());
-                        serializedObject.FindProperty("_tiles").arraySize = (Target as MapAsset).Width * (Target as MapAsset).Length;
+                        serializedObject.FindProperty("_tiles").arraySize = (Target as Map).Width * (Target as Map).Length;
 
                     }
 
@@ -140,7 +140,7 @@ namespace Reactics.Editors
             new GameObject("Map Debugger").Apply(obj =>
             {
                 debugger = obj.AddComponent<MapDebugger>();
-                debugger.MapRenderer.Map = Target as MapAsset;
+                debugger.MapRenderer.Map = Target as Map;
                 debugger.MapRenderer.FocusCamera(Scene.SceneView.camera);
                 float maxDistance = debugger.MapRenderer.GetMaxCameraDistance();
                 Vector3 center = debugger.MapRenderer.GetCenter();
@@ -162,7 +162,7 @@ namespace Reactics.Editors
             {
                 AddPointList(element);
             };
-            foreach (var item in (Target as MapAsset).spawnGroups)
+            foreach (var item in (Target as Map).spawnGroups)
             {
                 AddPointList(element, item.points);
             }

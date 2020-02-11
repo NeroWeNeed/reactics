@@ -163,7 +163,7 @@ namespace Reactics.Battle.Servers
     }
     public class Configuration
     {
-        public MapAsset Map { get; set; }
+        public Map Map { get; set; }
 
         public int MaxPlayers { get; set; }
 
@@ -172,7 +172,7 @@ namespace Reactics.Battle.Servers
         public int MaxUnits { get; set; }
 
         public Configuration() : this(null, 2, 8, 6) { }
-        public Configuration(MapAsset map = null, int maxPlayers = 2, int maxClients = 8, int maxUnits = 6)
+        public Configuration(Map map = null, int maxPlayers = 2, int maxClients = 8, int maxUnits = 6)
         {
             Map = map;
             MaxPlayers = maxPlayers;

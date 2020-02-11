@@ -1,14 +1,15 @@
+using Reactics.Battle;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 namespace Reactics.Debugger
 {
-    using Reactics.Battle;
-    using UnityEditor;
-    using UnityEngine;
-    using UnityEngine.InputSystem;
-    using UnityEngine.SceneManagement;
+
 
     [RequireComponent(typeof(MapRenderer))]
     [ExecuteInEditMode]
-    
+
     public class MapDebugger : MonoBehaviour
     {
 
@@ -26,7 +27,7 @@ namespace Reactics.Debugger
         private void Awake()
         {
             tag = "Debug";
-            
+
         }
 
 
