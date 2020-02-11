@@ -190,8 +190,8 @@ namespace Reactics.Editors
                 {
                     property.InsertArrayElementAtIndex(pointIndex);
                     pointProperty = property.GetArrayElementAtIndex(pointIndex);
-                    pointProperty.FindPropertyRelative("_x").intValue = item.x;
-                    pointProperty.FindPropertyRelative("_y").intValue = item.y;
+                    pointProperty.FindPropertyRelative("x").intValue = item.x;
+                    pointProperty.FindPropertyRelative("y").intValue = item.y;
                     pointIndex++;
                 }
                 property.arraySize = pointIndex;

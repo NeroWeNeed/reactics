@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using Reactics.Util;
 
 namespace Reactics.Battle
 {
@@ -9,7 +10,8 @@ namespace Reactics.Battle
     public struct Tile
     {
         public int elevation;
-        public bool inaccessible;
+        public BlittableBool inaccessible;
+        public bool Accessible() => !inaccessible;
     }
 
 

@@ -3,7 +3,7 @@
     <Style src="MapEditor.uss" />
     <ui:Foldout name="header" class="targetEditorSubSectionHeader">
         <uie:IntegerField label="Elevation" value="0" binding-path="elevation" class="targetEditorSubSectionMember" />
-        <ui:Toggle label="Inaccessible" value="true" binding-path="inaccessible"  class="targetEditorSubSectionMember"/>
+        <ui:Toggle label="Inaccessible" value="false" binding-path="inaccessible"  class="targetEditorSubSectionMember"/>
     </ui:Foldout>
     </ui:BindableElement>
 </ui:UXML>

@@ -24,7 +24,7 @@ namespace Reactics.Editors
         private bool initiated = false;
         public static T GetSceneView<T>(ScriptableObject target, bool force = false) where T : EditorScene
         {
-
+Debug.Log(target);
             T[] editorScenes = Resources.FindObjectsOfTypeAll<T>();
             T editorScene;
             if (editorScenes.Length > 0)

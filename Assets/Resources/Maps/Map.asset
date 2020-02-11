@@ -16,134 +16,212 @@ MonoBehaviour:
   _width: 8
   _length: 8
   _tiles:
+  - elevation: 100
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   - elevation: 0
-    inaccessible: 0
-  - elevation: 0
-    inaccessible: 0
+    inaccessible:
+      boolValue: 0
   _elevation: 0
-  backgroundHandler: {fileID: 0}
-  _spawnGroups: []
+  _spawnGroups:
+  - points:
+    - x: 1
+      y: 0
+    - x: 2
+      y: 0
+    - x: 3
+      y: 0
+    - x: 4
+      y: 0
+    - x: 5
+      y: 0
+    - x: 6
+      y: 0
+    - x: 7
+      y: 0

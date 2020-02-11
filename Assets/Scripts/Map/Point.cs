@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
@@ -10,20 +12,18 @@ namespace Reactics.Battle
     {
         public static readonly Point zero = new Point(0, 0);
 
-        [SerializeField]
-        private ushort _x, _y;
-        public ushort x { get => _x; }
-        public ushort y { get => _y; }
+        public ushort x;
+        public ushort y;
 
         public Point(ushort x, ushort y)
         {
-            _x = x;
-            _y = y;
+            this.x = x;
+            this.y = y;
         }
         public Point(int x, int y)
         {
-            _x = Convert.ToUInt16(x);
-            _y = Convert.ToUInt16(y);
+            this.x = Convert.ToUInt16(x);
+            this.y = Convert.ToUInt16(y);
         }
 
 
@@ -64,5 +64,40 @@ namespace Reactics.Battle
                 throw new InvalidCastException("Vector must be positive");
         }
 
+    }
+
+
+    public class PointComparerByX : IComparer<Point>
+    {
+        private static PointComparerByX INSTANCE;
+
+        public static PointComparerByX GetInstance()
+        {
+            if (INSTANCE == null)
+                INSTANCE = new PointComparerByX();
+            return INSTANCE;
+        }
+        public int Compare(Point a, Point b)
+        {
+            int yCompare = a.y.CompareTo(b.y);
+            return yCompare != 0 ? yCompare : a.x.CompareTo(b.x);
+        }
+    }
+
+    public class PointComparerByY : IComparer<Point>
+    {
+        private static PointComparerByY INSTANCE;
+
+        public static PointComparerByY GetInstance()
+        {
+            if (INSTANCE == null)
+                INSTANCE = new PointComparerByY();
+            return INSTANCE;
+        }
+        public int Compare(Point a, Point b)
+        {
+            int xCompare = a.x.CompareTo(b.x);
+            return xCompare != 0 ? xCompare : a.y.CompareTo(b.y);
+        }
     }
 }

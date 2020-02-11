@@ -31,7 +31,7 @@ namespace Reactics.Util
 
     public static class UnityObjectUtil
     {
-        public static void InjectResources(this UnityEngine.Object target)
+        public static void InjectResources(this object target)
         {
             ResourceField attr;
 

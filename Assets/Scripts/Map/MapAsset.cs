@@ -3,6 +3,10 @@ using System.Runtime.CompilerServices;
 using System;
 using System.Collections;
 using Reactics.Util;
+using Unity.Entities;
+using Unity.Collections;
+using System.Linq;
+using Reactics.Battle.Components;
 
 namespace Reactics.Battle
 {
@@ -11,9 +15,9 @@ namespace Reactics.Battle
     {
         [SerializeField]
         private string _name = "Untitled Map";
-        
 
-        public new string Name => _name;
+
+        public string Name => _name;
 
 
         [SerializeField]
@@ -53,9 +57,6 @@ namespace Reactics.Battle
         {
             get => _elevation;
         }
-
-        [SerializeField]
-        private GameObject backgroundHandler;
 
         [SerializeField]
         private SpawnGroup[] _spawnGroups;
@@ -163,25 +164,29 @@ namespace Reactics.Battle
         }
 
 
-
         /// <summary>
-        /// Creates a Map Component from the Asset.
+        /// Creates a Map Entity from the Asset.
         /// </summary>
-        /// <return> Map Component</return>
-        public MapComponent ToComponent() => ToComponent(out _);
-        /// <summary>
-        /// Creates a Map Component from the Asset.
-        /// </summary>
-        /// <param name="map">Output Parameter to store output in. Also returns the Map</param>
-        /// <returns>Map Component</returns>
-        public MapComponent ToComponent(out MapComponent map)
+        /// <param name="entityManager">Entity Manager to use for Entity Creation. Defaults to <c>World.DefaultGameObjectInjectionWorld.EntityManager</c></param>
+        /// <returns>A Map Entity</returns>
+        public Entity CreateEntity(EntityManager entityManager = null)
         {
-            Tile[] tiles = new Tile[Width * Length];
-            SpawnGroup[] spawnGroups = new SpawnGroup[this.spawnGroups.Length];
-            Array.Copy(this.tiles, tiles, tiles.Length);
-            Array.Copy(this.spawnGroups, spawnGroups, spawnGroups.Length);
-            map = new MapComponent(Name, Width, Length, Elevation, tiles, spawnGroups);
-            return map;
+            EntityManager manager = entityManager ?? World.DefaultGameObjectInjectionWorld.EntityManager;
+            Entity entity = manager.CreateEntity(typeof(MapHeader), typeof(MapTile), typeof(MapSpawnGroup));
+
+            manager.SetComponentData(entity, new MapHeader(this.Name, this.Width, this.Length, this.Elevation));
+            DynamicBuffer<MapTile> tileElement = manager.GetBuffer<MapTile>(entity);
+            tileElement.Capacity = Width * Length;
+            tileElement.CopyFrom(this.tiles.Select(x => new MapTile(x)).ToArray());
+            DynamicBuffer<MapSpawnGroup> spawnGroupElement = manager.GetBuffer<MapSpawnGroup>(entity);
+            for (int i = 0; i < this.spawnGroups.Length; i++)
+            {
+                foreach (var item in this.spawnGroups[i].points)
+                {
+                    spawnGroupElement.Add(new MapSpawnGroup(item, i));
+                }
+            }
+            return entity;
         }
 
         public void OnBeforeSerialize()
