@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "BattleGrid", menuName = "Battle/Grid", order = 0)]
 public class BattleGrid : ScriptableObject
 {
 

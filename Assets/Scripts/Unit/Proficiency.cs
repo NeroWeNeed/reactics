@@ -2,7 +2,7 @@ namespace Reactics.Battle
 {
     using UnityEngine;
 
-    [CreateAssetMenu(fileName = "Proficiency", menuName = "Project ATT/Proficiency", order = 0)]
+    [CreateAssetMenu(fileName = "Proficiency", menuName = "Reactics/Proficiency", order = 0)]
     public class Proficiency : ScriptableObject
     {
         public enum Level

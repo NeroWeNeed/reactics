@@ -21,6 +21,7 @@ namespace Reactics.Battle
 
         protected override void OnCreate()
         {
+            
             this.InjectResources();
             mapArchetype = EntityManager.CreateArchetype(typeof(MapHeader), typeof(MapTile), typeof(MapSpawnGroupPoint));
             rootRendererArchetype = EntityManager.CreateArchetype(typeof(MapRootRenderLayer), typeof(RenderMesh), typeof(Translation), typeof(LocalToWorld));

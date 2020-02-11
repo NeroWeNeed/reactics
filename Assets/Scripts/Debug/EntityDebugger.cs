@@ -19,6 +19,10 @@ namespace Reactics.Util
 #endif
             DynamicBuffer<HighlightTile> highlights = entityManager.AddBuffer<HighlightTile>(mapEntity);
             highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
+            highlights.Add(new HighlightTile { point = new Point(2, 0), layer = MapLayer.HOVER });
+            highlights.Add(new HighlightTile { point = new Point(0, 4), layer = MapLayer.HOVER });
+            highlights.Add(new HighlightTile { point = new Point(6, 6), layer = MapLayer.HOVER });
+            highlights.Add(new HighlightTile { point = new Point(17, 17), layer = MapLayer.HOVER });
         }
     }
 }
