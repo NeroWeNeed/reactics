@@ -1,7 +1,5 @@
-using Reactics.Util;
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
 namespace Reactics.Battle
 {

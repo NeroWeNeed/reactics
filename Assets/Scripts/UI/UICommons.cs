@@ -25,7 +25,7 @@ namespace Reactics.Util
     }
     public static class UIUtil
     {
-        private static Regex nameRegex = new Regex("\\-(.)");
+        private static readonly Regex nameRegex = new Regex("\\-(.)");
 
         public static void Initialize(this VisualElement element, object target)
         {

@@ -125,6 +125,8 @@ namespace Reactics.Battle
             int yCompare = a.y.CompareTo(b.y);
             return yCompare != 0 ? yCompare : a.x.CompareTo(b.x);
         }
+
+        private PointComparerByX() {}
     }
 
     public class PointComparerByY : IComparer<Point>
@@ -142,6 +144,7 @@ namespace Reactics.Battle
             int xCompare = a.x.CompareTo(b.x);
             return xCompare != 0 ? xCompare : a.y.CompareTo(b.y);
         }
+        private PointComparerByY() {}
     }
 
     [Serializable]
@@ -150,7 +153,6 @@ namespace Reactics.Battle
     {
         [SerializeField]
         public Point[] points;
-
     }
 
     [Serializable]

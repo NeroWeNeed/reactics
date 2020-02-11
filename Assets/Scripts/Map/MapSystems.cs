@@ -4,8 +4,6 @@ using Unity.Rendering;
 using UnityEngine;
 using Reactics.Util;
 using Unity.Transforms;
-using System.Linq;
-using Reactics.Battle;
 
 namespace Reactics.Battle
 {

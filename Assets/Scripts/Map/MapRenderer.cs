@@ -1,8 +1,6 @@
 using System;
-using System.Linq;
 using Reactics.Util;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Reactics.Battle
 {

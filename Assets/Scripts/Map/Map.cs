@@ -2,11 +2,8 @@ using UnityEngine;
 using System.Runtime.CompilerServices;
 using System;
 using System.Collections;
-using Reactics.Util;
 using Unity.Entities;
-using Unity.Collections;
 using System.Linq;
-using Reactics.Battle;
 
 namespace Reactics.Battle
 {
@@ -174,18 +171,18 @@ namespace Reactics.Battle
         public Entity CreateEntity(EntityManager entityManager = null)
         {
             EntityManager manager = entityManager ?? World.DefaultGameObjectInjectionWorld.EntityManager;
-            Entity entity = manager.CreateEntity(typeof(MapHeader), typeof(MapTile), typeof(MapSpawnGroup));
+            Entity entity = manager.CreateEntity(typeof(MapHeader), typeof(MapTile), typeof(MapSpawnGroupPoint));
 
             manager.SetComponentData(entity, new MapHeader(this.Name, this.Width, this.Length, this.Elevation));
             DynamicBuffer<MapTile> tileElement = manager.GetBuffer<MapTile>(entity);
             tileElement.Capacity = Width * Length;
             tileElement.CopyFrom(this.tiles.Select(x => new MapTile(x)).ToArray());
-            DynamicBuffer<MapSpawnGroup> spawnGroupElement = manager.GetBuffer<MapSpawnGroup>(entity);
+            DynamicBuffer<MapSpawnGroupPoint> spawnGroupElement = manager.GetBuffer<MapSpawnGroupPoint>(entity);
             for (int i = 0; i < this.spawnGroups.Length; i++)
             {
                 foreach (var item in this.spawnGroups[i].points)
                 {
-                    spawnGroupElement.Add(new MapSpawnGroup(item, i));
+                    spawnGroupElement.Add(new MapSpawnGroupPoint(item, i));
                 }
             }
             return entity;
