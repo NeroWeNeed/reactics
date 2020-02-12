@@ -36,7 +36,6 @@ namespace Reactics.Battle.Abilities
     public sealed class AbilityProvider : Attribute
     {
         public readonly string identifier;
-
         public AbilityProvider(string identifier)
         {
             this.identifier = identifier;

@@ -24,7 +24,7 @@ namespace Reactics.Editors
         private bool initiated = false;
         public static T GetSceneView<T>(ScriptableObject target, bool force = false) where T : EditorScene
         {
-Debug.Log(target);
+            Debug.Log(target);
             T[] editorScenes = Resources.FindObjectsOfTypeAll<T>();
             T editorScene;
             if (editorScenes.Length > 0)
@@ -123,6 +123,9 @@ Debug.Log(target);
             public void UpdateInfo(EditorScene root)
             {
                 rootVisualElement.Clear();
+                if (rootElement == null)
+                    rootElement = new VisualElement();
+                rootElement.Bind(root.serializedObject);
                 if (onCreateInspector != null)
                     rootElement = onCreateInspector(rootElement);
                 rootVisualElement.Add(rootElement);
@@ -132,14 +135,7 @@ Debug.Log(target);
 
 
             }
-            private void OnDisable()
-            {
-                Debug.Log("Disabled");
-            }
-            private void OnDestroy()
-            {
-                Debug.Log("Destroyed");
-            }
+
             public void Cleanup()
             {
                 EditorWindow.GetWindow<EditorSceneSubWindow>().rootVisualElement.Clear();

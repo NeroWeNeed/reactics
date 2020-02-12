@@ -110,13 +110,8 @@ namespace Reactics.Battle
                         if (EntityManager.HasComponent<HighlightTile>(entity))
                         {
                             DynamicBuffer<HighlightTile> highlights = EntityManager.GetBuffer<HighlightTile>(entity);
-                            //NativeMultiHashMap<int, Point> highlightedTiles = new NativeMultiHashMap<int, Point>(highlights.Length, Allocator.Temp);
-                            //NativeMultiHashMap<int, Point> highlightedTiles = NativeUtils.ToMultiHashMap(ref highlightedTiles, x => (int)x.layer, x => x.point);
                             highlights.ToMultiHashMap(out NativeMultiHashMap<int, Point> highlightedTiles, highlights.Length, Allocator.Temp, x => (int)x.layer, x => x.point);
-                            /*                             foreach (var item in highlights)
-                                                        {
-                                                            highlightedTiles.Add((int)item.layer, item.point);
-                                                        } */
+
                             foreach (var layer in highlightedTiles.GetKeyArray(Allocator.Temp))
                             {
                                 if (layer == 0)
