@@ -8,7 +8,7 @@ using System.Linq;
 namespace Reactics.Battle
 {
 
-    
+
     [CreateAssetMenu(fileName = "Map", menuName = "Reactics/Map", order = 0)]
     public class Map : ScriptableObject, IEnumerable, ISerializationCallbackReceiver
     {
@@ -216,5 +216,48 @@ namespace Reactics.Battle
         {
             return spawnGroups[index];
         }
+        public Mesh GenerateMesh(Mesh mesh = null, float tileSize = 1f)
+        {
+            int vertexCount = (Width + 1) * (Length + 1);
+            Vector3[] vertices = new Vector3[vertexCount];
+            Vector2[] uv = new Vector2[vertexCount];
+            Vector3[] normals = new Vector3[vertexCount];
+            int[] triangles = new int[Width * Length * 6];
+            int x, y, index;
+            for (y = 0; y <= Length; y++)
+            {
+                for (x = 0; x <= Width; x++)
+                {
+                    index = y * (Width + 1) + x;
+                    vertices[index] = new Vector3(x * tileSize, 0, y * tileSize);
+                    uv[index] = new Vector2((float)x / (Width), (float)y / (Length));
+                    normals[index] = Vector3.up;
+                }
+            }
+            for (y = 0; y < Length; y++)
+            {
+                for (x = 0; x < Width; x++)
+                {
+                    index = (y * Width + x) * 6;
+                    triangles[index] = y * (Width + 1) + x;
+                    triangles[index + 1] = y * (Width + 1) + x + Width + 1;
+                    triangles[index + 2] = y * (Width + 1) + x + Width + 2;
+                    triangles[index + 3] = y * (Width + 1) + x;
+                    triangles[index + 4] = y * (Width + 1) + x + Width + 2;
+                    triangles[index + 5] = y * (Width + 1) + x + 1;
+                }
+            }
+            if (mesh == null)
+                mesh = new Mesh();
+            mesh.Clear();
+            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            mesh.vertices = vertices;
+            mesh.uv = uv;
+            mesh.triangles = triangles;
+            mesh.subMeshCount = 2;
+            mesh.normals = normals;
+            return mesh;
+        }
+
     }
 }

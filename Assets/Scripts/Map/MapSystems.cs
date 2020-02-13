@@ -4,144 +4,90 @@ using Unity.Rendering;
 using UnityEngine;
 using Reactics.Util;
 using Unity.Transforms;
+using Unity.Jobs;
+using System;
 
 namespace Reactics.Battle
 {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateBefore(typeof(RenderMeshSystemV2))]
-    public class MapVisualizationSystem : ComponentSystem
+    [DisableAutoCreation]
+    public class MapRenderSystem : ComponentSystem
     {
-        private EntityArchetype mapArchetype;
-        private EntityArchetype rootRendererArchetype;
+        private MapWorld.WorldArchetypes Archetypes;
+        private EntityQuery MapRendererQuery;
+        private NativeHashMap<int, Entity> childEntityBuffer;
 
-
-
-        [ResourceField("Materials/Map/MapMaterial.mat")]
-        private Material baseMaterial;
-
-        protected override void OnCreate()
-        {
-            
-            this.InjectResources();
-            mapArchetype = EntityManager.CreateArchetype(typeof(MapHeader), typeof(MapTile), typeof(MapSpawnGroupPoint));
-            rootRendererArchetype = EntityManager.CreateArchetype(typeof(MapRootRenderLayer), typeof(RenderMesh), typeof(Translation), typeof(LocalToWorld));
-            RequireForUpdate(GetEntityQuery(mapArchetype.GetComponentTypes()));
-        }
-        protected override void OnUpdate()
-        {
-            Entities.With(GetEntityQuery(mapArchetype.GetComponentTypes())).ForEach((entity) =>
-            {
-                Entity rootRenderer;
-
-                if (EntityManager.HasComponent(entity, typeof(LinkedEntityGroup)))
-                {
-                    DynamicBuffer<Entity> children = EntityManager.GetBuffer<LinkedEntityGroup>(entity).Reinterpret<Entity>();
-                    if (children.Length <= 0 || !children.Find(out rootRenderer, x => EntityManager.HasComponent<MapRootRenderLayer>(x)))
-                    {
-                        rootRenderer = rootRenderer = AddRootRenderer(entity);
-                    }
-                }
-                else
-                {
-                    rootRenderer = AddRootRenderer(entity);
-                }
-
-
-
-            });
-
-        }
-        private Entity AddRootRenderer(Entity parent)
-        {
-            Entity entity = PostUpdateCommands.CreateEntity(rootRendererArchetype);
-            MapHeader header = EntityManager.GetComponentData<MapHeader>(parent);
-            PostUpdateCommands.SetSharedComponent(entity,
-            new RenderMesh
-            {
-                mesh = MapUtil.GenerateMesh(new Mesh(), header.width, header.length, 1f),
-                material = baseMaterial,
-                subMesh = 0
-            });
-            PostUpdateCommands.SetComponent(entity, new MapRootRenderLayer { lastVersion = entity.Version });
-
-
-            DynamicBuffer<LinkedEntityGroup> buffer = EntityManager.HasComponent<LinkedEntityGroup>(parent) ? EntityManager.GetBuffer<LinkedEntityGroup>(parent) : PostUpdateCommands.AddBuffer<LinkedEntityGroup>(parent);
-
-            buffer.Add(new LinkedEntityGroup { Value = entity });
-            return entity;
-        }
-
-    }
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
-    [UpdateAfter(typeof(MapVisualizationSystem))]
-    [UpdateBefore(typeof(RenderMeshSystemV2))]
-    public class MapHighlightSystem : ComponentSystem
-    {
         [ResourceField("Materials/Map/HoverMaterial.mat")]
         private Material hoverMaterial;
-        private EntityArchetype mapArchetype;
-        private EntityArchetype layerRendererArchetype;
-
 
         protected override void OnCreate()
         {
             this.InjectResources();
-            mapArchetype = EntityManager.CreateArchetype(typeof(MapHeader), typeof(MapTile), typeof(MapSpawnGroupPoint));
-            layerRendererArchetype = EntityManager.CreateArchetype(typeof(MapRenderLayer), typeof(RenderMesh), typeof(Translation), typeof(LocalToWorld));
-            RequireForUpdate(GetEntityQuery(mapArchetype.GetComponentTypes()));
+            Archetypes = new MapWorld.WorldArchetypes(EntityManager);
+            MapRendererQuery = GetEntityQuery(Archetypes.MapRenderer.GetComponentTypes());
+
+            RequireForUpdate(MapRendererQuery);
+
+
         }
+        protected override void OnStartRunning()
+        {
+            if (!childEntityBuffer.IsCreated)
+                childEntityBuffer = new NativeHashMap<int, Entity>(Enum.GetValues(typeof(MapLayer)).Length, Allocator.Persistent);
+        }
+
         protected override void OnUpdate()
         {
-            Entities.With(GetEntityQuery(mapArchetype.GetComponentTypes())).ForEach((entity) =>
-            {
-                if (EntityManager.HasComponent(entity, typeof(LinkedEntityGroup)))
-                {
-                    DynamicBuffer<Entity> children = EntityManager.GetBuffer<LinkedEntityGroup>(entity).Reinterpret<Entity>();
-                    if (children.Find(out Entity rootRenderer, x => EntityManager.HasComponent<MapRootRenderLayer>(x)))
-                    {
-                        DynamicBuffer<Entity> rootRendererChildren = (EntityManager.HasComponent<LinkedEntityGroup>(rootRenderer) ? EntityManager.GetBuffer<LinkedEntityGroup>(rootRenderer) : PostUpdateCommands.AddBuffer<LinkedEntityGroup>(rootRenderer)).Reinterpret<Entity>();
-                        NativeList<int> renderLayers = new NativeList<int>(Allocator.Temp);
-                        for (int i = 0; i < rootRendererChildren.Length; i++)
-                        {
-                            if (EntityManager.HasComponent<MapRenderLayer>(rootRendererChildren[i]) && EntityManager.HasComponent<RenderMesh>(rootRendererChildren[i]))
-                                renderLayers.Add((int)EntityManager.GetComponentData<MapRenderLayer>(rootRendererChildren[i]).layer);
-                        }
-                        RenderMesh renderData = EntityManager.GetSharedComponentData<RenderMesh>(rootRenderer);
-                        if (EntityManager.HasComponent<HighlightTile>(entity))
-                        {
-                            DynamicBuffer<HighlightTile> highlights = EntityManager.GetBuffer<HighlightTile>(entity);
-                            highlights.ToMultiHashMap(out NativeMultiHashMap<int, Point> highlightedTiles, highlights.Length, Allocator.Temp, x => (int)x.layer, x => x.point);
+            ComponentDataFromEntity<RenderMap> targetData = GetComponentDataFromEntity<RenderMap>(true);
+            BufferFromEntity<RenderMapLayerChild> childrenData = GetBufferFromEntity<RenderMapLayerChild>(false);
 
-                            foreach (var layer in highlightedTiles.GetKeyArray(Allocator.Temp))
-                            {
-                                if (layer == 0)
-                                    continue;
-                                UpdateMesh(renderData.mesh, layer, highlightedTiles.GetValuesForKey(layer), highlightedTiles.CountValuesForKey(layer), EntityManager.GetComponentData<MapHeader>(entity).width);
-                                if (!renderLayers.Contains(layer))
-                                {
-                                    AddLayerRenderer(rootRenderer, layer);
-                                    renderLayers.Add(layer);
-                                }
-                            }
+            Entities.With(MapRendererQuery).ForEach((entity) =>
+            {
+                
+                RenderMap target = targetData[entity];
+                if (EntityManager.HasComponent<HighlightTile>(target.map))
+                {
+                    childEntityBuffer.Clear();
+                    DynamicBuffer<RenderMapLayerChild> children = childrenData[entity];
+                    NativeList<int> renderLayers = new NativeList<int>(Allocator.Temp);
+                    for (int i = 0; i < children.Length; i++)
+                    {
+                        childEntityBuffer[(int)children[i].layer] = children[i].child;
+                    }
+                    DynamicBuffer<HighlightTile> highlights = EntityManager.GetBuffer<HighlightTile>(target.map);
+                    highlights.ToMultiHashMap(out NativeMultiHashMap<int, Point> points, highlights.Length, Allocator.Temp, x => (int)x.layer, x => x.point);
+                    Mesh mesh = EntityManager.GetSharedComponentData<RenderMesh>(entity).mesh;
+                    foreach (var layer in points.GetKeyArray(Allocator.Temp))
+                    {
+                        if (layer == 0)
+                            continue;
+                        UpdateMesh(mesh, layer, points.GetValuesForKey(layer), points.CountValuesForKey(layer), EntityManager.GetComponentData<MapHeader>(target.map).width);
+                        if (!childEntityBuffer.ContainsKey(layer))
+                        {
+                            childEntityBuffer.Add(layer, AddLayerRenderer(entity, layer));
                         }
                     }
                 }
             });
         }
 
+        protected override void OnStopRunning()
+        {
+            childEntityBuffer.Dispose();
+        }
         private Entity AddLayerRenderer(Entity parent, int layer)
         {
-            Entity entity = PostUpdateCommands.CreateEntity(layerRendererArchetype);
-            PostUpdateCommands.SetComponent(entity, new MapRenderLayer { layer = (MapLayer)layer });
-            PostUpdateCommands.SetSharedComponent(entity,
-new RenderMesh
-{
-    mesh = EntityManager.GetSharedComponentData<RenderMesh>(parent).mesh,
-    material = hoverMaterial,
-    subMesh = layer
-});
-            DynamicBuffer<LinkedEntityGroup> buffer = EntityManager.HasComponent<LinkedEntityGroup>(parent) ? EntityManager.GetBuffer<LinkedEntityGroup>(parent) : PostUpdateCommands.AddBuffer<LinkedEntityGroup>(parent);
-            buffer.Add(new LinkedEntityGroup { Value = entity });
+            Entity entity = PostUpdateCommands.CreateEntity(Archetypes.MapRendererChild);
+
+
+            PostUpdateCommands.SetSharedComponent(entity, new RenderMesh
+            {
+                mesh = EntityManager.GetSharedComponentData<RenderMesh>(parent).mesh,
+                material = hoverMaterial,
+                subMesh = layer
+            });
+            PostUpdateCommands.AddBuffer<RenderMapLayerChild>(parent).Add(new RenderMapLayerChild { layer = (MapLayer)layer, child = entity });
             return entity;
         }
         private void UpdateMesh(Mesh mesh, int layer, NativeMultiHashMap<int, Point>.Enumerator points, int size, ushort Width)
@@ -160,5 +106,8 @@ new RenderMesh
             }
             mesh.SetTriangles(triangles, layer);
         }
+
+
+
     }
 }

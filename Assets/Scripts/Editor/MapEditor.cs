@@ -59,6 +59,7 @@ namespace Reactics.Editors
                         ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
                         if (Physics.Raycast(ray, out hit) && debugger.MapRenderer.GetPoint(hit.point, out pointInfo))
                         {
+                            
                             debugger.MapRenderer.Hover(pointInfo);
                         }
                         else
@@ -137,11 +138,12 @@ namespace Reactics.Editors
         private void OnSceneInit(Scene scene)
         {
             this.InjectResources();
-            new GameObject("Map Debugger").Apply(obj =>
+            new GameObject("Map Debugger").Apply((GeneralUtils.ApplyDelegate<GameObject>)(obj =>
             {
                 debugger = obj.AddComponent<MapDebugger>();
                 debugger.MapRenderer.Map = Target as Map;
                 debugger.MapRenderer.FocusCamera(Scene.SceneView.camera);
+                
                 float maxDistance = debugger.MapRenderer.GetMaxCameraDistance();
                 Vector3 center = debugger.MapRenderer.GetCenter();
                 if (Vector3.Distance(center, Scene.SceneView.camera.transform.position) > maxDistance)
@@ -149,7 +151,7 @@ namespace Reactics.Editors
                 if (Scene.SceneView.pivot.y < center.y + maxDistance * 0.5f)
                     Scene.SceneView.pivot = new Vector3(Scene.SceneView.pivot.x, center.y + (maxDistance * 0.5f), Scene.SceneView.pivot.z);
                 Scene.SceneView.LookAt(center);
-            });
+            }));
         }
 
         private VisualElement OnCreateWindowInspector(VisualElement element)

@@ -68,17 +68,18 @@ namespace Reactics.Battle
     /// <summary>
     /// Marker Component to signal if an entity is rendering a specific MapLayer. BASE is ignored, as it's handled by the MapRootRenderLayer.
     /// </summary>
-    public struct MapRenderLayer : IComponentData
+    public struct RenderMap : IComponentData
     {
+        public Entity map;
+
+    }
+    public struct RenderMapLayerChild : IBufferElementData
+    {
+        public Entity child;
+
         public MapLayer layer;
     }
-    /// <summary>
-    /// Marker component to signal which entity is responsible for rendering the base layer. 
-    /// </summary>
-    public struct MapRootRenderLayer : IComponentData
-    {
-        public int lastVersion;
-    }
+
 
 
     /// <summary>
@@ -88,6 +89,7 @@ namespace Reactics.Battle
     {
         public Point point;
         public MapLayer layer;
+        
     }
     /// <summary>
     /// Component to represent movable entities on the map. Point holds the current coordinate they are on.
@@ -95,6 +97,21 @@ namespace Reactics.Battle
     public struct MapBody : IComponentData
     {
         public Point point;
+    }
+    /// <summary>
+    /// Component to signal MapBody entities to move. Add this to a MapBody, and a system will transition the body to the point. 
+    /// This Component is removed when <c>MapBody.point==MapBodyTranslation.transitionPoint=MapBodyTranslation.destinationPoint</c>
+    /// </summary>
+    public struct MapBodyTranslation : IComponentData
+    {
+        /// <summary>
+        /// Represents the next point the MapBody is supposed to move to.
+        /// </summary>
+        public Point transitionPoint;
+        /// <summary>
+        /// Represents the final point the MapBody should be on before removal.
+        /// </summary>
+        public Point destinationPoint;
     }
     /// <summary>
     /// Component to represent tile effects on the map. Point refers to the location of the tile.
