@@ -9,6 +9,7 @@ public struct CameraMovementData : IComponentData
 {
     public float2 movementDirection;
     public int speed;
+    public float offsetValue;
     public float3 cameraLookAtPoint;
     public float zoomMagnitude; //should always be above 0
     public float zoomDirectionAndStrength;

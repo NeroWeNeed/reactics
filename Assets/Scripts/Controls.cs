@@ -120,17 +120,6 @@ public class @Controls : IInputActionCollection, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""7f649279-8b24-416f-9909-3139fa815f1e"",
-                    ""path"": ""<Mouse>/position"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": ""Keyboard + Mouse"",
-                    ""action"": ""Hover"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
                     ""id"": ""03851877-34d6-493b-ac66-2218776c0ed8"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",

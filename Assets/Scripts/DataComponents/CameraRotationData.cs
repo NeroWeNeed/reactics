@@ -9,9 +9,11 @@ public struct CameraRotationData : IComponentData
 {
     public Vector2 rotationDirection;
     public float3 targetPosition;
+    public float3 lastPosition;
     public float speed;
     public int horizontalAngles;
     public int verticalAngles;
     public bool lockToHalfVerticalSphere; //admittedly this is stupid, and also it's more like a fourth of a sphere. so i'm gonna remove this.
     public bool rotating;
+    public float rotationTime;
 }

@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Users;
 using Unity.Mathematics;
+using System.Collections;
+using Reactics.Battle;
 
 [RequireComponent(typeof(PlayerInput))]
 public class BattlePlayer : MonoBehaviour
@@ -9,18 +11,37 @@ public class BattlePlayer : MonoBehaviour
     private static BattlePlayer _instance;
     public static BattlePlayer instance => _instance;
 
+    [SerializeField]
+    private Camera camera;
+
     public Controls input;
+
+    public PlayerInput playerInput;
 
     private void Awake()
     {
         _instance = this;
         input = new Controls();
+        playerInput = GetComponent<PlayerInput>();
         input.Enable();
     }
 
     private void OnDestroy()
     {
         input.Disable();
+    }
+
+    public ControlSchemes GetControlScheme()
+    {
+        if (playerInput.currentControlScheme == "Gamepad")
+            return ControlSchemes.Gamepad;
+        return ControlSchemes.KeyboardAndMouse;
+    }
+
+    public Ray GetMouseCursorWorldCoordinates(Vector2 mouseCoordinates)
+    {
+        //fuckin kill me this isn't how this is supposed to work dammit
+        return camera.ScreenPointToRay(mouseCoordinates);
     }
 /*
     [SerializeField]
