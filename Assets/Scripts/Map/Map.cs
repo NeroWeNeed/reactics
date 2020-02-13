@@ -2,58 +2,140 @@ using UnityEngine;
 using System.Runtime.CompilerServices;
 using System;
 using System.Collections;
+using Unity.Entities;
+using System.Linq;
 
-namespace Reactics.Battle.Map
+namespace Reactics.Battle
 {
+
+
     [CreateAssetMenu(fileName = "Map", menuName = "Reactics/Map", order = 0)]
-    public class Map : ScriptableObject, IEnumerable
+    public class Map : ScriptableObject, IEnumerable, ISerializationCallbackReceiver
     {
         [SerializeField]
-        private new string name;
+        private string _name = "Untitled Map";
 
-        public string Name => name;
 
-        [SerializeField]
-        private int width;
+        public string Name => _name;
 
-        public int Width => width;
 
         [SerializeField]
-        private int height;
+        private ushort _width = 8;
 
-        public int Height => height;
+
+        public ushort Width
+        {
+            get => _width;
+            private set
+            {
+                SetSize(value, _length);
+            }
+        }
 
         [SerializeField]
-        private Tile[] tiles;
+        private ushort _length = 8;
 
+        public ushort Length
+        {
+            get => _length;
+            private set
+            {
+                SetSize(_width, value);
+            }
+        }
+
+
+        [SerializeField]
+        private Tile[] _tiles;
+
+        public Tile[] tiles { get => _tiles; set => _tiles = value; }
+
+        [SerializeField]
+        private int _elevation;
+        public int Elevation
+        {
+            get => _elevation;
+        }
+
+        [SerializeField]
+        private SpawnGroup[] _spawnGroups;
+
+        public SpawnGroup[] spawnGroups { get => _spawnGroups; private set => _spawnGroups = value; }
+
+        public int TileCount => tiles.Length;
+
+        public int SpawnGroupCount => spawnGroups.Length;
+
+        private void Awake()
+        {
+            if (tiles == null || tiles.Length == 0)
+                tiles = new Tile[Length * Width];
+            else
+            {
+                SetSize(Width, Length, true);
+            }
+
+        }
+
+        /// <summary>
+        /// Calculates the index associated with the x and y coordinate provided.
+        /// </summary>
+        /// <param name="x">The x Coordinate</param>
+        /// <param name="y">The y Coordinate</param>
+        /// <return> The Index associated with the provided coordinates </return>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int IndexOf(int x, int y)
+        public int IndexOf(ushort x, ushort y)
         {
             return (y * Width) + x;
         }
+        /// <summary>
+        /// Calculates the index associated with the point provided.
+        /// </summary>
+        /// <param name="point">The Tile referencing the Point</param>
+        /// <return> The Index associated with the provided coordinates</return>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int IndexOf(Vector2Int coordinates)
+        public int IndexOf(Point point)
         {
-            return (coordinates.y * Width) + coordinates.x;
+            return (point.y * Width) + point.x;
         }
+        /// <summary>
+        /// Searches for the index the tile provided is located at.
+        /// </summary>
+        /// <param name="tile">The Tile to search</param>
+        /// <return> The Index of the tile provided. -1 if the tile doesn't exist in this Map.</return>
         public int IndexOf(Tile tile)
         {
             return Array.IndexOf(tiles, tile);
         }
+        /// <summary>
+        /// Calculates the Point from the index provided.
+        /// </summary>
+        /// <param name="index">The index of the Point</param>
+        /// <return> The point the index is associated with.</return>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector2Int CoordinatesOf(int index)
+        public Point PointOf(int index)
         {
-            return new Vector2Int(XCoordinateOf(index), YCoordinateOf(index));
+            return new Point(XPointOf(index), YPointOf(index));
         }
+        /// <summary>
+        /// Calculates the X coordinate of the index provided.
+        /// </summary>
+        /// <param name="index">The index of the Point</param>
+        /// <return> The x coordinate of the Point the index is associated with.</return>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int XCoordinateOf(int index)
+        public ushort XPointOf(int index)
         {
-            return index % Width;
+            return (ushort)(index % Width);
         }
+        /// <summary>
+        /// Calculates the Y coordinate of the index provided.
+        /// </summary>
+        /// <param name="index">The index of the Point</param>
+        /// <return> The y coordinate of the Point the index is associated with.</return>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int YCoordinateOf(int index)
+        public ushort YPointOf(int index)
         {
-            return index / Width;
+            return (ushort)(index / Width);
         }
 
 
@@ -62,8 +144,120 @@ namespace Reactics.Battle.Map
             return tiles.GetEnumerator();
         }
 
-        public Tile this[int x, int y] => tiles[IndexOf(x, y)];
-        public Tile this[Vector2Int coordinates] => tiles[IndexOf(coordinates)];
+        public Tile this[ushort x, ushort y] => tiles[IndexOf(x, y)];
+        public Tile this[Point point] => tiles[IndexOf(point)];
+        private void SetSize(ushort newWidth, ushort newLength, bool force = false)
+        {
+            if (newWidth <= 0 || newLength <= 0)
+                throw new UnityException("Map Width and Length must be larger than 0");
+
+            if (Width == newWidth && newLength == Length && !force)
+                return;
+            Tile[] newTiles = new Tile[newWidth * newLength];
+            int span = newLength > Length ? Length : newLength;
+            Array.Copy(tiles, newTiles, tiles.Length > newTiles.Length ? newTiles.Length : tiles.Length);
+
+            tiles = newTiles;
+            Width = newWidth;
+            Length = newLength;
+        }
+
+
+        /// <summary>
+        /// Creates a Map Entity from the Asset.
+        /// </summary>
+        /// <param name="entityManager">Entity Manager to use for Entity Creation. Defaults to <c>World.DefaultGameObjectInjectionWorld.EntityManager</c></param>
+        /// <returns>A Map Entity</returns>
+        public Entity CreateEntity(EntityManager entityManager = null)
+        {
+            EntityManager manager = entityManager ?? World.DefaultGameObjectInjectionWorld.EntityManager;
+            Entity entity = manager.CreateEntity(typeof(MapHeader), typeof(MapTile), typeof(MapSpawnGroupPoint));
+
+            manager.SetComponentData(entity, new MapHeader(this.Name, this.Width, this.Length, this.Elevation));
+            DynamicBuffer<MapTile> tileElement = manager.GetBuffer<MapTile>(entity);
+            tileElement.Capacity = Width * Length;
+            tileElement.CopyFrom(this.tiles.Select(x => new MapTile(x)).ToArray());
+            DynamicBuffer<MapSpawnGroupPoint> spawnGroupElement = manager.GetBuffer<MapSpawnGroupPoint>(entity);
+            for (int i = 0; i < this.spawnGroups.Length; i++)
+            {
+                foreach (var item in this.spawnGroups[i].points)
+                {
+                    spawnGroupElement.Add(new MapSpawnGroupPoint(item, i));
+                }
+            }
+            return entity;
+        }
+
+        public void OnBeforeSerialize()
+        {
+            if (tiles.Length != Width * Length)
+            {
+                SetSize(Width, Length, true);
+            }
+
+        }
+
+        public void OnAfterDeserialize()
+        {
+
+        }
+
+        public Tile GetTile(ushort x, ushort y)
+        {
+            return tiles[IndexOf(x, y)];
+        }
+
+        public Tile GetTile(Point point)
+        {
+            return tiles[IndexOf(point)];
+        }
+
+        public SpawnGroup GetSpawnGroup(int index)
+        {
+            return spawnGroups[index];
+        }
+        public Mesh GenerateMesh(Mesh mesh = null, float tileSize = 1f)
+        {
+            int vertexCount = (Width + 1) * (Length + 1);
+            Vector3[] vertices = new Vector3[vertexCount];
+            Vector2[] uv = new Vector2[vertexCount];
+            Vector3[] normals = new Vector3[vertexCount];
+            int[] triangles = new int[Width * Length * 6];
+            int x, y, index;
+            for (y = 0; y <= Length; y++)
+            {
+                for (x = 0; x <= Width; x++)
+                {
+                    index = y * (Width + 1) + x;
+                    vertices[index] = new Vector3(x * tileSize, 0, y * tileSize);
+                    uv[index] = new Vector2((float)x / (Width), (float)y / (Length));
+                    normals[index] = Vector3.up;
+                }
+            }
+            for (y = 0; y < Length; y++)
+            {
+                for (x = 0; x < Width; x++)
+                {
+                    index = (y * Width + x) * 6;
+                    triangles[index] = y * (Width + 1) + x;
+                    triangles[index + 1] = y * (Width + 1) + x + Width + 1;
+                    triangles[index + 2] = y * (Width + 1) + x + Width + 2;
+                    triangles[index + 3] = y * (Width + 1) + x;
+                    triangles[index + 4] = y * (Width + 1) + x + Width + 2;
+                    triangles[index + 5] = y * (Width + 1) + x + 1;
+                }
+            }
+            if (mesh == null)
+                mesh = new Mesh();
+            mesh.Clear();
+            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            mesh.vertices = vertices;
+            mesh.uv = uv;
+            mesh.triangles = triangles;
+            mesh.subMeshCount = 2;
+            mesh.normals = normals;
+            return mesh;
+        }
 
     }
 }

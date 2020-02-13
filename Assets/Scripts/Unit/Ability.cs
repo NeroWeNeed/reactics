@@ -1,4 +1,4 @@
-namespace Reactics.Battle.Unit
+namespace Reactics.Battle
 {
     using UnityEngine;
 

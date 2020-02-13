@@ -1,110 +1,68 @@
 using System;
-using System.Threading;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Reactics.Battle.Packets;
+using System.Linq;
+using Reactics.Util;
+
 
 namespace Reactics.Battle
 {
-
-    public class Server : PacketRouter
+    public class Server
     {
-
-
-        public ServerStatus Status { get; private set; }
-        public int MaxPlayers { get; private set; }
-
-        public int CurrentPlayers { get; private set; }
-
-        private readonly object joiningPlayerLock = new object();
-
-        private List<ServerPlayer> players;
-
-        private IConnectionFactory connectionFactory;
-
-        private List<IConnection> connections;
-
-        private ConcurrentQueue<IPacket> packets;
-
-        public Server(IConnectionFactory connectionFactory, int maxPlayers = 2) : base()
+        private readonly MessageHandler<Packet> messageHandler = new MessageHandler<Packet>();
+        private readonly List<object> fragments = new List<object>();
+        public Server(ServerFactory factory, params Type[] views)
         {
-            this.MaxPlayers = maxPlayers;
-            this.connectionFactory = connectionFactory;
-            Status = ServerStatus.ACCEPTING_PLAYERS;
-            players = new List<ServerPlayer>();
-            connections = new List<IConnection>();
+            Init(factory.Invoke, views);
         }
-
-        public IConnection Connect(connectionHandler handler)
+        public Server(params Type[] views)
         {
-            IConnection connection = connectionFactory.Create(this, handler);
-            connections.Add(connection);
-            return connection;
+            DefaultServerFactory factory = new DefaultServerFactory(messageHandler);
+            Init(factory.Invoke, views);
         }
-
-
-
-        [PacketRoute(typeof(JoinPacket))]
-        public void ProcessJoin(PacketSenderDelegate packetSender, JoinPacket packet)
+        private void Init(ServerFactory factory, params Type[] views)
         {
-            ServerPlayer player;
-            lock (joiningPlayerLock)
+            object t;
+            ServerView[] viewAttributes;
+            foreach (var type in views.Where(x => !this.fragments.Any(y => y.GetType().Equals(x))).Distinct())
             {
+                viewAttributes = (ServerView[])type.GetCustomAttributes(typeof(ServerView), true);
 
-                if (packet.PlayerType == ServerPlayerType.PLAYER && Status == ServerStatus.ACCEPTING_PLAYERS)
+                t = factory.Invoke(type);
+                this.fragments.Add(t);
+
+                messageHandler.SubscribeFromInstance(t);
+                if (viewAttributes != null && viewAttributes.Length > 0)
                 {
-
-                    
-                    if (CurrentPlayers < MaxPlayers)
-                    {
-                        CurrentPlayers++;
-                        player = new ServerPlayer(ServerPlayerType.PLAYER);
-                    }
-                    else
-                    {
-                        player = new ServerPlayer(ServerPlayerType.OBSERVER);
-                    }
+                    Init(factory, viewAttributes.SelectMany(x => x.types).Where(x => !this.fragments.Any(y => y.GetType().Equals(x))).ToArray());
                 }
-                else
-                {
-                    player = new ServerPlayer(ServerPlayerType.OBSERVER);
-                }
-
             }
-            players.Add(player);
-            packetSender.Invoke(new JoinResponsePacket(player.Type, player.Id));
         }
-
-
-
-    }
-
-
-
-
-
-    class ServerPlayer
-    {
-        public Guid Id { get; private set; }
-        public ServerPlayerType Type { get; private set; }
-        public ServerPlayer(ServerPlayerType type)
+        public void Publish<T>(T packet, MessageListener<Packet> callback) where T : Packet
         {
-            Id = System.Guid.NewGuid();
-            Type = type;
+            messageHandler.Publish(packet, callback);
         }
-
     }
-    public enum ServerPlayerType
+    class DefaultServerFactory
     {
-        PLAYER, OBSERVER
+        private readonly InjectActivator injectActivator = new InjectActivator();
+        public DefaultServerFactory(MessageHandler<Packet> handler)
+        {
+            injectActivator.Inject(handler);
+        }
+        public object Invoke(Type type)
+        {
+            return injectActivator.CreateInstance(type);
+        }
     }
-    public enum ServerStatus
+    [AttributeUsage(AttributeTargets.Class)]
+    public class ServerView : Attribute
     {
-        ACCEPTING_PLAYERS, PLAYING, FINISHED
+        public readonly Type[] types;
+        public ServerView(params Type[] types)
+        {
+            this.types = types;
+        }
     }
-    public struct PacketLog
-    {
-        public readonly long Timestamp;
-    }
-
-
+    public delegate object ServerFactory(Type type);
 }
