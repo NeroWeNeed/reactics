@@ -12,9 +12,6 @@ namespace Reactics.Battle
 
         [SerializeField]
         private Map map;
-
-
-
         public Map Map
         {
             get => map; set
@@ -46,10 +43,12 @@ namespace Reactics.Battle
         public ushort Width { get; private set; }
         public ushort Length { get; private set; }
 
+        private int[] hoverBuffer;
         private void Awake()
         {
             this.InjectResources();
-            mesh = GenerateMesh(Map?.Width ?? 0, Map?.Length ?? 0, tileSize);
+            if (map != null)
+                mesh = GenerateMesh(Map.Width, Map.Length, tileSize);
 
         }
         private void Start()
@@ -57,9 +56,9 @@ namespace Reactics.Battle
             GetComponent<MeshRenderer>().sharedMaterials = new Material[] { mapMaterial, hoverMaterial };
         }
 
-        public bool UpdateMesh(Map map)
+        public bool UpdateMesh(Map map, bool force = false)
         {
-            if (UpdateMesh(map, false))
+            if (UpdateMesh(map?.Width ?? 0, map?.Length ?? 0, 1, force))
             {
                 this.map = map;
                 return true;
@@ -67,7 +66,6 @@ namespace Reactics.Battle
             else
                 return false;
         }
-        private bool UpdateMesh(Map map, bool force) => UpdateMesh(map?.Width ?? 0, map?.Length ?? 0, 1, force);
         private bool UpdateMesh(Map map, float newTileSize, bool force = false) => UpdateMesh(map?.Width ?? 0, map?.Length ?? 0, newTileSize, force);
         private bool UpdateMesh(ushort newWidth, ushort newLength, float newTileSize, bool force = false)
         {
@@ -82,7 +80,7 @@ namespace Reactics.Battle
         private Mesh GenerateMesh(ushort width, ushort length, float tileSize) => GenerateMesh(new Mesh(), width, length, tileSize);
         private Mesh GenerateMesh(Mesh mesh, ushort width, ushort length, float tileSize)
         {
-            map.GenerateMesh(mesh,tileSize);
+            map.GenerateMesh(mesh, tileSize);
             Width = width;
             Length = length;
             this.tileSize = tileSize;
@@ -163,15 +161,11 @@ namespace Reactics.Battle
             }
             else
             {
+                if (hoverBuffer == null)
+                    hoverBuffer = new int[6];
 
-                mesh.SetTriangles(new int[6] {
-                point.y * (Width + 1) + point.x,
-                point.y * (Width + 1) + point.x + Width + 1,
-                point.y * (Width + 1) + point.x + Width + 2,
-                point.y * (Width + 1) + point.x,
-                point.y * (Width + 1) + point.x + Width + 2,
-                point.y * (Width + 1) + point.x + 1
-            }, 1);
+                Map.GenerateMeshTile(hoverBuffer, 0, point.x, point.y,map.Width);
+                mesh.SetTriangles(hoverBuffer, 1);
             }
         }
         /// <summary>
@@ -179,6 +173,7 @@ namespace Reactics.Battle
         /// </summary>
         public void UnHover()
         {
+
             mesh.SetTriangles(Array.Empty<int>(), 1);
         }
 

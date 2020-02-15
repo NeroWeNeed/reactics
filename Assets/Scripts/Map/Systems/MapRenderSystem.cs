@@ -24,12 +24,10 @@ namespace Reactics.Battle
         protected override void OnCreate()
         {
             this.InjectResources();
+            Debug.Log(hoverMaterial);
             Archetypes = new MapWorld.WorldArchetypes(EntityManager);
             MapRendererQuery = GetEntityQuery(Archetypes.MapRenderer.GetComponentTypes());
-
             RequireForUpdate(MapRendererQuery);
-
-
         }
         protected override void OnStartRunning()
         {
@@ -44,7 +42,7 @@ namespace Reactics.Battle
 
             Entities.With(MapRendererQuery).ForEach((entity) =>
             {
-                
+
                 RenderMap target = targetData[entity];
                 if (EntityManager.HasComponent<HighlightTile>(target.map))
                 {
@@ -65,9 +63,10 @@ namespace Reactics.Battle
                         UpdateMesh(mesh, layer, points.GetValuesForKey(layer), points.CountValuesForKey(layer), EntityManager.GetComponentData<MapHeader>(target.map).width);
                         if (!childEntityBuffer.ContainsKey(layer))
                         {
-                            childEntityBuffer.Add(layer, AddLayerRenderer(entity, layer));
+                            childEntityBuffer.Add(layer, AddLayerRenderer(entity, mesh, layer));
                         }
                     }
+
                 }
             });
         }
@@ -76,14 +75,13 @@ namespace Reactics.Battle
         {
             childEntityBuffer.Dispose();
         }
-        private Entity AddLayerRenderer(Entity parent, int layer)
+        private Entity AddLayerRenderer(Entity parent, Mesh mesh, int layer)
         {
+
             Entity entity = PostUpdateCommands.CreateEntity(Archetypes.MapRendererChild);
-
-
             PostUpdateCommands.SetSharedComponent(entity, new RenderMesh
             {
-                mesh = EntityManager.GetSharedComponentData<RenderMesh>(parent).mesh,
+                mesh = mesh,
                 material = hoverMaterial,
                 subMesh = layer
             });
@@ -94,15 +92,11 @@ namespace Reactics.Battle
         {
             int[] triangles = new int[size * 6];
             int index = 0;
+
             foreach (var point in points)
             {
-                triangles[index * 6] = point.y * (Width + 1) + point.x;
-                triangles[(index * 6) + 1] = point.y * (Width + 1) + point.x + Width + 1;
-                triangles[(index * 6) + 2] = point.y * (Width + 1) + point.x + Width + 2;
-                triangles[(index * 6) + 3] = point.y * (Width + 1) + point.x;
-                triangles[(index * 6) + 4] = point.y * (Width + 1) + point.x + Width + 2;
-                triangles[(index * 6) + 5] = point.y * (Width + 1) + point.x + 1;
-                index++;
+                Map.GenerateMeshTile(triangles,index,point.x,point.y,Width);
+                index+=6;
             }
             mesh.SetTriangles(triangles, layer);
         }

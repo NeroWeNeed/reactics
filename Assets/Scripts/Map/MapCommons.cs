@@ -2,10 +2,40 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Reactics.Util;
+using Unity.Collections;
+using Unity.Entities;
 using UnityEngine;
+using static Unity.Mathematics.math;
 
 namespace Reactics.Battle
 {
+    public static class MapUtils
+    {
+        public static void Expand(this Point point, ref MapHeader mapHeader, ref DynamicBuffer<MapTile> mapTiles, ushort amount, ref NativeList<Point> output)
+        {
+            output.Clear();
+
+            for (int y = -amount; y <= amount; y++)
+            {
+                for (int x = -amount; x <= amount; x++)
+                {
+                    if ((abs(x) + abs(y)) > amount)
+                        continue;
+                    if (Point.SafeCreate(point.x + x, point.y + y, mapHeader.width, mapHeader.length, out Point p) && !mapTiles.GetTile(mapHeader, p).Value.inaccessible)
+                    {
+                        output.Add(p);
+                    }
+
+                }
+            }
+
+        }
+        public static MapTile GetTile(this DynamicBuffer<MapTile> tiles, MapHeader header, Point point)
+        {
+            return tiles[point.y * header.width + point.x];
+        }
+    }
+
 
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
@@ -27,6 +57,55 @@ namespace Reactics.Battle
             this.y = Convert.ToUInt16(y);
         }
 
+        public Point ShiftX(int amount)
+        {
+            return new Point(x + amount, y);
+        }
+        public bool SafeShiftX(int amount, int max, out Point output)
+        {
+            int newX = x + amount;
+            if (newX < 0 || newX >= max)
+            {
+                output = default;
+                return false;
+            }
+            else
+            {
+                output = new Point(x + amount, y);
+                return true;
+            }
+        }
+        public Point ShiftY(int amount)
+        {
+            return new Point(x, y + amount);
+        }
+        public bool SafeShiftY(int amount, int max, out Point output)
+        {
+            int newY = y + amount;
+            if (newY < 0 || newY >= max)
+            {
+                output = default;
+                return false;
+            }
+            else
+            {
+                output = new Point(x, y + amount);
+                return true;
+            }
+        }
+        public static bool SafeCreate(int x, int y, int maxX, int maxY, out Point output)
+        {
+            if (x < 0 || x >= maxX || y < 0 || y >= maxY)
+            {
+                output = default;
+                return false;
+            }
+            else
+            {
+                output = new Point(x, y);
+                return true;
+            }
+        }
 
 
         public bool Equals(Point other)
@@ -52,7 +131,9 @@ namespace Reactics.Battle
             return "Point(" + x + "," + y + ")";
         }
 
+        public static Point operator +(Point thisPoint, Point otherPoint) => new Point(thisPoint.x + otherPoint.x, thisPoint.y + otherPoint.y);
 
+        public static Point operator -(Point thisPoint, Point otherPoint) => new Point(thisPoint.x - otherPoint.x, thisPoint.y - otherPoint.y);
         public static implicit operator Vector2Int(Point point) => new Vector2Int(Convert.ToInt32(point.x), Convert.ToInt32(point.y));
         public static explicit operator Point(Vector2Int vector)
         {
@@ -84,7 +165,7 @@ namespace Reactics.Battle
             return yCompare != 0 ? yCompare : a.x.CompareTo(b.x);
         }
 
-        private PointComparerByX() {}
+        private PointComparerByX() { }
     }
 
     public class PointComparerByY : IComparer<Point>
@@ -102,7 +183,7 @@ namespace Reactics.Battle
             int xCompare = a.x.CompareTo(b.x);
             return xCompare != 0 ? xCompare : a.y.CompareTo(b.y);
         }
-        private PointComparerByY() {}
+        private PointComparerByY() { }
     }
 
     [Serializable]
@@ -118,8 +199,28 @@ namespace Reactics.Battle
     public struct Tile
     {
         public int elevation;
+        public bool inaccessible;
+
+    }
+
+    public struct BlittableTile
+    {
+        public int elevation;
         public BlittableBool inaccessible;
-        public bool Accessible() => !inaccessible;
+
+        public static implicit operator Tile(BlittableTile tile) => new Tile
+        {
+            elevation = tile.elevation,
+            inaccessible = tile.inaccessible
+        };
+
+
+        public static explicit operator BlittableTile(Tile tile) => new BlittableTile
+        {
+            elevation = tile.elevation,
+            inaccessible = tile.inaccessible
+        };
+
     }
     public struct TileInfo : IEquatable<TileInfo>
     {

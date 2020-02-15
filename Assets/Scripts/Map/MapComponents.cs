@@ -1,3 +1,4 @@
+using System;
 using Unity.Collections;
 using Unity.Entities;
 
@@ -38,10 +39,10 @@ namespace Reactics.Battle
     /// </summary>
     public struct MapTile : IBufferElementData
     {
-        public readonly Tile Value;
+        public readonly BlittableTile Value;
         public MapTile(Tile value)
         {
-            Value = value;
+            Value = (BlittableTile) value;
         }
         public static explicit operator MapTile(Tile value)
         {
@@ -89,7 +90,7 @@ namespace Reactics.Battle
     {
         public Point point;
         public MapLayer layer;
-        
+
     }
     /// <summary>
     /// Component to represent movable entities on the map. Point holds the current coordinate they are on.
@@ -97,7 +98,12 @@ namespace Reactics.Battle
     public struct MapBody : IComponentData
     {
         public Point point;
+        //Measured in tiles/second
+        public float speed;
+
+        public Entity map;
     }
+
     /// <summary>
     /// Component to signal MapBody entities to move. Add this to a MapBody, and a system will transition the body to the point. 
     /// This Component is removed when <c>MapBody.point==MapBodyTranslation.transitionPoint=MapBodyTranslation.destinationPoint</c>
@@ -105,14 +111,27 @@ namespace Reactics.Battle
     public struct MapBodyTranslation : IComponentData
     {
         /// <summary>
-        /// Represents the next point the MapBody is supposed to move to.
-        /// </summary>
-        public Point transitionPoint;
-        /// <summary>
         /// Represents the final point the MapBody should be on before removal.
         /// </summary>
-        public Point destinationPoint;
+        public Point point;
     }
+    public struct MapBodyTranslationPoint : IBufferElementData, IComparable<MapBodyTranslationPoint>
+    {
+        public Point point;
+        public int order;
+
+        public float completion;
+
+        public int CompareTo(MapBodyTranslationPoint other)
+        {
+            return order.CompareTo(other.order);
+
+        }
+    }
+    /// <summary>
+    /// Component to signal to lock the entity onto it's point. Useful for initialization
+    /// </summary>
+    public struct MapBodySnap : IComponentData { }
     /// <summary>
     /// Component to represent tile effects on the map. Point refers to the location of the tile.
     /// </summary>

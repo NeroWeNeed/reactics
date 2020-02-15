@@ -145,6 +145,7 @@ namespace Reactics.Battle
         }
 
         public Tile this[ushort x, ushort y] => tiles[IndexOf(x, y)];
+        public Tile this[int x, int y] => tiles[IndexOf((ushort)x, (ushort)y)];
         public Tile this[Point point] => tiles[IndexOf(point)];
         private void SetSize(ushort newWidth, ushort newLength, bool force = false)
         {
@@ -218,33 +219,47 @@ namespace Reactics.Battle
         }
         public Mesh GenerateMesh(Mesh mesh = null, float tileSize = 1f)
         {
-            int vertexCount = (Width + 1) * (Length + 1);
+            int vertexCount = (Width) * (Length) * 4;
             Vector3[] vertices = new Vector3[vertexCount];
             Vector2[] uv = new Vector2[vertexCount];
             Vector3[] normals = new Vector3[vertexCount];
             int[] triangles = new int[Width * Length * 6];
             int x, y, index;
-            for (y = 0; y <= Length; y++)
+            for (y = 0; y < Length; y++)
             {
-                for (x = 0; x <= Width; x++)
+                for (x = 0; x < Width; x++)
                 {
-                    index = y * (Width + 1) + x;
-                    vertices[index] = new Vector3(x * tileSize, 0, y * tileSize);
+                    index = (y * (Width) + x) * 4;
+
+                    vertices[index] = new Vector3(x * tileSize, this[x, y].elevation * 0.25f, y * tileSize);
                     uv[index] = new Vector2((float)x / (Width), (float)y / (Length));
                     normals[index] = Vector3.up;
+
+                    vertices[index + 1] = new Vector3((x + 1) * tileSize, this[x, y].elevation * 0.25f, y * tileSize);
+                    uv[index + 1] = new Vector2(((float)x + 1) / (Width), (float)y / (Length));
+                    normals[index + 1] = Vector3.up;
+
+                    vertices[index + 2] = new Vector3(x * tileSize, this[x, y].elevation * 0.25f, (y + 1) * tileSize);
+                    uv[index + 2] = new Vector2((float)x / (Width), ((float)y + 1) / (Length));
+                    normals[index + 2] = Vector3.up;
+
+                    vertices[index + 3] = new Vector3((x + 1) * tileSize, this[x, y].elevation * 0.25f, (y + 1) * tileSize);
+                    uv[index + 3] = new Vector2(((float)x + 1) / (Width), ((float)y + 1) / (Length));
+                    normals[index + 3] = Vector3.up;
                 }
             }
             for (y = 0; y < Length; y++)
             {
                 for (x = 0; x < Width; x++)
                 {
-                    index = (y * Width + x) * 6;
-                    triangles[index] = y * (Width + 1) + x;
-                    triangles[index + 1] = y * (Width + 1) + x + Width + 1;
-                    triangles[index + 2] = y * (Width + 1) + x + Width + 2;
-                    triangles[index + 3] = y * (Width + 1) + x;
-                    triangles[index + 4] = y * (Width + 1) + x + Width + 2;
-                    triangles[index + 5] = y * (Width + 1) + x + 1;
+                    GenerateMeshTile(triangles, (y * Width + x) * 6, x, y,Width);
+                    /*                     index = (y * Width + x) * 6;
+                                        triangles[index] = y * (Width + 1) + x;
+                                        triangles[index + 1] = y * (Width + 1) + x + Width + 1;
+                                        triangles[index + 2] = y * (Width + 1) + x + Width + 2;
+                                        triangles[index + 3] = y * (Width + 1) + x;
+                                        triangles[index + 4] = y * (Width + 1) + x + Width + 2;
+                                        triangles[index + 5] = y * (Width + 1) + x + 1; */
                 }
             }
             if (mesh == null)
@@ -258,6 +273,24 @@ namespace Reactics.Battle
             mesh.normals = normals;
             return mesh;
         }
+        public static void GenerateMeshTile(int[] triangles, int index, int x, int y,int stride)
+        {
+            triangles[index] = (y * stride + x) * 4;
+            triangles[index + 1] = ((y * stride + x) * 4) + 2;
+            triangles[index + 2] = ((y * stride + x) * 4) + 1;
+            triangles[index + 3] = ((y * stride + x) * 4) + 2;
+            triangles[index + 4] = ((y * stride + x) * 4) + 3;
+            triangles[index + 5] = ((y * stride + x) * 4) + 1;
+        }
+        public static void GenerateMeshTiles(int[] triangles, int index,int stride, params Point[] points)
+        {
+            for (int i = 0; i < points.Length; i++)
+            {
+                GenerateMeshTile(triangles, index + (i * 6), points[i].x, points[i].y,stride);
+            }
+        }
+
+
 
     }
 }

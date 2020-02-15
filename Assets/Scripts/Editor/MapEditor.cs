@@ -59,7 +59,7 @@ namespace Reactics.Editors
                         ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
                         if (Physics.Raycast(ray, out hit) && debugger.MapRenderer.GetPoint(hit.point, out pointInfo))
                         {
-                            
+
                             debugger.MapRenderer.Hover(pointInfo);
                         }
                         else
@@ -126,8 +126,16 @@ namespace Reactics.Editors
                 tilePropertiesElement.CloneTree(tileElement);
                 tileElement.Q<Foldout>("header").text = $"X: {point.x}, Y: {point.y}";
                 tileElement.BindProperty(serializedObject.FindProperty("_tiles").GetArrayElementAtIndex(debugger.MapRenderer.Map.IndexOf(point)));
+                tileElement.RegisterCallback<ChangeEvent<int>>(x =>
+                {
+                    serializedObject.ApplyModifiedProperties();
+                    if (serializedObject.UpdateIfRequiredOrScript())
+                    {
+                        debugger.MapRenderer.UpdateMesh(Target as Map, true);
+                        Debug.Log("Updated");
+                    }
+                });
                 container.Add(tileElement);
-
             }
             else if (remove)
             {
@@ -143,7 +151,7 @@ namespace Reactics.Editors
                 debugger = obj.AddComponent<MapDebugger>();
                 debugger.MapRenderer.Map = Target as Map;
                 debugger.MapRenderer.FocusCamera(Scene.SceneView.camera);
-                
+
                 float maxDistance = debugger.MapRenderer.GetMaxCameraDistance();
                 Vector3 center = debugger.MapRenderer.GetCenter();
                 if (Vector3.Distance(center, Scene.SceneView.camera.transform.position) > maxDistance)

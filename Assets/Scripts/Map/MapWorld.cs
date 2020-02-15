@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Reactics.Battle
 {
-    
+
     public class MapWorld : World
     {
 
@@ -31,11 +31,11 @@ namespace Reactics.Battle
                 material = baseMaterial,
                 subMesh = 0
             });
-/*             EntityManager.SetSharedComponentData(mapRenderer, new MapRender
-            {
-                map = mapEntity
-                
-            }); */
+            /*             EntityManager.SetSharedComponentData(mapRenderer, new MapRender
+                        {
+                            map = mapEntity
+
+                        }); */
             //AddSystem(new MapHighlightSystem2(Archetypes));
         }
 
@@ -49,10 +49,10 @@ namespace Reactics.Battle
             public WorldArchetypes(EntityManager manager)
             {
                 Player = manager.CreateArchetype(typeof(MapPlayer));
-                MapBody = manager.CreateArchetype(typeof(MapBody), typeof(LocalToWorld));
+                MapBody = manager.CreateArchetype(typeof(MapBody), typeof(LocalToWorld), typeof(Translation), typeof(Rotation), typeof(Scale), typeof(RenderMesh));
                 Map = manager.CreateArchetype(typeof(MapHeader), typeof(MapTile), typeof(MapSpawnGroupPoint));
-                MapRenderer = manager.CreateArchetype(typeof(RenderMap),typeof(RenderMapLayerChild), typeof(RenderMesh), typeof(LocalToWorld),typeof(Translation));
-                MapRendererChild = manager.CreateArchetype(typeof(RenderMesh), typeof(LocalToWorld),typeof(Translation));
+                MapRenderer = manager.CreateArchetype(typeof(RenderMap), typeof(RenderMapLayerChild), typeof(RenderMesh), typeof(LocalToWorld), typeof(Translation));
+                MapRendererChild = manager.CreateArchetype(typeof(RenderMesh), typeof(LocalToWorld), typeof(Translation));
             }
         }
     }
