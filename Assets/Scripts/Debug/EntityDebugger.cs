@@ -1,9 +1,13 @@
 using System;
 using Reactics.Battle;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Rendering;
 using Unity.Transforms;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.LowLevel;
+
 namespace Reactics.Util
 {
 
@@ -23,8 +27,8 @@ namespace Reactics.Util
         private void Start()
         {
             this.InjectResources();
-
-
+            EditorApplication.playModeStateChanged += Cleanup;
+            World.DefaultGameObjectInjectionWorld = new World("Sample");
             EntityManager EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             MapWorld.WorldArchetypes Archetypes = new MapWorld.WorldArchetypes(EntityManager);
             var mapEntity = map.CreateEntity(EntityManager);
@@ -35,12 +39,13 @@ namespace Reactics.Util
                 material = baseMaterial,
                 subMesh = 0
             });
+
             EntityManager.SetComponentData(mapRenderer, new RenderMap
             {
                 map = mapEntity
 
             });
-            var systems = new Type[] { typeof(MapRenderSystem), typeof(MapBodyPathFindingSystem), typeof(MapBodyMovementSystem),typeof(MapBodyToWorldSystem) };
+            var systems = new Type[] { typeof(MapRenderSystem), typeof(MapBodyPathFindingSystem), typeof(MapBodyMovementSystem), typeof(MapBodyToWorldSystem), typeof(ExternalSimulationSystem) };
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(World.DefaultGameObjectInjectionWorld, systems);
 
 
@@ -69,6 +74,23 @@ namespace Reactics.Util
                 material = baseMaterial,
                 subMesh = 0
             });
+
+
+        }
+        private int previous = -1;
+        private void Cleanup(PlayModeStateChange state)
+        {
+            if (previous == -1)
+                previous = (int) state;
+            else if ((int)state != previous)
+            {
+                World.DisposeAllWorlds();
+                WordStorage.Instance.Dispose();
+                WordStorage.Instance = null;
+                ScriptBehaviourUpdateOrder.UpdatePlayerLoop(null);
+                previous = (int)state;
+            }
+
         }
     }
 }

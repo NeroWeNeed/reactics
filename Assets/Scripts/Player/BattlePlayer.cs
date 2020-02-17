@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using System.Collections;
 using Reactics.Battle;
 
-[RequireComponent(typeof(PlayerInput))]
+[RequireComponent(typeof(UnityEngine.InputSystem.PlayerInput))]
 public class BattlePlayer : MonoBehaviour
 {
     private static BattlePlayer _instance;
@@ -16,13 +16,13 @@ public class BattlePlayer : MonoBehaviour
 
     public Controls input;
 
-    public PlayerInput playerInput;
+    public UnityEngine.InputSystem.PlayerInput playerInput;
 
     private void Awake()
     {
         _instance = this;
         input = new Controls();
-        playerInput = GetComponent<PlayerInput>();
+        playerInput = GetComponent<UnityEngine.InputSystem.PlayerInput>();
         input.Enable();
     }
 
