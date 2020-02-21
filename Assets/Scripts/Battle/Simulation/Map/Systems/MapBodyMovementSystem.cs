@@ -78,7 +78,7 @@ namespace Reactics.Battle
     /// Used for determining paths from MapBodyTranslation Components.
     /// </summary>
     [UpdateInGroup(typeof(MapSystemGroup))]
-    [DisableAutoCreation]
+
     public class MapBodyPathFindingSystem : JobComponentSystem
     {
         private EntityQuery query;
@@ -86,8 +86,12 @@ namespace Reactics.Battle
         protected override void OnCreate()
         {
             query = EntityManager.CreateEntityQuery(typeof(MapBodyTranslation), typeof(MapBody));
-            ecbSystem = World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>();
             RequireForUpdate(query);
+        }
+        protected override void OnStartRunning()
+        {
+            ecbSystem = World.GetExistingSystem<BattleSimulationEntityCommandBufferSystem>();
+            Debug.Log(ecbSystem);
         }
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
@@ -100,6 +104,7 @@ namespace Reactics.Battle
                 //bodyFromEntity = GetComponentDataFromEntity<MapBody>(true),
                 CommandBuffer = ecbSystem.CreateCommandBuffer().ToConcurrent()
             };
+            
 
             var handle = job.Schedule(query, inputDeps);
 
@@ -135,7 +140,7 @@ namespace Reactics.Battle
                     var current = new Node
                     {
                         point = body.point,
-                        weight = Distance(body.point, translation.point),
+                        distanceToDestination = Distance(body.point, translation.point),
                         previousIndex = -1,
                         index = 0
                     };
@@ -148,7 +153,7 @@ namespace Reactics.Battle
                     Node node;
                     while (!current.point.Equals(translation.point))
                     {
-                        current.point.Expand(ref header, ref tiles, 1, ref pointBuffer);
+                        current.point.Expand(ref header, ref tiles, 1, PathExpandPattern.SQUARE, ref pointBuffer);
 
                         for (int i = 0; i < history.Length; i++)
                         {
@@ -169,7 +174,8 @@ namespace Reactics.Battle
                             node = new Node
                             {
                                 point = pointBuffer[i],
-                                weight = Distance(pointBuffer[i], translation.point),
+                                distanceToDestination = Distance(pointBuffer[i], translation.point),
+                                distanceFromExpansion = Distance(current.point, pointBuffer[i]),
                                 previousIndex = current.index,
                                 index = historyIndex++
                             };
@@ -208,20 +214,22 @@ namespace Reactics.Battle
 
             }
 
-            private float Distance(Point point, Point destination)
+            private int Distance(Point point, Point destination)
             {
                 return math.abs(point.x - destination.x) + math.abs(point.y - destination.y);
             }
             struct Node : IEquatable<Point>, IComparable<Node>
             {
                 public Point point;
-                public float weight;
+                public float distanceToDestination;
+                public int distanceFromExpansion;
                 public int previousIndex;
                 public int index;
 
                 public int CompareTo(Node other)
                 {
-                    return weight.CompareTo(other.weight);
+                    int compare = distanceToDestination.CompareTo(other.distanceToDestination);
+                    return compare != 0 ? compare : other.distanceFromExpansion.CompareTo(distanceFromExpansion);
                 }
 
                 public bool Equals(Point other)
@@ -256,7 +264,7 @@ namespace Reactics.Battle
                 tilesFromEntity = GetBufferFromEntity<MapTile>(),
                 meshData = GetArchetypeChunkSharedComponentType<RenderMesh>()
             };
-            
+
             return job.Run(query, inputDeps);
         }
 

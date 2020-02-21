@@ -7,6 +7,7 @@ using Unity.Transforms;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.LowLevel;
+using static Reactics.Util.GameLoop;
 
 namespace Reactics.Util
 {
@@ -27,9 +28,19 @@ namespace Reactics.Util
         private void Start()
         {
             this.InjectResources();
+            
+
+            var simSystems = new Type[] {  typeof(MapSystemGroup), typeof(MapBodyPathFindingSystem), typeof(MapBodyMovementSystem), typeof(MapBodyToWorldSystem) };
+            
+
+            World world = World.DefaultGameObjectInjectionWorld;
+            World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BattleSimulationSystemGroup>();
+            World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BattleSimulationEntityCommandBufferSystem>();
+
+            //SimulationWorld simulationWorld = new SimulationWorld("Sample Simulation", simSystems);
+            
             EditorApplication.playModeStateChanged += Cleanup;
-            World.DefaultGameObjectInjectionWorld = new World("Sample");
-            EntityManager EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            EntityManager EntityManager = world.EntityManager;
             MapWorld.WorldArchetypes Archetypes = new MapWorld.WorldArchetypes(EntityManager);
             var mapEntity = map.CreateEntity(EntityManager);
             var mapRenderer = EntityManager.CreateEntity(Archetypes.MapRenderer);
@@ -39,14 +50,16 @@ namespace Reactics.Util
                 material = baseMaterial,
                 subMesh = 0
             });
-
             EntityManager.SetComponentData(mapRenderer, new RenderMap
             {
                 map = mapEntity
-
             });
-            var systems = new Type[] { typeof(MapRenderSystem), typeof(MapBodyPathFindingSystem), typeof(MapBodyMovementSystem), typeof(MapBodyToWorldSystem), typeof(ExternalSimulationSystem) };
-            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(World.DefaultGameObjectInjectionWorld, systems);
+
+
+            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, simSystems);
+
+            //World.DefaultGameObjectInjectionWorld.GetExistingSystem<ExternalSimulationSystem>().SimulationWorld = simulationWorld;
+
 
 
             //world.AddSystem(new MapHighlightSystem2(Archetypes));
@@ -75,13 +88,12 @@ namespace Reactics.Util
                 subMesh = 0
             });
 
-
         }
         private int previous = -1;
         private void Cleanup(PlayModeStateChange state)
         {
             if (previous == -1)
-                previous = (int) state;
+                previous = (int)state;
             else if ((int)state != previous)
             {
                 World.DisposeAllWorlds();

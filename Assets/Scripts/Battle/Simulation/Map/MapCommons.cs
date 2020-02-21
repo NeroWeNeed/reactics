@@ -11,20 +11,32 @@ namespace Reactics.Battle
 {
     public static class MapUtils
     {
-        public static void Expand(this Point point, ref MapHeader mapHeader, ref DynamicBuffer<MapTile> mapTiles, ushort amount, ref NativeList<Point> output)
+        public static void Expand(this Point point, ref MapHeader mapHeader, ref DynamicBuffer<MapTile> mapTiles, ushort amount, PathExpandPattern pattern, ref NativeList<Point> output)
         {
             output.Clear();
-
+            Point p;
             for (int y = -amount; y <= amount; y++)
             {
                 for (int x = -amount; x <= amount; x++)
                 {
-                    if ((abs(x) + abs(y)) > amount)
-                        continue;
-                    if (Point.SafeCreate(point.x + x, point.y + y, mapHeader.width, mapHeader.length, out Point p) && !mapTiles.GetTile(mapHeader, p).Value.inaccessible)
+                    switch (pattern)
                     {
-                        output.Add(p);
+                        case PathExpandPattern.DIAMOND:
+                            if ((abs(x) + abs(y)) > amount)
+                                continue;
+                            if (Point.SafeCreate(point.x + x, point.y + y, mapHeader.width, mapHeader.length, out p) && !mapTiles.GetTile(mapHeader, p).Value.inaccessible)
+                            {
+                                output.Add(p);
+                            }
+                            break;
+                        case PathExpandPattern.SQUARE:
+                            if (Point.SafeCreate(point.x + x, point.y + y, mapHeader.width, mapHeader.length, out p) && !mapTiles.GetTile(mapHeader, p).Value.inaccessible)
+                            {
+                                output.Add(p);
+                            }
+                            break;
                     }
+
 
                 }
             }
@@ -34,6 +46,11 @@ namespace Reactics.Battle
         {
             return tiles[point.y * header.width + point.x];
         }
+    }
+
+    public enum PathExpandPattern
+    {
+        DIAMOND, SQUARE
     }
 
 

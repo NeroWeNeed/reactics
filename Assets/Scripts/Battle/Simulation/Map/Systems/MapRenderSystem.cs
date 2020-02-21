@@ -9,8 +9,9 @@ using System;
 
 namespace Reactics.Battle
 {
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
-    [UpdateBefore(typeof(RenderMeshSystemV2))]
+    
+    [UpdateInGroup(typeof(MapRenderSystemGroup))]
+
     [DisableAutoCreation]
     public class MapRenderSystem : ComponentSystem
     {
@@ -24,7 +25,6 @@ namespace Reactics.Battle
         protected override void OnCreate()
         {
             this.InjectResources();
-            Debug.Log(hoverMaterial);
             Archetypes = new MapWorld.WorldArchetypes(EntityManager);
             MapRendererQuery = GetEntityQuery(Archetypes.MapRenderer.GetComponentTypes());
             RequireForUpdate(MapRendererQuery);

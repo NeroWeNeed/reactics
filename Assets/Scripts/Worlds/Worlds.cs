@@ -38,7 +38,7 @@ namespace Reactics
             Map = map;
             Archetypes = new MapWorldArchetypes(EntityManager);
             this.GetOrCreateSystem<InitializationSystemGroup>();
-            this.GetOrCreateSystem<SimulationSystemGroup>();
+            this.GetOrCreateSystem<Unity.Entities.SimulationSystemGroup>();
 
         }
 
