@@ -22,6 +22,7 @@ namespace Reactics.Util
         {
             valueEntries = new ValueEntry[INITIAL_SIZE];
             keyEntries = new KeyEntry[INITIAL_SIZE];
+            
         }
         public PrivateKey Add(TValue value)
         {

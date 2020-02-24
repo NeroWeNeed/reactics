@@ -1,8 +1,10 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
+using UnityEngine;
 
 namespace Reactics.Util
 {
@@ -18,6 +20,33 @@ namespace Reactics.Util
 
                 output.Add(keySelector(elements[i]), valueSelector(elements[i]));
             }
+
+        }
+
+        public static bool AddIfMissing<K, V>(this ref NativeMultiHashMap<K, V> map, K key, V value) where K : struct, IEquatable<K> where V : struct, IEquatable<V>
+        {
+            var enumerator = map.GetValuesForKey(key);
+            while (enumerator.MoveNext())
+            {
+                if (enumerator.Current.Equals(value))
+                    return false;
+            }
+            map.Add(key, value);
+            return true;
+        }
+
+
+        public static bool ContentEquals<K, V>(this ref NativeMultiHashMap<K, V> self, ref NativeMultiHashMap<K, V> other) where K : struct, IEquatable<K> where V : struct, IEquatable<V>
+        {
+
+            if (!other.IsCreated)
+                return self.IsCreated == other.IsCreated;
+            var selfVA = self.GetValueArray(Allocator.TempJob);
+            var otherVA = other.GetValueArray(Allocator.TempJob);
+            bool result = selfVA.ArraysEqual(otherVA);
+            selfVA.Dispose();
+            otherVA.Dispose();
+            return result;
 
         }
     }

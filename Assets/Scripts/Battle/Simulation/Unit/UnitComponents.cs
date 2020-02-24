@@ -7,19 +7,9 @@ namespace Reactics.Battle
     /// <summary>
     /// Shared Component for referencing Unit Information
     /// </summary>
-    public struct UnitInfo : ISharedComponentData, IEquatable<UnitInfo>
+    public struct UnitData : IComponentData
     {
-        public Unit unit;
-
-        public bool Equals(UnitInfo other)
-        {
-            return unit == other.unit;
-        }
-
-        public override int GetHashCode()
-        {
-            return -1913094625 + EqualityComparer<Unit>.Default.GetHashCode(unit);
-        }
+        public BlobAssetReference<UnitBlob> unit;
     }
     /// <summary>
     /// Handles Recharging Action Meters and determining if the unit can act.

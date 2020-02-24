@@ -6,102 +6,132 @@ using Reactics.Util;
 using Unity.Transforms;
 using Unity.Jobs;
 using System;
+using System.Collections.Generic;
 
 namespace Reactics.Battle
 {
-    
-    [UpdateInGroup(typeof(MapRenderSystemGroup))]
 
+
+    [UpdateInGroup(typeof(MapRenderSystemGroup))]
     [DisableAutoCreation]
     public class MapRenderSystem : ComponentSystem
     {
-        private MapWorld.WorldArchetypes Archetypes;
-        private EntityQuery MapRendererQuery;
-        private NativeHashMap<int, Entity> childEntityBuffer;
+        public Mesh MapMesh { get; private set; }
+        private EntityQuery renderMapQuery;
 
         [ResourceField("Materials/Map/HoverMaterial.mat")]
         private Material hoverMaterial;
 
+        [ResourceField("Materials/Map/MapMaterial.mat")]
+        private Material mapMaterial;
+
+        private MapLayerRenderSystem mapLayerRenderSystem;
         protected override void OnCreate()
         {
             this.InjectResources();
-            Archetypes = new MapWorld.WorldArchetypes(EntityManager);
-            MapRendererQuery = GetEntityQuery(Archetypes.MapRenderer.GetComponentTypes());
-            RequireForUpdate(MapRendererQuery);
+            renderMapQuery = GetEntityQuery(new EntityQueryDesc
+            {
+                All = new ComponentType[] { typeof(RenderMap) },
+                None = new ComponentType[] { typeof(RenderMesh) }
+            });
+            RequireSingletonForUpdate<MapData>();
+            RequireSingletonForUpdate<MapRenderData>();
+            RequireForUpdate(renderMapQuery);
         }
         protected override void OnStartRunning()
         {
-            if (!childEntityBuffer.IsCreated)
-                childEntityBuffer = new NativeHashMap<int, Entity>(Enum.GetValues(typeof(MapLayer)).Length, Allocator.Persistent);
+            if (MapMesh == null)
+            {
+
+                var mapData = GetSingleton<MapData>();
+                var mapRenderData = GetSingleton<MapRenderData>();
+                ref var dataBlob = ref mapData.map.Value;
+
+                MapMesh = dataBlob.GenerateMesh(mapRenderData.tileSize, mapRenderData.elevationStep);
+            }
+        }
+        protected override void OnUpdate()
+        {
+            Entities.With(renderMapQuery).ForEach((Entity entity, ref RenderMap renderMap) =>
+            {
+                if (!EntityManager.HasComponent<RenderMesh>(entity))
+                {
+                    //TODO: Proper Materials for layers
+                    PostUpdateCommands.AddSharedComponent(entity, new RenderMesh
+                    {
+                        mesh = MapMesh,
+                        subMesh = (int)renderMap.layer,
+                        material = renderMap.layer == MapLayer.BASE ? mapMaterial : hoverMaterial
+                    });
+                }
+
+            });
+        }
+    }
+    [UpdateInGroup(typeof(MapRenderSystemGroup))]
+    [DisableAutoCreation]
+    public class MapLayerRenderSystem : ComponentSystem
+    {
+
+
+        private EntityQuery query;
+
+        private NativeMultiHashMap<int, Point> highlights;
+
+
+        protected override void OnCreate()
+        {
+            query = GetEntityQuery(typeof(HighlightTile));
+            query.SetChangedVersionFilter(typeof(HighlightTile));
+            RequireForUpdate(query);
+            RequireSingletonForUpdate<MapData>();
+
+        }
+        protected override void OnStopRunning()
+        {
+            if (highlights.IsCreated)
+                highlights.Dispose();
         }
 
         protected override void OnUpdate()
         {
-            ComponentDataFromEntity<RenderMap> targetData = GetComponentDataFromEntity<RenderMap>(true);
-            BufferFromEntity<RenderMapLayerChild> childrenData = GetBufferFromEntity<RenderMapLayerChild>(false);
+            NativeMultiHashMap<int, Point> tiles = new NativeMultiHashMap<int, Point>(16, Allocator.Persistent);
+            Entities.With(query).ForEach((DynamicBuffer<HighlightTile> highlights) =>
+            {
+                for (int i = 0; i < highlights.Length; i++)
+                    tiles.AddIfMissing((int)highlights[i].layer, highlights[i].point);
 
-            Entities.With(MapRendererQuery).ForEach((entity) =>
+            });
+
+
+
+            if (!highlights.IsCreated || !tiles.ContentEquals(ref highlights))
             {
 
-                RenderMap target = targetData[entity];
-                if (EntityManager.HasComponent<HighlightTile>(target.map))
+                if (highlights.IsCreated)
+                    highlights.Dispose();
+                highlights = tiles;
+                var renderSystem = World.GetOrCreateSystem<MapRenderSystem>();
+                var mapData = GetSingleton<MapData>();
+                var h = highlights.GetKeyArray(Allocator.TempJob);
+                foreach (var layer in h)
                 {
-                    childEntityBuffer.Clear();
-                    DynamicBuffer<RenderMapLayerChild> children = childrenData[entity];
-                    NativeList<int> renderLayers = new NativeList<int>(Allocator.Temp);
-                    for (int i = 0; i < children.Length; i++)
-                    {
-                        childEntityBuffer[(int)children[i].layer] = children[i].child;
-                    }
-                    DynamicBuffer<HighlightTile> highlights = EntityManager.GetBuffer<HighlightTile>(target.map);
-                    highlights.ToMultiHashMap(out NativeMultiHashMap<int, Point> points, highlights.Length, Allocator.Temp, x => (int)x.layer, x => x.point);
-                    Mesh mesh = EntityManager.GetSharedComponentData<RenderMesh>(entity).mesh;
-                    foreach (var layer in points.GetKeyArray(Allocator.Temp))
-                    {
-                        if (layer == 0)
-                            continue;
-                        UpdateMesh(mesh, layer, points.GetValuesForKey(layer), points.CountValuesForKey(layer), EntityManager.GetComponentData<MapHeader>(target.map).width);
-                        if (!childEntityBuffer.ContainsKey(layer))
-                        {
-                            childEntityBuffer.Add(layer, AddLayerRenderer(entity, mesh, layer));
-                        }
-                    }
+                    if (layer == 0)
+                        continue;
+                    NativeArray<int> triangles = new NativeArray<int>(highlights.CountValuesForKey(layer) * 6, Allocator.TempJob);
+
+
+                    MapUtils.GenerateMeshTileTriangles(ref triangles, 0, mapData.Width, highlights.GetValuesForKey(layer));
+                    renderSystem.MapMesh.SetTriangles(triangles.ToArray(), layer);
+                    triangles.Dispose();
 
                 }
-            });
-        }
-
-        protected override void OnStopRunning()
-        {
-            childEntityBuffer.Dispose();
-        }
-        private Entity AddLayerRenderer(Entity parent, Mesh mesh, int layer)
-        {
-
-            Entity entity = PostUpdateCommands.CreateEntity(Archetypes.MapRendererChild);
-            PostUpdateCommands.SetSharedComponent(entity, new RenderMesh
-            {
-                mesh = mesh,
-                material = hoverMaterial,
-                subMesh = layer
-            });
-            PostUpdateCommands.AddBuffer<RenderMapLayerChild>(parent).Add(new RenderMapLayerChild { layer = (MapLayer)layer, child = entity });
-            return entity;
-        }
-        private void UpdateMesh(Mesh mesh, int layer, NativeMultiHashMap<int, Point>.Enumerator points, int size, ushort Width)
-        {
-            int[] triangles = new int[size * 6];
-            int index = 0;
-
-            foreach (var point in points)
-            {
-                Map.GenerateMeshTile(triangles,index,point.x,point.y,Width);
-                index+=6;
+                h.Dispose();
             }
-            mesh.SetTriangles(triangles, layer);
+            else
+            {
+                tiles.Dispose();
+            }
         }
-
-
-
     }
 }

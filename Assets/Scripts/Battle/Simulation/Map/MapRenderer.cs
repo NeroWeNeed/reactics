@@ -1,4 +1,5 @@
 using System;
+using Reactics.Battle.Abilities;
 using Reactics.Util;
 using UnityEngine;
 
@@ -80,13 +81,15 @@ namespace Reactics.Battle
         private Mesh GenerateMesh(ushort width, ushort length, float tileSize) => GenerateMesh(new Mesh(), width, length, tileSize);
         private Mesh GenerateMesh(Mesh mesh, ushort width, ushort length, float tileSize)
         {
-            map.GenerateMesh(mesh, tileSize);
+            
+            //Mesh m = map.GenerateMesh(tileSize);
+            Mesh m = new Mesh();
             Width = width;
             Length = length;
             this.tileSize = tileSize;
-            GetComponent<MeshFilter>().sharedMesh = mesh;
-            GetComponent<MeshCollider>().sharedMesh = mesh;
-            return mesh;
+            GetComponent<MeshFilter>().sharedMesh = m;
+            GetComponent<MeshCollider>().sharedMesh = m;
+            return m;
         }
         /// <summary>
         /// Tries to approximate a <c>Point</c> from the provided World Point.
@@ -163,8 +166,8 @@ namespace Reactics.Battle
             {
                 if (hoverBuffer == null)
                     hoverBuffer = new int[6];
-
-                Map.GenerateMeshTile(hoverBuffer, 0, point.x, point.y,map.Width);
+                
+                MapUtils.GenerateMeshTileTriangles(hoverBuffer, 0, point.x, point.y, map.Width);
                 mesh.SetTriangles(hoverBuffer, 1);
             }
         }

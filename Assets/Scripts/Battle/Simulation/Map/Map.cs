@@ -1,16 +1,62 @@
-using UnityEngine;
-using System.Runtime.CompilerServices;
 using System;
 using System.Collections;
+using System.Runtime.CompilerServices;
+using Unity.Collections;
 using Unity.Entities;
-using System.Linq;
+using UnityEngine;
 
 namespace Reactics.Battle
 {
+    public interface IMap<Tile, SpawnGroup> where Tile : IMapTile where SpawnGroup : IMapSpawnGroup
+    {
+
+
+        ushort Width { get; }
+
+        ushort Length { get; }
+
+        int Elevation { get; }
+
+        ref Tile this[Point point]
+        {
+            get;
+        }
+        ref Tile this[int x, int y]
+        {
+            get;
+        }
+        ref Tile this[ushort x, ushort y]
+        {
+            get;
+        }
+
+        bool GetTile(Point point, out Tile mapTile);
+
+        int TileCount { get; }
+
+        ref SpawnGroup this[int index] { get; }
+        int SpawnGroupCount { get; }
+
+    }
+
+    public interface IMapTile
+    {
+        int Elevation { get; }
+        bool Inaccessible { get; }
+    }
+
+    public interface IMapSpawnGroup
+    {
+        Point this[int index] { get; }
+
+        int Count { get; }
+    }
+
+    // Asset
 
 
     [CreateAssetMenu(fileName = "Map", menuName = "Reactics/Map", order = 0)]
-    public class Map : ScriptableObject, IEnumerable, ISerializationCallbackReceiver
+    public class Map : ScriptableObject, IEnumerable, ISerializationCallbackReceiver, IMap<Tile, SpawnGroup>
     {
         [SerializeField]
         private string _name = "Untitled Map";
@@ -25,6 +71,7 @@ namespace Reactics.Battle
 
         public ushort Width
         {
+
             get => _width;
             private set
             {
@@ -65,6 +112,9 @@ namespace Reactics.Battle
         public int TileCount => tiles.Length;
 
         public int SpawnGroupCount => spawnGroups.Length;
+
+        public ref SpawnGroup this[int index] => ref spawnGroups[index];
+
 
         private void Awake()
         {
@@ -144,9 +194,9 @@ namespace Reactics.Battle
             return tiles.GetEnumerator();
         }
 
-        public Tile this[ushort x, ushort y] => tiles[IndexOf(x, y)];
-        public Tile this[int x, int y] => tiles[IndexOf((ushort)x, (ushort)y)];
-        public Tile this[Point point] => tiles[IndexOf(point)];
+        public ref Tile this[ushort x, ushort y] => ref tiles[IndexOf(x, y)];
+        public ref Tile this[int x, int y] => ref tiles[IndexOf((ushort)x, (ushort)y)];
+        public ref Tile this[Point point] => ref tiles[IndexOf(point)];
         private void SetSize(ushort newWidth, ushort newLength, bool force = false)
         {
             if (newWidth <= 0 || newLength <= 0)
@@ -164,29 +214,49 @@ namespace Reactics.Battle
         }
 
 
-        /// <summary>
-        /// Creates a Map Entity from the Asset.
-        /// </summary>
-        /// <param name="entityManager">Entity Manager to use for Entity Creation. Defaults to <c>World.DefaultGameObjectInjectionWorld.EntityManager</c></param>
-        /// <returns>A Map Entity</returns>
-        public Entity CreateEntity(EntityManager entityManager = null)
-        {
-            EntityManager manager = entityManager ?? World.DefaultGameObjectInjectionWorld.EntityManager;
-            Entity entity = manager.CreateEntity(typeof(MapHeader), typeof(MapTile), typeof(MapSpawnGroupPoint));
 
-            manager.SetComponentData(entity, new MapHeader(this.Name, this.Width, this.Length, this.Elevation));
-            DynamicBuffer<MapTile> tileElement = manager.GetBuffer<MapTile>(entity);
-            tileElement.Capacity = Width * Length;
-            tileElement.CopyFrom(this.tiles.Select(x => new MapTile(x)).ToArray());
-            DynamicBuffer<MapSpawnGroupPoint> spawnGroupElement = manager.GetBuffer<MapSpawnGroupPoint>(entity);
-            for (int i = 0; i < this.spawnGroups.Length; i++)
+        public MapData CreateComponent() => new MapData { map = CreateBlob() };
+        public BlobAssetReference<MapBlob> CreateBlob()
+        {
+            BlobBuilder builder = new BlobBuilder(Allocator.Temp);
+            ref MapBlob mapBlob = ref builder.ConstructRoot<MapBlob>();
+            builder.AllocateString(ref mapBlob.name, name);
+            mapBlob.width = Width;
+            mapBlob.length = Length;
+            mapBlob.elevation = Elevation;
+            BlobBuilderArray<BlittableTile> tiles = builder.Allocate(ref mapBlob.tiles, Width * Length);
+            int index;
+            for (ushort x = 0; x < Width; x++)
             {
-                foreach (var item in this.spawnGroups[i].points)
+                for (ushort y = 0; y < Length; y++)
                 {
-                    spawnGroupElement.Add(new MapSpawnGroupPoint(item, i));
+                    index = IndexOf(x, y);
+                    tiles[index] = new BlittableTile
+                    {
+                        elevation = this.tiles[index].elevation,
+                        inaccessible = this.tiles[index].inaccessible
+                    };
                 }
             }
-            return entity;
+/*             BlobBuilderArray<MapBlobSpawnGroup> spawnGroups = builder.Allocate(ref mapBlob.spawnGroups, this.spawnGroups.Length);
+
+            for (int i = 0; i < spawnGroups.Length; i++)
+            {
+                if (this.spawnGroups[i].points.Length > 0)
+                {
+                    BlobBuilderArray<Point> spawnGroupPoints = builder.Allocate(ref mapBlob.spawnGroups[i].points, this.spawnGroups[i].points.Length);
+
+                    for (int j = 0; j < spawnGroupPoints.Length; j++)
+                    {
+
+                        spawnGroupPoints[j] = this.spawnGroups[i].points[j];
+                    }
+                }
+            } */
+            BlobAssetReference<MapBlob> blob = builder.CreateBlobAssetReference<MapBlob>(Allocator.Persistent);
+            builder.Dispose();
+            return blob;
+
         }
 
         public void OnBeforeSerialize()
@@ -217,80 +287,81 @@ namespace Reactics.Battle
         {
             return spawnGroups[index];
         }
-        public Mesh GenerateMesh(Mesh mesh = null, float tileSize = 1f)
+
+        public bool GetTile(Point point, out Tile mapTile)
         {
-            int vertexCount = (Width) * (Length) * 4;
-            Vector3[] vertices = new Vector3[vertexCount];
-            Vector2[] uv = new Vector2[vertexCount];
-            Vector3[] normals = new Vector3[vertexCount];
-            int[] triangles = new int[Width * Length * 6];
-            int x, y, index;
-            for (y = 0; y < Length; y++)
+            int index = (point.y * Width) + point.x;
+            if (index < 0 || index >= tiles.Length)
             {
-                for (x = 0; x < Width; x++)
-                {
-                    index = (y * (Width) + x) * 4;
-
-                    vertices[index] = new Vector3(x * tileSize, this[x, y].elevation * 0.25f, y * tileSize);
-                    uv[index] = new Vector2((float)x / (Width), (float)y / (Length));
-                    normals[index] = Vector3.up;
-
-                    vertices[index + 1] = new Vector3((x + 1) * tileSize, this[x, y].elevation * 0.25f, y * tileSize);
-                    uv[index + 1] = new Vector2(((float)x + 1) / (Width), (float)y / (Length));
-                    normals[index + 1] = Vector3.up;
-
-                    vertices[index + 2] = new Vector3(x * tileSize, this[x, y].elevation * 0.25f, (y + 1) * tileSize);
-                    uv[index + 2] = new Vector2((float)x / (Width), ((float)y + 1) / (Length));
-                    normals[index + 2] = Vector3.up;
-
-                    vertices[index + 3] = new Vector3((x + 1) * tileSize, this[x, y].elevation * 0.25f, (y + 1) * tileSize);
-                    uv[index + 3] = new Vector2(((float)x + 1) / (Width), ((float)y + 1) / (Length));
-                    normals[index + 3] = Vector3.up;
-                }
+                mapTile = default;
+                return false;
             }
-            for (y = 0; y < Length; y++)
+            else
             {
-                for (x = 0; x < Width; x++)
-                {
-                    GenerateMeshTile(triangles, (y * Width + x) * 6, x, y,Width);
-                    /*                     index = (y * Width + x) * 6;
-                                        triangles[index] = y * (Width + 1) + x;
-                                        triangles[index + 1] = y * (Width + 1) + x + Width + 1;
-                                        triangles[index + 2] = y * (Width + 1) + x + Width + 2;
-                                        triangles[index + 3] = y * (Width + 1) + x;
-                                        triangles[index + 4] = y * (Width + 1) + x + Width + 2;
-                                        triangles[index + 5] = y * (Width + 1) + x + 1; */
-                }
-            }
-            if (mesh == null)
-                mesh = new Mesh();
-            mesh.Clear();
-            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-            mesh.vertices = vertices;
-            mesh.uv = uv;
-            mesh.triangles = triangles;
-            mesh.subMeshCount = 2;
-            mesh.normals = normals;
-            return mesh;
-        }
-        public static void GenerateMeshTile(int[] triangles, int index, int x, int y,int stride)
-        {
-            triangles[index] = (y * stride + x) * 4;
-            triangles[index + 1] = ((y * stride + x) * 4) + 2;
-            triangles[index + 2] = ((y * stride + x) * 4) + 1;
-            triangles[index + 3] = ((y * stride + x) * 4) + 2;
-            triangles[index + 4] = ((y * stride + x) * 4) + 3;
-            triangles[index + 5] = ((y * stride + x) * 4) + 1;
-        }
-        public static void GenerateMeshTiles(int[] triangles, int index,int stride, params Point[] points)
-        {
-            for (int i = 0; i < points.Length; i++)
-            {
-                GenerateMeshTile(triangles, index + (i * 6), points[i].x, points[i].y,stride);
+                mapTile = tiles[(point.y * Width) + point.x];
+                return true;
             }
         }
-
-
-
     }
+
+    // Blobs
+
+    public struct MapBlob : IMap<BlittableTile, MapBlobSpawnGroup>
+    {
+        public BlobString name;
+
+        public ushort width;
+
+        public ushort length;
+
+        public int elevation;
+
+        public BlobArray<BlittableTile> tiles;
+
+        public BlobArray<MapBlobSpawnGroup> spawnGroups;
+
+        public ref MapBlobSpawnGroup this[int index] => ref spawnGroups[index];
+
+        public ref BlittableTile this[int x, int y] => ref tiles[(y * width) + x];
+
+        public ref BlittableTile this[ushort x, ushort y] => ref tiles[(y * width) + x];
+
+        public ref BlittableTile this[Point point] => ref tiles[(point.y * width) + point.x];
+
+        public ushort Width => width;
+
+        public ushort Length => length;
+
+        public int Elevation => elevation;
+
+        public int TileCount => tiles.Length;
+
+        public int SpawnGroupCount => spawnGroups.Length;
+
+        public bool GetTile(Point point, out BlittableTile mapTile)
+        {
+            int index = (point.y * width) + point.x;
+            if (index < 0 || index >= tiles.Length)
+            {
+                mapTile = default;
+                return false;
+            }
+            else
+            {
+                mapTile = tiles[(point.y * width) + point.x];
+                return true;
+            }
+
+        }
+    }
+
+    public struct MapBlobSpawnGroup : IMapSpawnGroup
+    {
+        public BlobArray<Point> points;
+
+        public Point this[int index] => points[index];
+
+        public int Count => points.Length;
+    }
+
 }

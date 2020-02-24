@@ -7,7 +7,6 @@ using Unity.Transforms;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.LowLevel;
-using static Reactics.Util.GameLoop;
 
 namespace Reactics.Util
 {
@@ -28,42 +27,38 @@ namespace Reactics.Util
         private void Start()
         {
             this.InjectResources();
-            
 
-            var simSystems = new Type[] {  typeof(MapSystemGroup), typeof(MapBodyPathFindingSystem), typeof(MapBodyMovementSystem), typeof(MapBodyToWorldSystem) };
-            
+
+            var simSystems = new Type[] { typeof(MapSystemGroup), typeof(MapRenderSystemGroup), typeof(MapRenderSystem), typeof(MapLayerRenderSystem) };
+
 
             World world = World.DefaultGameObjectInjectionWorld;
             World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BattleSimulationSystemGroup>();
             World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BattleSimulationEntityCommandBufferSystem>();
 
             //SimulationWorld simulationWorld = new SimulationWorld("Sample Simulation", simSystems);
-            
+
             EditorApplication.playModeStateChanged += Cleanup;
             EntityManager EntityManager = world.EntityManager;
-            MapWorld.WorldArchetypes Archetypes = new MapWorld.WorldArchetypes(EntityManager);
-            var mapEntity = map.CreateEntity(EntityManager);
-            var mapRenderer = EntityManager.CreateEntity(Archetypes.MapRenderer);
-            EntityManager.SetSharedComponentData(mapRenderer, new RenderMesh
-            {
-                mesh = map.GenerateMesh(),
-                material = baseMaterial,
-                subMesh = 0
+            var mapEntity = EntityManager.CreateEntity(typeof(MapData),typeof(MapRenderData));
+
+            EntityManager.SetComponentData(mapEntity, map.CreateComponent());
+            EntityManager.SetComponentData(mapEntity,new MapRenderData {
+                tileSize = 1f,
+                elevationStep = 0.25f
             });
-            EntityManager.SetComponentData(mapRenderer, new RenderMap
+            var renderMap = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
+            var renderMap2 = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
+            var otherHighlightEntity = EntityManager.CreateEntity(typeof(HighlightTile));
+            EntityManager.SetComponentData(renderMap, new RenderMap
             {
-                map = mapEntity
+                layer = MapLayer.BASE
             });
-
-
-            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, simSystems);
-
-            //World.DefaultGameObjectInjectionWorld.GetExistingSystem<ExternalSimulationSystem>().SimulationWorld = simulationWorld;
-
-
-
-            //world.AddSystem(new MapHighlightSystem2(Archetypes));
-            DynamicBuffer<HighlightTile> highlights = EntityManager.AddBuffer<HighlightTile>(mapEntity);
+            EntityManager.SetComponentData(renderMap2, new RenderMap
+            {
+                layer = MapLayer.HOVER
+            });
+            DynamicBuffer<HighlightTile> highlights = EntityManager.AddBuffer<HighlightTile>(otherHighlightEntity);
             highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
             highlights.Add(new HighlightTile { point = new Point(2, 0), layer = MapLayer.HOVER });
             highlights.Add(new HighlightTile { point = new Point(0, 4), layer = MapLayer.HOVER });
@@ -74,7 +69,6 @@ namespace Reactics.Util
             EntityManager.SetComponentData(body, new MapBody
             {
                 point = new Point(0, 0),
-                map = mapEntity,
                 speed = 4
             });
             EntityManager.SetComponentData(body, new MapBodyTranslation
@@ -88,6 +82,41 @@ namespace Reactics.Util
                 subMesh = 0
             });
 
+            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, simSystems);
+            /* 
+                        
+
+                        //World.DefaultGameObjectInjectionWorld.GetExistingSystem<ExternalSimulationSystem>().SimulationWorld = simulationWorld;
+
+
+
+
+                        //world.AddSystem(new MapHighlightSystem2(Archetypes));
+                        DynamicBuffer<HighlightTile> highlights = EntityManager.AddBuffer<HighlightTile>(mapEntity);
+                        highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(2, 0), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(0, 4), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(6, 6), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
+
+                        var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(Translation));
+                        EntityManager.SetComponentData(body, new MapBody
+                        {
+                            point = new Point(0, 0),
+                            map = mapEntity,
+                            speed = 4
+                        });
+                        EntityManager.SetComponentData(body, new MapBodyTranslation
+                        {
+                            point = new Point(4, 5)
+                        });
+                        EntityManager.SetSharedComponentData(body, new RenderMesh
+                        {
+                            mesh = mesh,
+                            material = baseMaterial,
+                            subMesh = 0
+                        });
+             */
         }
         private int previous = -1;
         private void Cleanup(PlayModeStateChange state)

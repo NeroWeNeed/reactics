@@ -11,9 +11,105 @@ namespace Reactics.Battle
 {
     public static class MapUtils
     {
-        public static void Expand(this Point point, ref MapHeader mapHeader, ref DynamicBuffer<MapTile> mapTiles, ushort amount, PathExpandPattern pattern, ref NativeList<Point> output)
+
+        public static Mesh GenerateMesh(this ref MapBlob map, float tileSize = 1f,float elevationStep = 0.25f)
         {
-            output.Clear();
+
+            int vertexCount = map.Width * map.Length * 4;
+            Vector3[] vertices = new Vector3[vertexCount];
+            Vector2[] uv = new Vector2[vertexCount];
+            Vector3[] normals = new Vector3[vertexCount];
+            int[] triangles = new int[map.Width * map.Length * 6];
+            int x, y, index;
+            for (y = 0; y < map.Length; y++)
+            {
+                for (x = 0; x < map.Width; x++)
+                {
+                    index = (y * map.Width + x) * 4;
+
+                    vertices[index] = new Vector3(x * tileSize, map[x, y].Elevation * elevationStep, y * tileSize);
+                    uv[index] = new Vector2((float)x / map.Width, (float)y / map.Length);
+                    normals[index] = Vector3.up;
+
+                    vertices[index + 1] = new Vector3((x + 1) * tileSize, map[x, y].Elevation * elevationStep, y * tileSize);
+                    uv[index + 1] = new Vector2(((float)x + 1) / map.Width, (float)y / map.Length);
+                    normals[index + 1] = Vector3.up;
+
+                    vertices[index + 2] = new Vector3(x * tileSize, map[x, y].Elevation * elevationStep, (y + 1) * tileSize);
+                    uv[index + 2] = new Vector2((float)x / map.Width, ((float)y + 1) / map.Length);
+                    normals[index + 2] = Vector3.up;
+
+                    vertices[index + 3] = new Vector3((x + 1) * tileSize, map[x, y].Elevation * elevationStep, (y + 1) * tileSize);
+                    uv[index + 3] = new Vector2(((float)x + 1) / map.Width, ((float)y + 1) / map.Length);
+                    normals[index + 3] = Vector3.up;
+                }
+            }
+            for (y = 0; y < map.Length; y++)
+            {
+                for (x = 0; x < map.Width; x++)
+                {
+                    GenerateMeshTileTriangles(triangles, (y * map.Width + x) * 6, x, y, map.Width);
+                }
+            }
+
+            Mesh mesh = new Mesh();
+            mesh.Clear();
+            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            mesh.vertices = vertices;
+            mesh.uv = uv;
+            mesh.triangles = triangles;
+            mesh.subMeshCount = 2;
+            mesh.normals = normals;
+            return mesh;
+        }
+
+
+        public static void GenerateMeshTileTriangles(int[] triangles, int index, int x, int y, int stride)
+        {
+            triangles[index] = (y * stride + x) * 4;
+            triangles[index + 1] = ((y * stride + x) * 4) + 2;
+            triangles[index + 2] = ((y * stride + x) * 4) + 1;
+            triangles[index + 3] = ((y * stride + x) * 4) + 2;
+            triangles[index + 4] = ((y * stride + x) * 4) + 3;
+            triangles[index + 5] = ((y * stride + x) * 4) + 1;
+        }
+        public static void GenerateMeshTileTriangles(ref NativeArray<int> triangles, int index, int x, int y, int stride)
+        {
+            triangles[index] = (y * stride + x) * 4;
+            triangles[index + 1] = ((y * stride + x) * 4) + 2;
+            triangles[index + 2] = ((y * stride + x) * 4) + 1;
+            triangles[index + 3] = ((y * stride + x) * 4) + 2;
+            triangles[index + 4] = ((y * stride + x) * 4) + 3;
+            triangles[index + 5] = ((y * stride + x) * 4) + 1;
+        }
+
+        public static void GenerateMeshTileTriangles(int[] triangles, int index, int stride, params Point[] points)
+        {
+            for (int i = 0; i < points.Length; i++)
+            {
+                GenerateMeshTileTriangles(triangles, index + (i * 6), points[i].x, points[i].y, stride);
+            }
+        }
+        public static void GenerateMeshTileTriangles(int[] triangles, int index, int stride, IEnumerator<Point> points)
+        {
+            for (int i = 0; points.MoveNext(); i++)
+            {
+                GenerateMeshTileTriangles(triangles, index + (i * 6), points.Current.x, points.Current.y, stride);
+            }
+
+        }
+        public static void GenerateMeshTileTriangles(ref NativeArray<int> triangles, int index, int stride, IEnumerator<Point> points)
+        {
+            for (int i = 0; points.MoveNext(); i++)
+            {
+                GenerateMeshTileTriangles(ref triangles, index + (i * 6), points.Current.x, points.Current.y, stride);
+            }
+
+        }
+
+        public static NativeList<Point> Expand(this ref Point point, ref MapBlob map, ushort amount, PathExpandPattern pattern, Allocator allocator)
+        {
+            NativeList<Point> output = new NativeList<Point>(allocator);
             Point p;
             for (int y = -amount; y <= amount; y++)
             {
@@ -24,13 +120,13 @@ namespace Reactics.Battle
                         case PathExpandPattern.DIAMOND:
                             if ((abs(x) + abs(y)) > amount)
                                 continue;
-                            if (Point.SafeCreate(point.x + x, point.y + y, mapHeader.width, mapHeader.length, out p) && !mapTiles.GetTile(mapHeader, p).Value.inaccessible)
+                            if (Point.SafeCreate(point.x + x, point.y + y, map.width, map.length, out p) && !map[p].Inaccessible)
                             {
                                 output.Add(p);
                             }
                             break;
                         case PathExpandPattern.SQUARE:
-                            if (Point.SafeCreate(point.x + x, point.y + y, mapHeader.width, mapHeader.length, out p) && !mapTiles.GetTile(mapHeader, p).Value.inaccessible)
+                            if (Point.SafeCreate(point.x + x, point.y + y, map.width, map.length, out p) && !map[p].Inaccessible)
                             {
                                 output.Add(p);
                             }
@@ -41,11 +137,47 @@ namespace Reactics.Battle
                 }
             }
 
+            return output;
         }
-        public static MapTile GetTile(this DynamicBuffer<MapTile> tiles, MapHeader header, Point point)
-        {
-            return tiles[point.y * header.width + point.x];
-        }
+
+        /* 
+                public static void Expand(this Point point, ref MapHeader mapHeader, ref DynamicBuffer<MapTile> mapTiles, ushort amount, PathExpandPattern pattern, ref NativeList<Point> output)
+                {
+
+                    output.Clear();
+                    Point p;
+                    for (int y = -amount; y <= amount; y++)
+                    {
+                        for (int x = -amount; x <= amount; x++)
+                        {
+                            switch (pattern)
+                            {
+                                case PathExpandPattern.DIAMOND:
+                                    if ((abs(x) + abs(y)) > amount)
+                                        continue;
+                                    if (Point.SafeCreate(point.x + x, point.y + y, mapHeader.width, mapHeader.length, out p) && !mapTiles.GetTile(mapHeader, p).Value.inaccessible)
+                                    {
+                                        output.Add(p);
+                                    }
+                                    break;
+                                case PathExpandPattern.SQUARE:
+                                    if (Point.SafeCreate(point.x + x, point.y + y, mapHeader.width, mapHeader.length, out p) && !mapTiles.GetTile(mapHeader, p).Value.inaccessible)
+                                    {
+                                        output.Add(p);
+                                    }
+                                    break;
+                            }
+
+
+                        }
+                    }
+
+                }
+         */
+
+
+
+
     }
 
     public enum PathExpandPattern
@@ -205,25 +337,39 @@ namespace Reactics.Battle
 
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct SpawnGroup
+    public struct SpawnGroup : IMapSpawnGroup
     {
         [SerializeField]
         public Point[] points;
+
+        public Point this[int index] => points[index];
+
+        public int Count => points.Length;
     }
 
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Tile
+    public struct Tile : IMapTile
     {
         public int elevation;
+
+
         public bool inaccessible;
 
+        public int Elevation => elevation;
+
+        public bool Inaccessible => inaccessible;
     }
 
-    public struct BlittableTile
+    public struct BlittableTile : IMapTile
     {
+
         public int elevation;
+
         public BlittableBool inaccessible;
+        public int Elevation { get => elevation; }
+
+        public bool Inaccessible { get => inaccessible; }
 
         public static implicit operator Tile(BlittableTile tile) => new Tile
         {
@@ -273,5 +419,6 @@ namespace Reactics.Battle
         ALLY_ALL,
         UTILITY
     }
+
 
 }

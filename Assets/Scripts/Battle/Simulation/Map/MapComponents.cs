@@ -4,83 +4,39 @@ using Unity.Entities;
 
 namespace Reactics.Battle
 {
-    /// <summary>
-    /// Represents the header data of a map. 
-    /// </summary>
-    public struct MapHeader : IComponentData
+    public struct MapData : IComponentData
     {
-        /// <summary>
-        /// Map name. Max Length is 126 characters.
-        /// </summary>
-        public NativeString128 name;
-        /// <summary>
-        /// Represents the Map width in Map Coordinates.
-        /// </summary>
-        public ushort width;
-        /// <summary>
-        /// Represents the Map length in Map Coordinates.
-        /// </summary>
-        public ushort length;
-        /// <summary>
-        /// Represents the base elevation. that every tile uses to derive their height. By default this value is 0.
-        /// </summary>
-        public int elevation;
-        public MapHeader(string name, ushort width, ushort length, int elevation)
-        {
-            this.name = new NativeString128(name);
-            this.width = width;
-            this.length = length;
-            this.elevation = elevation;
-        }
+        public BlobAssetReference<MapBlob> map;
+
+        public ushort Width { get => map.Value.width; }
+
+        public ushort Length { get => map.Value.length; }
+
+        public int Elevation { get => map.Value.elevation; }
+
+        public ref BlobString Name { get => ref map.Value.name; }
+
+        public ref BlobArray<BlittableTile> Tiles { get => ref map.Value.tiles; }
+
+        public ref BlobArray<MapBlobSpawnGroup> SpawnGroups { get => ref map.Value.spawnGroups; }
+
+
     }
-    /// <summary>
-    /// Represents A Map tile. Map tiles are stored in a way that the index can be calculated via <c>index = y * width + x</c>.
-    /// Conversely, the tile coordinates can be calculated by <c>x = index % width</c> and <c>y = index / width </c>, where y is truncated.
-    /// </summary>
-    public struct MapTile : IBufferElementData
+
+    public struct MapRenderData : IComponentData
     {
-        public readonly BlittableTile Value;
-        public MapTile(Tile value)
-        {
-            Value = (BlittableTile) value;
-        }
-        public static explicit operator MapTile(Tile value)
-        {
-            return new MapTile(value);
-        }
-        public static implicit operator Tile(MapTile value)
-        {
-            return value.Value;
-        }
+        public float tileSize;
+
+        public float elevationStep;
     }
-    /// <summary>
-    /// Represents a spawn point for a spawn group. 
-    /// </summary>
-    public struct MapSpawnGroupPoint : IBufferElementData
-    {
-        public readonly Point point;
-        public readonly int group;
-        public MapSpawnGroupPoint(Point point, int group)
-        {
-            this.point = point;
-            this.group = group;
-        }
-    }
+
     /// <summary>
     /// Marker Component to signal if an entity is rendering a specific MapLayer. BASE is ignored, as it's handled by the MapRootRenderLayer.
     /// </summary>
     public struct RenderMap : IComponentData
     {
-        public Entity map;
-
-    }
-    public struct RenderMapLayerChild : IBufferElementData
-    {
-        public Entity child;
-
         public MapLayer layer;
     }
-
 
 
     /// <summary>
@@ -100,8 +56,6 @@ namespace Reactics.Battle
         public Point point;
         //Measured in tiles/second
         public float speed;
-
-        public Entity map;
     }
 
     /// <summary>
