@@ -12,7 +12,7 @@ using Reactics.Battle;
 
 //always synchronize? not sure if necessary on component system
 [AlwaysSynchronizeSystem]
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(Unity.Entities.SimulationSystemGroup))]
 public class PlayerInputSystem : JobComponentSystem
 {
     /*[SerializeField] figure out later...

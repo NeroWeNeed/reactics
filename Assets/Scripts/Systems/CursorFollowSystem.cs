@@ -10,7 +10,7 @@ using Reactics.Battle;
 using Unity.Physics;
 
 //always synchronize? not sure if necessary on component system
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(Unity.Entities.SimulationSystemGroup))]
 [UpdateAfter(typeof(CameraRotationSystem))]
 public class CursorFollowSystem : JobComponentSystem
 {

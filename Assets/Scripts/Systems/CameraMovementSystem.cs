@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Users;
 using Reactics.Battle;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(Unity.Entities.SimulationSystemGroup))]
 [UpdateAfter(typeof(PlayerInputSystem))]
 public class CameraMovementSystem : JobComponentSystem
 {
