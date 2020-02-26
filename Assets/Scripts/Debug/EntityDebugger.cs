@@ -4,6 +4,8 @@ using Unity.Entities;
 using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
+using Unity.Collections;
+
 namespace Reactics.Util
 {
 
@@ -28,6 +30,7 @@ namespace Reactics.Util
             EntityManager EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             MapWorld.WorldArchetypes Archetypes = new MapWorld.WorldArchetypes(EntityManager);
             var mapEntity = map.CreateEntity(EntityManager);
+            EntityManager.SetName(mapEntity, "ImTheMap");
             var mapRenderer = EntityManager.CreateEntity(Archetypes.MapRenderer);
             EntityManager.SetSharedComponentData(mapRenderer, new RenderMesh
             {
@@ -40,6 +43,7 @@ namespace Reactics.Util
                 map = mapEntity
 
             });
+            EntityManager.SetName(mapRenderer, "MapRenderer");
             var systems = new Type[] { typeof(MapRenderSystem), typeof(MapBodyPathFindingSystem), typeof(MapBodyMovementSystem),typeof(MapBodyToWorldSystem) };
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(World.DefaultGameObjectInjectionWorld, systems);
 
@@ -69,6 +73,29 @@ namespace Reactics.Util
                 material = baseMaterial,
                 subMesh = 0
             });
+            EntityManager.SetName(body, "MapBody");
+
+            EntityQuery query = EntityManager.CreateEntityQuery(typeof(CameraMovementData));
+            NativeArray<Entity> entities = query.ToEntityArray(Allocator.TempJob);
+
+            //Set some camera component data
+            //These only need to be set once so getting the component data at any other point is a waste of time...
+            float mapTileSize = 200f; //Hardcoded for now oops. Later we can get it from the map here or in an initialization system or w/e
+            EntityManager.SetComponentData(entities[0], new CameraMapData{
+                tileSize = mapTileSize, 
+                mapLength = mapTileSize * 10,
+                mapWidth = mapTileSize * 10
+            });
+
+            //Set cursor component data
+            var cursor = EntityManager.CreateEntity(typeof(CursorData), typeof(LocalToWorld), typeof(ControlSchemeData), typeof(InitializeTag), typeof(Translation));//GameObjectConversionUtility.ConvertGameObjectHierarchy(cursorGO, World.Active);//EntityManager.CreateEntity(typeof(CursorData), typeof(LocalToWorld), typeof(ControlSchemeData), typeof(InitializeTag), typeof(Translation));
+            EntityManager.SetComponentData(cursor, new CursorData
+            {
+                map = mapEntity,
+                cameraEntity = entities[0] //do this but better somehow maybe idk maybe its fine since theres only one camera
+            });
+            EntityManager.SetName(cursor, "Cursor");
+            entities.Dispose();
         }
     }
 }

@@ -57,6 +57,12 @@ namespace Reactics.Battle
             this.y = Convert.ToUInt16(y);
         }
 
+        public Point (Point point)
+        {
+            this.x = point.x;
+            this.y = point.y;
+        }
+
         public Point ShiftX(int amount)
         {
             return new Point(x + amount, y);

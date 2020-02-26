@@ -37,36 +37,38 @@ public class PlayerInputSystem : JobComponentSystem
         //Get any inputs 
         hoverInput = input.BattleControls.Hover.ReadValue<Vector2>(); //for some reason, gamepad doesn't work here... very strange.
         Vector2 rotationDirection = input.BattleControls.Camera.ReadValue<Vector2>();
+        Vector2 gridMovement = input.BattleControls.TileMovement.ReadValue<Vector2>();
         float cameraZoom = input.BattleControls.CameraZoom.ReadValue<float>();
 
         //find a way to make this not run every frame maybe, otherwise yeah.. waste of processing power
-        Entities.ForEach((ref ControlSchemeData controlSchemeData) => //Speed is set in the editor
+        Entities.ForEach((ref ControlSchemeData controlSchemeData) =>
         {
             controlSchemeData.currentControlScheme = controlScheme;
         }).Run();
 
         //In this case, we pan if the mouse is at the edge of the screen
-        float2 movementDirection = new float2(0, 0);
+        float2 panMovement = new float2(0, 0);
         if (playerInput.currentControlScheme == "Keyboard + Mouse")
         {
             mousePositionRayCast = BattlePlayer.instance.GetMouseCursorWorldCoordinates(hoverInput);
             
             if (hoverInput.y >= Screen.height - screenEdgeLength)
-                movementDirection.y = 1f;
+                panMovement.y = 1f;
             else if (hoverInput.y <= screenEdgeLength)
-                movementDirection.y = -1f;
+                panMovement.y = -1f;
             if (hoverInput.x >= Screen.width - screenEdgeLength)
-                movementDirection.x = 1f;
+                panMovement.x = 1f;
             else if (hoverInput.x <= screenEdgeLength)
-                movementDirection.x = -1f;
+                panMovement.x = -1f;
         }
         else if (playerInput.currentControlScheme == "Gamepad")
         {
-            movementDirection = hoverInput;
+            panMovement = hoverInput;
         }
 
         //If an input is detected that would move the camera, set those inputs on the respective data components
         //Note: This if statement seems to *really* speed up this system, maybe since it's not running the job all the time anymore. makes sense.
+        //okay maybe actually ti doesn't?? maybe it acutally doesn't do that at all actually
         if (rotationDirection.magnitude > 0 || hoverInput.magnitude > 0 || cameraZoom > 0.1f || cameraZoom < 0.1f) 
         {
         Entities.ForEach((ref CameraMovementData moveData, ref CameraRotationData rotData) => //Speed is set in the editor
@@ -74,7 +76,8 @@ public class PlayerInputSystem : JobComponentSystem
             //don't do camera stuff if it's actively rotating or it gets really mad
             if (!rotData.rotating)
             {
-                moveData.movementDirection = movementDirection;
+                moveData.panMovementDirection = panMovement;
+                moveData.gridMovementDirection = gridMovement;
                 moveData.zoomDirectionAndStrength = cameraZoom;
                 rotData.rotationDirection = rotationDirection;
                 //If we're done moving then center the camera to the tile it's currently in

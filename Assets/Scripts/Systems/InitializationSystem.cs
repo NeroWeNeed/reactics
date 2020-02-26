@@ -61,6 +61,7 @@ public class InitializationSystem : ComponentSystem
 {
     protected override void OnUpdate() 
     {
+        //apparently tilesize isn't really... in... ecs? anywhere? or something? so I'm just kinda doing that here for now, maybe.
         Entities.ForEach((Entity entity, ref InitializeTag initializeTag, ref CursorData cursorTag) =>
         {
             cursorTag.rayMagnitude = 10000f;

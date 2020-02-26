@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
+using Unity.Collections;
 using Unity.Jobs;
 using Unity.Transforms;
 using Unity.Mathematics;
@@ -59,13 +60,47 @@ public class CursorFollowSystem : JobComponentSystem
         return default;
     }
 }
-/*
-if (pointerPresent)
+
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateAfter(typeof(CursorFollowSystem))]
+public class CursorHighlightSystem : JobComponentSystem
+{
+    protected override JobHandle OnUpdate(JobHandle inputDeps) 
+    {
+        ComponentDataFromEntity<CameraMovementData> cameraData = GetComponentDataFromEntity<CameraMovementData>(true);
+        //tilesFromEntity = GetBufferFromEntity<MapTile>(),
+        BufferFromEntity<MapTile> tilesFromEntity = GetBufferFromEntity<MapTile>(true);
+        BufferFromEntity<HighlightTile> highlightTilesFromEntity = GetBufferFromEntity<HighlightTile>(false);
+        ComponentDataFromEntity<MapHeader> headerFromEntity = GetComponentDataFromEntity<MapHeader>(true);
+        Entities.ForEach((ref Translation trans, ref CursorData cursorData) => //remove ref trans later it doesn't need to be ref
         {
-            Ray ray = camera.GetComponent<Camera>().ScreenPointToRay(currentMousePosition);
-            if (mapRenderer.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitInfo, rayDistance))
+            /*//MapHeader header = headerFromEntity[cursorData.map];
+            if (highlightTilesFromEntity.Exists(cursorData.map))
             {
-                transform.position = ray.GetPoint(hitInfo.distance);
+                DynamicBuffer<HighlightTile> highlightTiles = highlightTilesFromEntity[cursorData.map];
+            }*/
+            if (tilesFromEntity.Exists(cursorData.map))
+            {
+                DynamicBuffer<MapTile> tiles = tilesFromEntity[cursorData.map];
+                DynamicBuffer<HighlightTile> highlightTiles = highlightTilesFromEntity[cursorData.map];
+                //MapHeader header = headerFromEntity[cursorData.map]; works
+                Point pointInfo = new Point((ushort)((trans.Value.x) / 200f), (ushort)((trans.Value.z) / 200f)); //this is what we want...? (apparently it should be x - trans.x)
+                cursorData.lastHoverPoint = pointInfo;
+
+                //Surely there's a better way? 
+                //Granted the thing can't be that big but still?
+                for (int i = 0; i < highlightTiles.Length; i++)
+                {
+                    if (highlightTiles[i].layer == MapLayer.HOVER)
+                    {
+                        highlightTiles.RemoveAt(i);
+                        //Realistically there should only be one hover tile...
+                        break;
+                    }
+                }
+                highlightTiles.Add(new HighlightTile { point = new Point(pointInfo), layer = MapLayer.HOVER });
             }
-        }
-*/
+        }).Run();
+        return default;
+    }
+}
