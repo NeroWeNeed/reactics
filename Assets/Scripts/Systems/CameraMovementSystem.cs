@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Users;
 using Reactics.Battle;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(Unity.Entities.SimulationSystemGroup))]
 [UpdateAfter(typeof(PlayerInputSystem))]
 public class CameraMovementSystem : JobComponentSystem
 {
@@ -22,16 +22,16 @@ public class CameraMovementSystem : JobComponentSystem
             if (!rotData.rotating) //delete this if you want to move/zoom and rotate at the same time.
             {
                 bool moving = false;
-                if (math.abs(moveData.gridMovementDirection.x) > 0.8f || math.abs(moveData.gridMovementDirection.y) > 0.8f)
+                if (math.abs(moveData.gridMovementDirection.x) > 0.8f || math.abs(moveData.gridMovementDirection.y) > 0.8f) //ignore diagonals
                 {
                     moveData.dummyBuffer++;
                     moveData.dummyBuffer %= 15;
                     
                     if (moveData.dummyBuffer == 1)
-                    {//if you like me as a person you won't indent this if statement. it's gonna get removed once I see how simulation and such works
+                    {//if you like me as a person you won't indent this if statement. it's gonna get removed once I see how simulation and such works probably
                     float3 oldTranslation = trans.Value;
                     float3 oldLookAtPoint = moveData.cameraLookAtPoint;
-                    float tileSize = 200f; //here's tielsize meme again
+                    float tileSize = 200f; //here's tilesize meme again
                     float3 upwardDirection = new float3(0,0,0);
                     Quaternion rotation = rot.Value;
                     //This means we're not looking in the cardinal directions, so we gotta rotate the input a little.

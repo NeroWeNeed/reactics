@@ -12,7 +12,7 @@ using Reactics.Battle;
 
 //always synchronize? not sure if necessary on component system
 [AlwaysSynchronizeSystem]
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(Unity.Entities.SimulationSystemGroup))]
 public class PlayerInputSystem : JobComponentSystem
 {
     /*[SerializeField] figure out later...
@@ -63,15 +63,15 @@ public class PlayerInputSystem : JobComponentSystem
         }
         else if (playerInput.currentControlScheme == "Gamepad")
         {
+            //Set the pan direction to the control stick direction
             panMovement = hoverInput;
         }
 
         //If an input is detected that would move the camera, set those inputs on the respective data components
-        //Note: This if statement seems to *really* speed up this system, maybe since it's not running the job all the time anymore. makes sense.
-        //okay maybe actually ti doesn't?? maybe it acutally doesn't do that at all actually
+        //Not sure if this if statement actually speeds anything up at all
         if (rotationDirection.magnitude > 0 || hoverInput.magnitude > 0 || cameraZoom > 0.1f || cameraZoom < 0.1f) 
         {
-        Entities.ForEach((ref CameraMovementData moveData, ref CameraRotationData rotData) => //Speed is set in the editor
+        Entities.ForEach((ref CameraMovementData moveData, ref CameraRotationData rotData) => //Speed is set in the editor atm
         {
             //don't do camera stuff if it's actively rotating or it gets really mad
             if (!rotData.rotating)
@@ -80,30 +80,17 @@ public class PlayerInputSystem : JobComponentSystem
                 moveData.gridMovementDirection = gridMovement;
                 moveData.zoomDirectionAndStrength = cameraZoom;
                 rotData.rotationDirection = rotationDirection;
-                //If we're done moving then center the camera to the tile it's currently in
-                /*if (!moveData.moving)
-                {
-                    if (currentControlScheme.CompareTo(gamepadControlScheme) == 0) //assuming 0 is true
-                    {
-                        //add tag...?
-                    }
-                }*/
             }
-            //well, anyway. how do we like... raycast or whatever?
-            //This value is the current mouse position.
-            //also it's become apparent that we need to have systems for like. each thing.
-            //isn't checking for input every frame stupid? maybe not if that's what the input system already does...?
-            //also we still aren't entirely... sure what the control mode is from the inputs alone?
         }).Run();
         }
         if (playerInput.currentControlScheme == "Gamepad")
         {
             Entities.ForEach((ref CameraMovementData moveData) => 
             {
-                //tile snap...?
+                //tile snap could theoretically go here
             }).Run();
         }
-        else
+        else if (playerInput.currentControlScheme == "Keyboard + Mouse") //Do the raycast stuff if we're in keyboard mode
         {
             Entities.ForEach((ref CursorData cursorTag) =>
             {

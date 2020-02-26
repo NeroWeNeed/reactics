@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_DefaultGroup: 10af95eeb3c36a94ebbc427f85e58226
   m_BuildRemoteCatalog: 0
+  m_DisableCatalogUpdateOnStart: 0
+  m_UniqueBundleIds: 0
   m_RemoteCatalogBuildPath:
     m_Id: 
   m_RemoteCatalogLoadPath:
@@ -22,6 +24,10 @@ MonoBehaviour:
   m_GroupAssets:
   - {fileID: 11400000, guid: 7dea7111bf3b1864b9a818f9122e362d, type: 2}
   - {fileID: 11400000, guid: bfb13fd74951a854a8470635804df881, type: 2}
+  - {fileID: 11400000, guid: e16e7b784ceb6334580cae7ce66eaff7, type: 2}
+  - {fileID: 11400000, guid: b839e3e3c1498694cbcec3a1c0c9bdad, type: 2}
+  - {fileID: 11400000, guid: fb406eeb7f4d83c498963f3d36167373, type: 2}
+  - {fileID: 11400000, guid: 8f79420fe80ace0499c309c32140c5ee, type: 2}
   m_BuildSettings:
     m_CompileScriptsInVirtualMode: 0
     m_CleanupStreamingAssetsAfterBuilds: 1
@@ -63,6 +69,8 @@ MonoBehaviour:
   m_LabelTable:
     m_LabelNames:
     - default
+    - Locale
+    - Locale-en
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 73c4ca6fbd724b04b8924a9141520c97, type: 2}

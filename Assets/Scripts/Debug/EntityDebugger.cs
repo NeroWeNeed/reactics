@@ -1,15 +1,18 @@
 using System;
 using Reactics.Battle;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Rendering;
 using Unity.Transforms;
+using UnityEditor;
 using UnityEngine;
-using Unity.Collections;
+using UnityEngine.LowLevel;
 
 namespace Reactics.Util
 {
 
-
+    //I had some changes here but this file exploded during a merge conflict so I'm just using yours for now since I'll probably have to change stuff with the map blobs anyway
+    //also this is just a debugger so seeing those changes doesn't *really* matter much
     public class EntityDebugger : MonoBehaviour
     {
 
@@ -27,29 +30,36 @@ namespace Reactics.Util
             this.InjectResources();
 
 
-            EntityManager EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            MapWorld.WorldArchetypes Archetypes = new MapWorld.WorldArchetypes(EntityManager);
-            var mapEntity = map.CreateEntity(EntityManager);
-            EntityManager.SetName(mapEntity, "ImTheMap");
-            var mapRenderer = EntityManager.CreateEntity(Archetypes.MapRenderer);
-            EntityManager.SetSharedComponentData(mapRenderer, new RenderMesh
-            {
-                mesh = map.GenerateMesh(),
-                material = baseMaterial,
-                subMesh = 0
+            var simSystems = new Type[] { typeof(MapSystemGroup), typeof(MapRenderSystemGroup), typeof(MapRenderSystem), typeof(MapLayerRenderSystem) };
+
+
+            World world = World.DefaultGameObjectInjectionWorld;
+            World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BattleSimulationSystemGroup>();
+            World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BattleSimulationEntityCommandBufferSystem>();
+
+            //SimulationWorld simulationWorld = new SimulationWorld("Sample Simulation", simSystems);
+
+            EditorApplication.playModeStateChanged += Cleanup;
+            EntityManager EntityManager = world.EntityManager;
+            var mapEntity = EntityManager.CreateEntity(typeof(MapData),typeof(MapRenderData));
+
+            EntityManager.SetComponentData(mapEntity, map.CreateComponent());
+            EntityManager.SetComponentData(mapEntity,new MapRenderData {
+                tileSize = 1f,
+                elevationStep = 0.25f
             });
-            EntityManager.SetComponentData(mapRenderer, new RenderMap
+            var renderMap = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
+            var renderMap2 = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
+            var otherHighlightEntity = EntityManager.CreateEntity(typeof(HighlightTile));
+            EntityManager.SetComponentData(renderMap, new RenderMap
             {
-                map = mapEntity
-
+                layer = MapLayer.BASE
             });
-            EntityManager.SetName(mapRenderer, "MapRenderer");
-            var systems = new Type[] { typeof(MapRenderSystem), typeof(MapBodyPathFindingSystem), typeof(MapBodyMovementSystem),typeof(MapBodyToWorldSystem) };
-            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(World.DefaultGameObjectInjectionWorld, systems);
-
-
-            //world.AddSystem(new MapHighlightSystem2(Archetypes));
-            DynamicBuffer<HighlightTile> highlights = EntityManager.AddBuffer<HighlightTile>(mapEntity);
+            EntityManager.SetComponentData(renderMap2, new RenderMap
+            {
+                layer = MapLayer.HOVER
+            });
+            DynamicBuffer<HighlightTile> highlights = EntityManager.AddBuffer<HighlightTile>(otherHighlightEntity);
             highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
             highlights.Add(new HighlightTile { point = new Point(2, 0), layer = MapLayer.HOVER });
             highlights.Add(new HighlightTile { point = new Point(0, 4), layer = MapLayer.HOVER });
@@ -60,7 +70,6 @@ namespace Reactics.Util
             EntityManager.SetComponentData(body, new MapBody
             {
                 point = new Point(0, 0),
-                map = mapEntity,
                 speed = 4
             });
             EntityManager.SetComponentData(body, new MapBodyTranslation
@@ -73,29 +82,51 @@ namespace Reactics.Util
                 material = baseMaterial,
                 subMesh = 0
             });
-            EntityManager.SetName(body, "MapBody");
 
-            EntityQuery query = EntityManager.CreateEntityQuery(typeof(CameraMovementData));
-            NativeArray<Entity> entities = query.ToEntityArray(Allocator.TempJob);
-
-            //Set some camera component data
-            //These only need to be set once so getting the component data at any other point is a waste of time...
-            float mapTileSize = 200f; //Hardcoded for now oops. Later we can get it from the map here or in an initialization system or w/e
-            EntityManager.SetComponentData(entities[0], new CameraMapData{
-                tileSize = mapTileSize, 
-                mapLength = mapTileSize * 10,
-                mapWidth = mapTileSize * 10
-            });
-
-            //Set cursor component data
-            var cursor = EntityManager.CreateEntity(typeof(CursorData), typeof(LocalToWorld), typeof(ControlSchemeData), typeof(InitializeTag), typeof(Translation));//GameObjectConversionUtility.ConvertGameObjectHierarchy(cursorGO, World.Active);//EntityManager.CreateEntity(typeof(CursorData), typeof(LocalToWorld), typeof(ControlSchemeData), typeof(InitializeTag), typeof(Translation));
-            EntityManager.SetComponentData(cursor, new CursorData
+            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, simSystems);
+            /* 
+                        
+                        //World.DefaultGameObjectInjectionWorld.GetExistingSystem<ExternalSimulationSystem>().SimulationWorld = simulationWorld;
+                        //world.AddSystem(new MapHighlightSystem2(Archetypes));
+                        DynamicBuffer<HighlightTile> highlights = EntityManager.AddBuffer<HighlightTile>(mapEntity);
+                        highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(2, 0), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(0, 4), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(6, 6), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
+                        var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(Translation));
+                        EntityManager.SetComponentData(body, new MapBody
+                        {
+                            point = new Point(0, 0),
+                            map = mapEntity,
+                            speed = 4
+                        });
+                        EntityManager.SetComponentData(body, new MapBodyTranslation
+                        {
+                            point = new Point(4, 5)
+                        });
+                        EntityManager.SetSharedComponentData(body, new RenderMesh
+                        {
+                            mesh = mesh,
+                            material = baseMaterial,
+                            subMesh = 0
+                        });
+             */
+        }
+        private int previous = -1;
+        private void Cleanup(PlayModeStateChange state)
+        {
+            if (previous == -1)
+                previous = (int)state;
+            else if ((int)state != previous)
             {
-                map = mapEntity,
-                cameraEntity = entities[0] //do this but better somehow maybe idk maybe its fine since theres only one camera
-            });
-            EntityManager.SetName(cursor, "Cursor");
-            entities.Dispose();
+                World.DisposeAllWorlds();
+                WordStorage.Instance.Dispose();
+                WordStorage.Instance = null;
+                ScriptBehaviourUpdateOrder.UpdatePlayerLoop(null);
+                previous = (int)state;
+            }
+
         }
     }
 }
