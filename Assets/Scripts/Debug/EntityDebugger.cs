@@ -40,14 +40,15 @@ namespace Reactics.Util
 
             EditorApplication.playModeStateChanged += Cleanup;
             EntityManager EntityManager = world.EntityManager;
-            var mapEntity = EntityManager.CreateEntity(typeof(MapData),typeof(MapRenderData));
+/*             var mapEntity = EntityManager.CreateEntity(typeof(MapData), typeof(MapRenderData));
 
             EntityManager.SetComponentData(mapEntity, map.CreateComponent());
-            EntityManager.SetComponentData(mapEntity,new MapRenderData {
+            EntityManager.SetComponentData(mapEntity, new MapRenderData
+            {
                 tileSize = 1f,
                 elevationStep = 0.25f
-            });
-            var renderMap = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
+            }); */
+/*             var renderMap = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
             var renderMap2 = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
             var otherHighlightEntity = EntityManager.CreateEntity(typeof(HighlightTile));
             EntityManager.SetComponentData(renderMap, new RenderMap
@@ -64,8 +65,8 @@ namespace Reactics.Util
             highlights.Add(new HighlightTile { point = new Point(0, 4), layer = MapLayer.HOVER });
             highlights.Add(new HighlightTile { point = new Point(6, 6), layer = MapLayer.HOVER });
             highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
-
-            var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(Translation));
+ */
+/*             var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(Translation));
             EntityManager.SetComponentData(body, new MapBody
             {
                 point = new Point(0, 0),
@@ -80,6 +81,17 @@ namespace Reactics.Util
                 mesh = mesh,
                 material = baseMaterial,
                 subMesh = 0
+            }); */
+            var uiSample = EntityManager.CreateEntity(typeof(RenderMesh), typeof(LocalToWorld), typeof(LocalToScreen), typeof(Translation));
+            EntityManager.SetComponentData(uiSample,new LocalToScreen(Camera.main));
+            EntityManager.SetComponentData(uiSample,new Translation {
+                Value = new Unity.Mathematics.float3(0,0,0)
+            });
+            EntityManager.SetSharedComponentData(uiSample,new RenderMesh {
+                mesh = mesh,
+                material = baseMaterial,
+                subMesh = 0
+        
             });
 
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, simSystems);
