@@ -7,7 +7,9 @@ using Unity.Mathematics;
 [GenerateAuthoringComponent]
 public struct CameraMovementData : IComponentData
 {
-    public float2 movementDirection;
+    public int dummyBuffer;
+    public float2 panMovementDirection;
+    public float2 gridMovementDirection;
     public int speed;
     public float offsetValue;
     public float3 cameraLookAtPoint;

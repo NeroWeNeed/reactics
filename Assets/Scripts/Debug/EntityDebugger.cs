@@ -11,7 +11,8 @@ using UnityEngine.LowLevel;
 namespace Reactics.Util
 {
 
-
+    //I had some changes here but this file exploded during a merge conflict so I'm just using yours for now since I'll probably have to change stuff with the map blobs anyway
+    //also this is just a debugger so seeing those changes doesn't *really* matter much
     public class EntityDebugger : MonoBehaviour
     {
 
@@ -97,12 +98,7 @@ namespace Reactics.Util
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, simSystems);
             /* 
                         
-
                         //World.DefaultGameObjectInjectionWorld.GetExistingSystem<ExternalSimulationSystem>().SimulationWorld = simulationWorld;
-
-
-
-
                         //world.AddSystem(new MapHighlightSystem2(Archetypes));
                         DynamicBuffer<HighlightTile> highlights = EntityManager.AddBuffer<HighlightTile>(mapEntity);
                         highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
@@ -110,7 +106,6 @@ namespace Reactics.Util
                         highlights.Add(new HighlightTile { point = new Point(0, 4), layer = MapLayer.HOVER });
                         highlights.Add(new HighlightTile { point = new Point(6, 6), layer = MapLayer.HOVER });
                         highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
-
                         var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(Translation));
                         EntityManager.SetComponentData(body, new MapBody
                         {

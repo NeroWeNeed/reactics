@@ -40,7 +40,6 @@ public class BattlePlayer : MonoBehaviour
 
     public Ray GetMouseCursorWorldCoordinates(Vector2 mouseCoordinates)
     {
-        //fuckin kill me this isn't how this is supposed to work dammit
         return camera.ScreenPointToRay(mouseCoordinates);
     }
 /*

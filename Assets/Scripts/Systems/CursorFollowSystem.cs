@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
+using Unity.Collections;
 using Unity.Jobs;
 using Unity.Transforms;
 using Unity.Mathematics;
@@ -14,11 +15,6 @@ using Unity.Physics;
 [UpdateAfter(typeof(CameraRotationSystem))]
 public class CursorFollowSystem : JobComponentSystem
 {
-    //https://docs.unity3d.com/Packages/com.unity.entities@0.0/manual/component_group.html may be helpful if grid = ecs (jk it's dynamic buffer or smth)
-    //this needs to know the current control scheme for sure... otherwise it doesn't make sense.
-    //it would either A: do raycasting bullshit or B: copy it to the camera data here...
-    //so for experiment purposes we should get that going *now* rather than later... which means we probably have to figure out thecontrols cheme stuff now
-    
     protected override JobHandle OnUpdate(JobHandle inputDeps) 
     {
         ComponentDataFromEntity<CameraMovementData> cameraData = GetComponentDataFromEntity<CameraMovementData>(true);
@@ -59,13 +55,50 @@ public class CursorFollowSystem : JobComponentSystem
         return default;
     }
 }
-/*
-if (pointerPresent)
+
+//move to own cs file 
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateAfter(typeof(CursorFollowSystem))]
+public class CursorHighlightSystem : JobComponentSystem
+{
+    protected override JobHandle OnUpdate(JobHandle inputDeps) 
+    {/* broken due to new map stuff
+        ComponentDataFromEntity<CameraMovementData> cameraData = GetComponentDataFromEntity<CameraMovementData>(true);
+        //tilesFromEntity = GetBufferFromEntity<MapTile>(),
+        BufferFromEntity<MapTile> tilesFromEntity = GetBufferFromEntity<MapTile>(true);
+        BufferFromEntity<HighlightTile> highlightTilesFromEntity = GetBufferFromEntity<HighlightTile>(false);
+        ComponentDataFromEntity<MapHeader> headerFromEntity = GetComponentDataFromEntity<MapHeader>(true);
+        Entities.ForEach((ref Translation trans, ref CursorData cursorData) => //remove ref trans later it doesn't need to be ref
         {
-            Ray ray = camera.GetComponent<Camera>().ScreenPointToRay(currentMousePosition);
-            if (mapRenderer.GetComponent<MeshCollider>().Raycast(ray, out RaycastHit hitInfo, rayDistance))
+            /*float tileSize = 200f;
+            MapHeader header = headerFromEntity[cursorData.map];
+            if (highlightTilesFromEntity.Exists(cursorData.map))
             {
-                transform.position = ray.GetPoint(hitInfo.distance);
+                DynamicBuffer<HighlightTile> highlightTiles = highlightTilesFromEntity[cursorData.map];
+            }*//*
+            if (tilesFromEntity.Exists(cursorData.map))
+            {
+                DynamicBuffer<MapTile> tiles = tilesFromEntity[cursorData.map];
+                DynamicBuffer<HighlightTile> highlightTiles = highlightTilesFromEntity[cursorData.map];
+                //MapHeader header = headerFromEntity[cursorData.map]; works
+                Point pointInfo = new Point((ushort)((trans.Value.x) / tileSize), (ushort)((trans.Value.z) / tileSize)); //this is what we want...? (apparently it should be x - trans.x)
+                cursorData.lastHoverPoint = pointInfo;
+
+                //Surely there's a better way? 
+                //Granted the thing can't be that big but still?
+                for (int i = 0; i < highlightTiles.Length; i++)
+                {
+                    if (highlightTiles[i].layer == MapLayer.HOVER)
+                    {
+                        highlightTiles.RemoveAt(i);
+                        //Realistically there should only be one hover tile...
+                        break;
+                    }
+                }
+                //Maybe add a Point constructor or clone function to make a Point using a Point
+                highlightTiles.Add(new HighlightTile { point = new Point((ushort)((trans.Value.x) / tileSize), (ushort)((trans.Value.z) / tileSize)), layer = MapLayer.HOVER });
             }
-        }
-*/
+        }).Run();*/
+        return default;
+    }
+}
