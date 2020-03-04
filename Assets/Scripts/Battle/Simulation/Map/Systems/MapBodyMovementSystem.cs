@@ -319,284 +319,374 @@ namespace Reactics.Battle
             }
         } */
 
-            [UpdateInGroup(typeof(MapSystemGroup))]
-            [UpdateBefore(typeof(MapBodyPathFindingSystem))]
-            public class MapBodyMovementSystem : JobComponentSystem
-            {
-                EntityQuery query;
-
-                private EntityCommandBufferSystem ecbSystem;
-                protected override void OnCreate()
+    /*             [UpdateInGroup(typeof(MapSystemGroup))]
+                [UpdateBefore(typeof(MapBodyPathFindingSystem))]
+                public class MapBodyMovementSystem : JobComponentSystem
                 {
+                    EntityQuery query;
 
-                    query = EntityManager.CreateEntityQuery(typeof(MapBodyTranslationPoint), typeof(MapBody));
-                    ecbSystem = World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>();
-                    RequireForUpdate(query);
-                    RequireSingletonForUpdate<MapData>();
-                }
-                protected override JobHandle OnUpdate(JobHandle inputDeps)
-                {
-                    MoveJob job = new MoveJob
+                    private EntityCommandBufferSystem ecbSystem;
+                    protected override void OnCreate()
                     {
-                        deltaTime = World.Time.DeltaTime,
-                        CommandBuffer = ecbSystem.CreateCommandBuffer().ToConcurrent()
-                    };
-                    var handle = job.Schedule(query, inputDeps);
-                    ecbSystem.AddJobHandleForProducer(handle);
-                    return handle;
-                }
-                private struct MoveJob : IJobForEachWithEntity_EBC<MapBodyTranslationPoint, MapBody>
-                {
-                    [ReadOnly]
-                    public float deltaTime;
 
-                    public EntityCommandBuffer.Concurrent CommandBuffer;
-                    public void Execute(Entity entity, int index, DynamicBuffer<MapBodyTranslationPoint> tiles, ref MapBody body)
+                        query = EntityManager.CreateEntityQuery(typeof(MapBodyTranslationPoint), typeof(MapBody));
+                        ecbSystem = World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>();
+                        RequireForUpdate(query);
+                        RequireSingletonForUpdate<MapData>();
+                    }
+                    protected override JobHandle OnUpdate(JobHandle inputDeps)
                     {
-                        float distance = body.speed * deltaTime;
-                        MapBodyTranslationPoint mapBodyTranslationPoint;
-                        while (distance > 0 && tiles.Length > 0)
+                        MoveJob job = new MoveJob
                         {
-                            mapBodyTranslationPoint = tiles[0];
-                            float newDistance = mapBodyTranslationPoint.completion + distance;
+                            deltaTime = World.Time.DeltaTime,
+                            CommandBuffer = ecbSystem.CreateCommandBuffer().ToConcurrent()
+                        };
+                        var handle = job.Schedule(query, inputDeps);
+                        ecbSystem.AddJobHandleForProducer(handle);
+                        return handle;
+                    }
+                    private struct MoveJob : IJobForEachWithEntity_EBC<MapBodyTranslationPoint, MapBody>
+                    {
+                        [ReadOnly]
+                        public float deltaTime;
 
-
-                            if (newDistance >= 1)
+                        public EntityCommandBuffer.Concurrent CommandBuffer;
+                        public void Execute(Entity entity, int index, DynamicBuffer<MapBodyTranslationPoint> tiles, ref MapBody body)
+                        {
+                            float distance = body.speed * deltaTime;
+                            MapBodyTranslationPoint mapBodyTranslationPoint;
+                            while (distance > 0 && tiles.Length > 0)
                             {
-                                distance -= 1 - mapBodyTranslationPoint.completion;
-                                body.point = tiles[0].point;
-                                tiles.RemoveAt(0);
+                                mapBodyTranslationPoint = tiles[0];
+                                float newDistance = mapBodyTranslationPoint.completion + distance;
+
+
+                                if (newDistance >= 1)
+                                {
+                                    distance -= 1 - mapBodyTranslationPoint.completion;
+                                    body.point = tiles[0].point;
+                                    tiles.RemoveAt(0);
+                                }
+                                else
+                                {
+                                    mapBodyTranslationPoint.completion = newDistance;
+                                    tiles[0] = mapBodyTranslationPoint;
+                                    distance = 0;
+                                }
+                            }
+                        }
+                    }
+                }
+
+        /// <summary>
+        /// Used for determining paths from MapBodyTranslation Components.
+        /// </summary>
+        [UpdateInGroup(typeof(MapSystemGroup))]
+
+        public class MapBodyPathFindingSystem : JobComponentSystem
+        {
+            private EntityQuery query;
+            private EntityCommandBufferSystem ecbSystem;
+            protected override void OnCreate()
+            {
+                query = EntityManager.CreateEntityQuery(typeof(MapBodyTranslation), typeof(MapBody));
+                RequireForUpdate(query);
+                RequireSingletonForUpdate<MapData>();
+            }
+            protected override void OnStartRunning()
+            {
+                ecbSystem = World.GetExistingSystem<BattleSimulationEntityCommandBufferSystem>();
+                Debug.Log(ecbSystem);
+            }
+            protected override JobHandle OnUpdate(JobHandle inputDeps)
+            {
+
+                var job = new FindPathJob
+                {
+                    bodies = GetEntityQuery(typeof(MapBody)).ToEntityArray(Allocator.TempJob),
+                    mapData = GetSingleton<MapData>(),
+                    //bodyFromEntity = GetComponentDataFromEntity<MapBody>(true),
+                    CommandBuffer = ecbSystem.CreateCommandBuffer().ToConcurrent()
+                };
+
+
+                var handle = job.Schedule(query, inputDeps);
+
+                ecbSystem.AddJobHandleForProducer(handle);
+                return handle;
+
+            }
+            [BurstCompile]
+            struct FindPathJob : IJobForEachWithEntity_ECC<MapBody, MapBodyTranslation>
+            {
+                [ReadOnly]
+                public MapData mapData;
+                [ReadOnly]
+                [DeallocateOnJobCompletion]
+                public NativeArray<Entity> bodies;
+
+                public EntityCommandBuffer.Concurrent CommandBuffer;
+                public void Execute(Entity entity, int index, ref MapBody body, ref MapBodyTranslation translation)
+                {
+                    if (!body.point.Equals(translation.point))
+                    {
+
+
+                        NativeList<Node> history = new NativeList<Node>(Allocator.Temp);
+                        NativeList<Node> frontier = new NativeList<Node>(Allocator.Temp);
+                        if (!mapData.map.Value.GetTile(translation.point, out BlittableTile tile) || tile.Inaccessible)
+                            return;
+                        var current = new Node
+                        {
+                            point = body.point,
+                            distanceToDestination = Distance(body.point, translation.point),
+                            previousIndex = -1,
+                            index = 0
+                        };
+                        int historyIndex = 1;
+                        history.Add(current);
+                        NativeList<Point> pointBuffer = new NativeList<Point>(Allocator.Temp);
+
+                        int removeIndex;
+                        int iteration = 0;
+                        Node node;
+                        while (!current.point.Equals(translation.point))
+                        {
+                            if (pointBuffer.IsCreated)
+                                pointBuffer.Dispose();
+                            pointBuffer = current.point.Expand(ref mapData.map.Value, 1, PathExpandPattern.SQUARE, Allocator.Temp);
+
+
+
+
+                            for (int i = 0; i < history.Length; i++)
+                            {
+                                removeIndex = pointBuffer.IndexOf(history[i].point);
+                                if (removeIndex >= 0)
+                                    pointBuffer.RemoveAtSwapBack(removeIndex);
+                            }
+
+     /*                        for (int i = 0; i < bodies.Length; i++)
+                            {
+                                removeIndex = pointBuffer.IndexOf(bodyFromEntity[bodies[i]].point);
+                                if (removeIndex >= 0)
+                                    pointBuffer.RemoveAtSwapBack(removeIndex);
+                            } 
+
+                            for (int i = 0; i < pointBuffer.Length; i++)
+                            {
+                                node = new Node
+                                {
+                                    point = pointBuffer[i],
+                                    distanceToDestination = Distance(pointBuffer[i], translation.point),
+                                    distanceFromExpansion = Distance(current.point, pointBuffer[i]),
+                                    previousIndex = current.index,
+                                    index = historyIndex++
+                                };
+                                frontier.Add(node);
+                                history.Add(node);
+                            }
+                            NativeSortExtension.Sort(frontier);
+                            if (frontier.Length > 0)
+                            {
+                                current = frontier[0];
+                                frontier.RemoveAtSwapBack(0);
                             }
                             else
+                                break;
+                        }
+                        if (current.point.Equals(translation.point))
+                        {
+                            DynamicBuffer<MapBodyTranslationPoint> points = CommandBuffer.AddBuffer<MapBodyTranslationPoint>(index, entity);
+                            while (current.previousIndex > 0)
                             {
-                                mapBodyTranslationPoint.completion = newDistance;
-                                tiles[0] = mapBodyTranslationPoint;
-                                distance = 0;
+
+                                points.Insert(0, new MapBodyTranslationPoint
+                                {
+                                    point = current.point,
+                                    order = current.index
+                                });
+                                current = history[current.previousIndex];
+                                iteration++;
                             }
                         }
-                    }
-                }
-            }
-
-    /// <summary>
-    /// Used for determining paths from MapBodyTranslation Components.
-    /// </summary>
-    [UpdateInGroup(typeof(MapSystemGroup))]
-
-    public class MapBodyPathFindingSystem : JobComponentSystem
-    {
-        private EntityQuery query;
-        private EntityCommandBufferSystem ecbSystem;
-        protected override void OnCreate()
-        {
-            query = EntityManager.CreateEntityQuery(typeof(MapBodyTranslation), typeof(MapBody));
-            RequireForUpdate(query);
-            RequireSingletonForUpdate<MapData>();
-        }
-        protected override void OnStartRunning()
-        {
-            ecbSystem = World.GetExistingSystem<BattleSimulationEntityCommandBufferSystem>();
-            Debug.Log(ecbSystem);
-        }
-        protected override JobHandle OnUpdate(JobHandle inputDeps)
-        {
-
-            var job = new FindPathJob
-            {
-                bodies = GetEntityQuery(typeof(MapBody)).ToEntityArray(Allocator.TempJob),
-                mapData = GetSingleton<MapData>(),
-                //bodyFromEntity = GetComponentDataFromEntity<MapBody>(true),
-                CommandBuffer = ecbSystem.CreateCommandBuffer().ToConcurrent()
-            };
-
-
-            var handle = job.Schedule(query, inputDeps);
-
-            ecbSystem.AddJobHandleForProducer(handle);
-            return handle;
-
-        }
-        [BurstCompile]
-        struct FindPathJob : IJobForEachWithEntity_ECC<MapBody, MapBodyTranslation>
-        {
-            [ReadOnly]
-            public MapData mapData;
-            [ReadOnly]
-            [DeallocateOnJobCompletion]
-            public NativeArray<Entity> bodies;
-
-            public EntityCommandBuffer.Concurrent CommandBuffer;
-            public void Execute(Entity entity, int index, ref MapBody body, ref MapBodyTranslation translation)
-            {
-                if (!body.point.Equals(translation.point))
-                {
-
-
-                    NativeList<Node> history = new NativeList<Node>(Allocator.Temp);
-                    NativeList<Node> frontier = new NativeList<Node>(Allocator.Temp);
-                    if (!mapData.map.Value.GetTile(translation.point, out BlittableTile tile) || tile.Inaccessible)
-                        return;
-                    var current = new Node
-                    {
-                        point = body.point,
-                        distanceToDestination = Distance(body.point, translation.point),
-                        previousIndex = -1,
-                        index = 0
-                    };
-                    int historyIndex = 1;
-                    history.Add(current);
-                    NativeList<Point> pointBuffer = new NativeList<Point>(Allocator.Temp);
-
-                    int removeIndex;
-                    int iteration = 0;
-                    Node node;
-                    while (!current.point.Equals(translation.point))
-                    {
+                        CommandBuffer.RemoveComponent<MapBodyTranslation>(index, entity);
                         if (pointBuffer.IsCreated)
                             pointBuffer.Dispose();
-                        pointBuffer = current.point.Expand(ref mapData.map.Value, 1, PathExpandPattern.SQUARE, Allocator.Temp);
+                    }
+                    else
+                    {
+                        CommandBuffer.RemoveComponent<MapBodyTranslation>(index, entity);
+                    }
 
 
 
 
-                        for (int i = 0; i < history.Length; i++)
+
+                }
+
+                private int Distance(Point point, Point destination)
+                {
+                    return math.abs(point.x - destination.x) + math.abs(point.y - destination.y);
+                }
+                struct Node : IEquatable<Point>, IComparable<Node>
+                {
+                    public Point point;
+                    public float distanceToDestination;
+                    public int distanceFromExpansion;
+                    public int previousIndex;
+                    public int index;
+
+                    public int CompareTo(Node other)
+                    {
+                        int compare = distanceToDestination.CompareTo(other.distanceToDestination);
+                        return compare != 0 ? compare : other.distanceFromExpansion.CompareTo(distanceFromExpansion);
+                    }
+
+                    public bool Equals(Point other)
+                    {
+                        return point.Equals(other);
+                    }
+                }
+            }
+
+        }
+
+        public class MapBodyToWorld : ComponentSystem
+        {
+            EntityQuery query;
+
+            protected override void OnCreate()
+            {
+
+                query = EntityManager.CreateEntityQuery(new EntityQueryDesc
+                {
+                    All = new ComponentType[] { ComponentType.ReadOnly<MapBody>(), typeof(Translation) }
+                });
+                RequireForUpdate(query);
+                RequireSingletonForUpdate<MapData>();
+                RequireSingletonForUpdate<MapRenderData>();
+
+
+            }
+            protected override void OnUpdate()
+            {
+                MapData mapData = GetSingleton<MapData>();
+                MapRenderData renderData = GetSingleton<MapRenderData>();
+                BufferFromEntity<MapBodyTranslationPoint> bodyTranslationPointsFromEntity = GetBufferFromEntity<MapBodyTranslationPoint>();
+                Entities.With(query).ForEach((Entity entity, ref MapBody body, ref Translation translation) =>
+                {
+                    float verticalOffset = EntityManager.HasComponent<RenderMesh>(entity) ? EntityManager.GetSharedComponentData<RenderMesh>(entity).mesh.bounds.extents.y : 0f;
+                    if (bodyTranslationPointsFromEntity.Exists(entity))
+                    {
+                        DynamicBuffer<MapBodyTranslationPoint> path = bodyTranslationPointsFromEntity[entity];
+                        if (path.Length > 0)
                         {
-                            removeIndex = pointBuffer.IndexOf(history[i].point);
-                            if (removeIndex >= 0)
-                                pointBuffer.RemoveAtSwapBack(removeIndex);
-                        }
-
- /*                        for (int i = 0; i < bodies.Length; i++)
-                        {
-                            removeIndex = pointBuffer.IndexOf(bodyFromEntity[bodies[i]].point);
-                            if (removeIndex >= 0)
-                                pointBuffer.RemoveAtSwapBack(removeIndex);
-                        } */
-
-                        for (int i = 0; i < pointBuffer.Length; i++)
-                        {
-                            node = new Node
-                            {
-                                point = pointBuffer[i],
-                                distanceToDestination = Distance(pointBuffer[i], translation.point),
-                                distanceFromExpansion = Distance(current.point, pointBuffer[i]),
-                                previousIndex = current.index,
-                                index = historyIndex++
-                            };
-                            frontier.Add(node);
-                            history.Add(node);
-                        }
-                        NativeSortExtension.Sort(frontier);
-                        if (frontier.Length > 0)
-                        {
-                            current = frontier[0];
-                            frontier.RemoveAtSwapBack(0);
+                            Point p = path[0].point;
+                            Point dir = p - body.point;
+                            translation.Value = new float3(body.point.x + dir.x * path[0].completion + renderData.tileSize / 2, (mapData.map.Value[body.point].Elevation * renderData.elevationStep) + verticalOffset, body.point.y + dir.y * path[0].completion + renderData.tileSize / 2);
                         }
                         else
-                            break;
-                    }
-                    if (current.point.Equals(translation.point))
-                    {
-                        DynamicBuffer<MapBodyTranslationPoint> points = CommandBuffer.AddBuffer<MapBodyTranslationPoint>(index, entity);
-                        while (current.previousIndex > 0)
                         {
-
-                            points.Insert(0, new MapBodyTranslationPoint
-                            {
-                                point = current.point,
-                                order = current.index
-                            });
-                            current = history[current.previousIndex];
-                            iteration++;
+                            translation.Value = new float3(body.point.x + renderData.tileSize / 2, (mapData.map.Value[body.point].Elevation * renderData.elevationStep) + verticalOffset, body.point.y + renderData.tileSize / 2);
                         }
-                    }
-                    CommandBuffer.RemoveComponent<MapBodyTranslation>(index, entity);
-                    if (pointBuffer.IsCreated)
-                        pointBuffer.Dispose();
-                }
-                else
-                {
-                    CommandBuffer.RemoveComponent<MapBodyTranslation>(index, entity);
-                }
-
-
-
-
-
-            }
-
-            private int Distance(Point point, Point destination)
-            {
-                return math.abs(point.x - destination.x) + math.abs(point.y - destination.y);
-            }
-            struct Node : IEquatable<Point>, IComparable<Node>
-            {
-                public Point point;
-                public float distanceToDestination;
-                public int distanceFromExpansion;
-                public int previousIndex;
-                public int index;
-
-                public int CompareTo(Node other)
-                {
-                    int compare = distanceToDestination.CompareTo(other.distanceToDestination);
-                    return compare != 0 ? compare : other.distanceFromExpansion.CompareTo(distanceFromExpansion);
-                }
-
-                public bool Equals(Point other)
-                {
-                    return point.Equals(other);
-                }
-            }
-        }
-
-    }
-
-    public class MapBodyToWorld : ComponentSystem
-    {
-        EntityQuery query;
-
-        protected override void OnCreate()
-        {
-
-            query = EntityManager.CreateEntityQuery(new EntityQueryDesc
-            {
-                All = new ComponentType[] { ComponentType.ReadOnly<MapBody>(), typeof(Translation) }
-            });
-            RequireForUpdate(query);
-            RequireSingletonForUpdate<MapData>();
-            RequireSingletonForUpdate<MapRenderData>();
-
-
-        }
-        protected override void OnUpdate()
-        {
-            MapData mapData = GetSingleton<MapData>();
-            MapRenderData renderData = GetSingleton<MapRenderData>();
-            BufferFromEntity<MapBodyTranslationPoint> bodyTranslationPointsFromEntity = GetBufferFromEntity<MapBodyTranslationPoint>();
-            Entities.With(query).ForEach((Entity entity, ref MapBody body, ref Translation translation) =>
-            {
-                float verticalOffset = EntityManager.HasComponent<RenderMesh>(entity) ? EntityManager.GetSharedComponentData<RenderMesh>(entity).mesh.bounds.extents.y : 0f;
-                if (bodyTranslationPointsFromEntity.Exists(entity))
-                {
-                    DynamicBuffer<MapBodyTranslationPoint> path = bodyTranslationPointsFromEntity[entity];
-                    if (path.Length > 0)
-                    {
-                        Point p = path[0].point;
-                        Point dir = p - body.point;
-                        translation.Value = new float3(body.point.x + dir.x * path[0].completion + renderData.tileSize / 2, (mapData.map.Value[body.point].Elevation * renderData.elevationStep) + verticalOffset, body.point.y + dir.y * path[0].completion + renderData.tileSize / 2);
                     }
                     else
                     {
                         translation.Value = new float3(body.point.x + renderData.tileSize / 2, (mapData.map.Value[body.point].Elevation * renderData.elevationStep) + verticalOffset, body.point.y + renderData.tileSize / 2);
                     }
-                }
-                else
+                });
+
+            }
+        } */
+
+
+    public class MapBodyPathFindingSystem : JobComponentSystem
+    {
+
+        private BattleSimulationEntityCommandBufferSystem ecbSystem;
+        protected override void OnCreate()
+        {
+            RequireSingletonForUpdate<MapData>();
+            ecbSystem = World.GetOrCreateSystem<BattleSimulationEntityCommandBufferSystem>();
+            RequireForUpdate(GetEntityQuery(ComponentType.ReadOnly(typeof(MapBody)), typeof(MapBodyTranslation), ComponentType.Exclude(typeof(MapBodyTranslationPoint))));
+        }
+        protected override JobHandle OnUpdate(JobHandle inputDeps)
+        {
+            var job = new PathFindingJob
+            {
+                ecb = ecbSystem.CreateCommandBuffer().ToConcurrent()
+            };
+            return job.Schedule(this, inputDeps);
+        }
+
+        public struct PathFindingJob : IJobForEachWithEntity_ECC<MapBody, MapBodyTranslation>
+        {
+
+            public EntityCommandBuffer.Concurrent ecb;
+            public void Execute(Entity entity, int index, ref MapBody body, ref MapBodyTranslation translation)
+            {
+                if (body.point.Equals(translation.point))
                 {
-                    translation.Value = new float3(body.point.x + renderData.tileSize / 2, (mapData.map.Value[body.point].Elevation * renderData.elevationStep) + verticalOffset, body.point.y + renderData.tileSize / 2);
+                    ecb.RemoveComponent<MapBodyTranslation>(index, entity);
+                    return;
                 }
-            });
+                NativeList<PathNode> history = new NativeList<PathNode>(Allocator.TempJob);
+                NativeQueue<PathNode> frontier = new NativeQueue<PathNode>(Allocator.TempJob);
+                frontier.
+
+
+            }
+        }
+        //TODO: Finish A* 
+        private NativeArray<PathNode> ExpandPoint(MapData mapData, Point point, Point destination)
+        {
+            NativeArray<PathNode> expansion = new NativeArray<PathNode>(8, Allocator.Temp);
+            BlittableTile tile;
+            for (int i = 0; i < 8; i += 2)
+            {
+                if (point.SafeShift((int)math.ceil(math.cos(i * math.PI / 4f)), (int)math.ceil(math.sin(i * math.PI / 4f)), mapData.Width, mapData.Length, out Point tilePoint))
+                {
+                    tile = mapData[tilePoint];
+                    if (tile.Inaccessible)
+                        continue;
+                    expansion[i] = new PathNode(tilePoint.Distance(destination), point.Distance(tilePoint), tilePoint);
+
+                }
+
+            }
+        }
+        private PathNode CalculateWeight(Point point, Point destination)
+        {
 
         }
+
+
+
+        public struct PathNode : IComparable<PathNode>
+        {
+            public float distance;
+            public float stride;
+
+            public Point point;
+
+            public int previous;
+
+            public PathNode(float distance, float stride, Point point, int previous = -1)
+            {
+                this.distance = distance;
+                this.stride = stride;
+                this.point = point;
+                this.previous = previous;
+            }
+
+            public int CompareTo(PathNode other)
+            {
+                var distanceComparision = distance.CompareTo(other.distance);
+                var strideComparison = stride.CompareTo(other.stride);
+                return distanceComparision != 0 ? distanceComparision : strideComparison;
+            }
+        }
     }
+
 }

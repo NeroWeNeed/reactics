@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Reactics.Util;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 using static Unity.Mathematics.math;
 
@@ -220,7 +221,7 @@ namespace Reactics.Battle
             }
             else
             {
-                output = new Point(x + amount, y);
+                output = new Point(newX, y);
                 return true;
             }
         }
@@ -238,10 +239,35 @@ namespace Reactics.Battle
             }
             else
             {
-                output = new Point(x, y + amount);
+                output = new Point(x, newY);
                 return true;
             }
         }
+
+        public Point Shift(int xAmount,int yAmount) {
+            return new Point(x+xAmount,y+yAmount);
+        }
+
+        public bool SafeShift(int xAmount,int yAmount, int xMax,int yMax, out Point output)
+        {
+            int newY = y + yAmount;
+            int newX = y + xAmount;
+            if (newY < 0 || newX < 0 || newX >= xMax || newY >= yMax)
+            {
+                output = default;
+                return false;
+            }
+            else
+            {
+                output = new Point(newX,newY);
+                return true;
+            }
+        }
+
+        public uint Distance(Point other) {
+            return (uint) (abs(x-other.x)+ abs(y-other.y));
+        }
+
         public static bool SafeCreate(int x, int y, int maxX, int maxY, out Point output)
         {
             if (x < 0 || x >= maxX || y < 0 || y >= maxY)

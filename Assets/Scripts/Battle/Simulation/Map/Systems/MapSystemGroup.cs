@@ -29,12 +29,18 @@ namespace Reactics.Battle
 
         public static readonly EntityArchetype Body;
 
+        public static readonly EntityArchetype RenderableBody;
+
+        public static readonly EntityArchetype RenderableMap;
+
         static MapArchetypes()
         {
             EntityManager manager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            Map = manager.CreateArchetype(typeof(MapData));
+            Map = manager.CreateArchetype(ComponentType.ReadOnly(typeof(MapData)));
+            RenderableMap = manager.CreateArchetype(ComponentType.ReadOnly(typeof(MapData)),typeof(MapRenderData));
             Render = manager.CreateArchetype(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
             Body = manager.CreateArchetype(typeof(MapBody));
+            RenderableBody = manager.CreateArchetype(typeof(MapBody),typeof(RenderMesh),typeof(MapBodyMeshOffset));
         }
     }
     [UpdateInGroup(typeof(MapSystemGroup))]
