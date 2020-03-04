@@ -1,6 +1,8 @@
 using System;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 
 namespace Reactics.Battle
 {
@@ -20,7 +22,11 @@ namespace Reactics.Battle
 
         public ref BlobArray<MapBlobSpawnGroup> SpawnGroups { get => ref map.Value.spawnGroups; }
 
+        public ref BlittableTile this[int x, int y] => ref map.Value.tiles[(y * Width) + x];
 
+        public ref BlittableTile this[ushort x, ushort y] => ref map.Value.tiles[(y * Width) + x];
+
+        public ref BlittableTile this[Point point] => ref map.Value.tiles[(point.y * Width) + point.x];
     }
 
     public struct MapRenderData : IComponentData
@@ -51,11 +57,64 @@ namespace Reactics.Battle
     /// <summary>
     /// Component to represent movable entities on the map. Point holds the current coordinate they are on.
     /// </summary>
+    [Serializable]
+    [WriteGroup(typeof(LocalToWorld))]
     public struct MapBody : IComponentData
     {
         public Point point;
         //Measured in tiles/second
         public float speed;
+
+        /// <summary>
+        /// Represents the offset from the tile center.
+        /// </summary>
+        public float3 offset;
+    }
+
+    public struct MapBodyMeshOffset : IComponentData
+    {
+        public float3 offset;
+
+        public MapBodyAnchor anchor;
+
+        public MapBodyMeshOffset(float3 offset, MapBodyAnchor anchor = MapBodyAnchor.BOTTOM_CENTER)
+        {
+            this.offset = offset;
+            this.anchor = anchor;
+        }
+    }
+
+    public enum MapBodyAnchor
+    {
+        TOP_NORTH = 0b100001,
+        TOP_NORTHEAST = 0b100010,
+        TOP_EAST = 0b010010,
+        TOP_SOUTHEAST = 0b000010,
+        TOP_SOUTH = 0b000001,
+        TOP_SOUTHWEST = 0b000000,
+        TOP_WEST = 0b010000,
+        TOP_NORTHWEST = 0b100000,
+        TOP_CENTER = 0b010001,
+
+        MIDDLE_NORTH = 0b100101,
+        MIDDLE_NORTHEAST = 0b100110,
+        MIDDLE_EAST = 0b010110,
+        MIDDLE_SOUTHEAST = 0b000110,
+        MIDDLE_SOUTH = 0b000101,
+        MIDDLE_SOUTHWEST = 0b000100,
+        MIDDLE_WEST = 0b010100,
+        MIDDLE_NORTHWEST = 0b100100,
+        MIDDLE_CENTER = 0b010101,
+
+        BOTTOM_NORTH = 0b101001,
+        BOTTOM_NORTHEAST = 0b101010,
+        BOTTOM_EAST = 0b011010,
+        BOTTOM_SOUTHEAST = 0b001010,
+        BOTTOM_SOUTH = 0b001001,
+        BOTTOM_SOUTHWEST = 0b001000,
+        BOTTOM_WEST = 0b011000,
+        BOTTOM_NORTHWEST = 0b101000,
+        BOTTOM_CENTER = 0b011001
     }
 
     /// <summary>

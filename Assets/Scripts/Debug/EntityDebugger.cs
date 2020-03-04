@@ -66,11 +66,14 @@ namespace Reactics.Util
             highlights.Add(new HighlightTile { point = new Point(6, 6), layer = MapLayer.HOVER });
             highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
 
-            var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(Translation));
+            var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld),typeof(MapBodyMeshOffset));
             EntityManager.SetComponentData(body, new MapBody
             {
-                point = new Point(0, 0),
+                point = new Point(4, 5),
                 speed = 4
+            });
+            EntityManager.SetComponentData(body, new MapBodyMeshOffset {
+                anchor = MapBodyAnchor.BOTTOM_CENTER
             });
             EntityManager.SetComponentData(body, new MapBodyTranslation
             {
