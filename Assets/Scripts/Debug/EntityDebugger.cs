@@ -30,7 +30,7 @@ namespace Reactics.Util
             this.InjectResources();
 
 
-            var simSystems = new Type[] { typeof(MapSystemGroup), typeof(MapRenderSystemGroup), typeof(MapRenderSystem), typeof(MapLayerRenderSystem) };
+            var simSystems = new Type[] { typeof(MapSystemGroup), typeof(MapRenderSystemGroup), typeof(MapRenderSystem), typeof(MapLayerRenderSystem), typeof(MapBodyPathFindingSystem) };
 
 
             World world = World.DefaultGameObjectInjectionWorld;
@@ -41,15 +41,15 @@ namespace Reactics.Util
 
             EditorApplication.playModeStateChanged += Cleanup;
             EntityManager EntityManager = world.EntityManager;
-/*             var mapEntity = EntityManager.CreateEntity(typeof(MapData), typeof(MapRenderData));
+            var mapEntity = EntityManager.CreateEntity(typeof(MapData), typeof(MapRenderData));
 
             EntityManager.SetComponentData(mapEntity, map.CreateComponent());
             EntityManager.SetComponentData(mapEntity, new MapRenderData
             {
                 tileSize = 1f,
                 elevationStep = 0.25f
-            }); */
-/*             var renderMap = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
+            });
+            var renderMap = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
             var renderMap2 = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
             var otherHighlightEntity = EntityManager.CreateEntity(typeof(HighlightTile));
             EntityManager.SetComponentData(renderMap, new RenderMap
@@ -60,43 +60,66 @@ namespace Reactics.Util
             {
                 layer = MapLayer.HOVER
             });
-            DynamicBuffer<HighlightTile> highlights = EntityManager.AddBuffer<HighlightTile>(otherHighlightEntity);
-            highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
-            highlights.Add(new HighlightTile { point = new Point(2, 0), layer = MapLayer.HOVER });
-            highlights.Add(new HighlightTile { point = new Point(0, 4), layer = MapLayer.HOVER });
-            highlights.Add(new HighlightTile { point = new Point(6, 6), layer = MapLayer.HOVER });
-            highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
+            
+            for (int i = 0; i < 10; i++)
+            {
+            var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(MapBodyMeshOffset));
+                EntityManager.SetComponentData(body, new MapBody
+                {
+                    point = new Point(i % map.Width, 0),
+                    speed = 8,
+                    solid = true
+                });
+                EntityManager.SetComponentData(body, new MapBodyMeshOffset
+                {
+                    anchor = MapBodyAnchor.BOTTOM_CENTER
+                });
+                EntityManager.SetSharedComponentData(body, new RenderMesh
+                {
+                    mesh = mesh,
+                    material = baseMaterial,
+                    subMesh = 0
+                });
+            }
 
-            var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld),typeof(MapBodyMeshOffset));
-            EntityManager.SetComponentData(body, new MapBody
-            {
-                point = new Point(4, 5),
-                speed = 4
-            });
-            EntityManager.SetComponentData(body, new MapBodyMeshOffset {
-                anchor = MapBodyAnchor.BOTTOM_CENTER
-            });
-            EntityManager.SetComponentData(body, new MapBodyTranslation
-            {
-                point = new Point(4, 5)
-            });
-            EntityManager.SetSharedComponentData(body, new RenderMesh
-            {
-                mesh = mesh,
-                material = baseMaterial,
-                subMesh = 0
-            }); */
-            var uiSample = EntityManager.CreateEntity(typeof(RenderMesh), typeof(LocalToWorld), typeof(LocalToScreen), typeof(Translation));
-            EntityManager.SetComponentData(uiSample,new LocalToScreen(Camera.main));
-            EntityManager.SetComponentData(uiSample,new Translation {
-                Value = new Unity.Mathematics.float3(0,0,0)
-            });
-            EntityManager.SetSharedComponentData(uiSample,new RenderMesh {
-                mesh = mesh,
-                material = baseMaterial,
-                subMesh = 0
-        
-            });
+            /*             var renderMap = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
+                        var renderMap2 = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
+                        var otherHighlightEntity = EntityManager.CreateEntity(typeof(HighlightTile));
+                        EntityManager.SetComponentData(renderMap, new RenderMap
+                        {
+                            layer = MapLayer.BASE
+                        });
+                        EntityManager.SetComponentData(renderMap2, new RenderMap
+                        {
+                            layer = MapLayer.HOVER
+                        });
+                        DynamicBuffer<HighlightTile> highlights = EntityManager.AddBuffer<HighlightTile>(otherHighlightEntity);
+                        highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(2, 0), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(0, 4), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(6, 6), layer = MapLayer.HOVER });
+                        highlights.Add(new HighlightTile { point = new Point(0, 0), layer = MapLayer.HOVER });
+
+                        var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld),typeof(MapBodyMeshOffset));
+                        EntityManager.SetComponentData(body, new MapBody
+                        {
+                            point = new Point(4, 5),
+                            speed = 4
+                        });
+                        EntityManager.SetComponentData(body, new MapBodyMeshOffset {
+                            anchor = MapBodyAnchor.BOTTOM_CENTER
+                        });
+                        EntityManager.SetComponentData(body, new MapBodyTranslation
+                        {
+                            point = new Point(4, 5)
+                        });
+                        EntityManager.SetSharedComponentData(body, new RenderMesh
+                        {
+                            mesh = mesh,
+                            material = baseMaterial,
+                            subMesh = 0
+                        }); */
+
 
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, simSystems);
             /* 

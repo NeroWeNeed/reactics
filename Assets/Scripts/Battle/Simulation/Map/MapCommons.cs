@@ -13,9 +13,58 @@ namespace Reactics.Battle
     public static class MapUtils
     {
 
-        public static Mesh GenerateMesh(this ref MapBlob map, float tileSize = 1f,float elevationStep = 0.25f)
+        public static Mesh GenerateMesh(this ref MapBlob map, float tileSize = 1f, float elevationStep = 0.25f)
         {
 
+            int vertexCount = map.Width * map.Length * 4;
+            Vector3[] vertices = new Vector3[vertexCount];
+            Vector2[] uv = new Vector2[vertexCount];
+            Vector3[] normals = new Vector3[vertexCount];
+            int[] triangles = new int[map.Width * map.Length * 6];
+            int x, y, index;
+            for (y = 0; y < map.Length; y++)
+            {
+                for (x = 0; x < map.Width; x++)
+                {
+                    index = (y * map.Width + x) * 4;
+
+                    vertices[index] = new Vector3(x * tileSize, map[x, y].Elevation * elevationStep, y * tileSize);
+                    uv[index] = new Vector2((float)x / map.Width, (float)y / map.Length);
+                    normals[index] = Vector3.up;
+
+                    vertices[index + 1] = new Vector3((x + 1) * tileSize, map[x, y].Elevation * elevationStep, y * tileSize);
+                    uv[index + 1] = new Vector2(((float)x + 1) / map.Width, (float)y / map.Length);
+                    normals[index + 1] = Vector3.up;
+
+                    vertices[index + 2] = new Vector3(x * tileSize, map[x, y].Elevation * elevationStep, (y + 1) * tileSize);
+                    uv[index + 2] = new Vector2((float)x / map.Width, ((float)y + 1) / map.Length);
+                    normals[index + 2] = Vector3.up;
+
+                    vertices[index + 3] = new Vector3((x + 1) * tileSize, map[x, y].Elevation * elevationStep, (y + 1) * tileSize);
+                    uv[index + 3] = new Vector2(((float)x + 1) / map.Width, ((float)y + 1) / map.Length);
+                    normals[index + 3] = Vector3.up;
+                }
+            }
+            for (y = 0; y < map.Length; y++)
+            {
+                for (x = 0; x < map.Width; x++)
+                {
+                    GenerateMeshTileTriangles(triangles, (y * map.Width + x) * 6, x, y, map.Width);
+                }
+            }
+
+            Mesh mesh = new Mesh();
+            mesh.Clear();
+            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            mesh.vertices = vertices;
+            mesh.uv = uv;
+            mesh.triangles = triangles;
+            mesh.subMeshCount = 2;
+            mesh.normals = normals;
+            return mesh;
+        }
+        public static Mesh GenerateMesh<T, S>(this IMap<T, S> map, float tileSize = 1f, float elevationStep = 0.25f) where T : IMapTile where S : IMapSpawnGroup
+        {
             int vertexCount = map.Width * map.Length * 4;
             Vector3[] vertices = new Vector3[vertexCount];
             Vector2[] uv = new Vector2[vertexCount];
@@ -108,84 +157,10 @@ namespace Reactics.Battle
 
         }
 
-        public static NativeList<Point> Expand(this ref Point point, ref MapBlob map, ushort amount, PathExpandPattern pattern, Allocator allocator)
-        {
-            NativeList<Point> output = new NativeList<Point>(allocator);
-            Point p;
-            for (int y = -amount; y <= amount; y++)
-            {
-                for (int x = -amount; x <= amount; x++)
-                {
-                    switch (pattern)
-                    {
-                        case PathExpandPattern.DIAMOND:
-                            if ((abs(x) + abs(y)) > amount)
-                                continue;
-                            if (Point.SafeCreate(point.x + x, point.y + y, map.width, map.length, out p) && !map[p].Inaccessible)
-                            {
-                                output.Add(p);
-                            }
-                            break;
-                        case PathExpandPattern.SQUARE:
-                            if (Point.SafeCreate(point.x + x, point.y + y, map.width, map.length, out p) && !map[p].Inaccessible)
-                            {
-                                output.Add(p);
-                            }
-                            break;
-                    }
-
-
-                }
-            }
-
-            return output;
-        }
-
-        /* 
-                public static void Expand(this Point point, ref MapHeader mapHeader, ref DynamicBuffer<MapTile> mapTiles, ushort amount, PathExpandPattern pattern, ref NativeList<Point> output)
-                {
-
-                    output.Clear();
-                    Point p;
-                    for (int y = -amount; y <= amount; y++)
-                    {
-                        for (int x = -amount; x <= amount; x++)
-                        {
-                            switch (pattern)
-                            {
-                                case PathExpandPattern.DIAMOND:
-                                    if ((abs(x) + abs(y)) > amount)
-                                        continue;
-                                    if (Point.SafeCreate(point.x + x, point.y + y, mapHeader.width, mapHeader.length, out p) && !mapTiles.GetTile(mapHeader, p).Value.inaccessible)
-                                    {
-                                        output.Add(p);
-                                    }
-                                    break;
-                                case PathExpandPattern.SQUARE:
-                                    if (Point.SafeCreate(point.x + x, point.y + y, mapHeader.width, mapHeader.length, out p) && !mapTiles.GetTile(mapHeader, p).Value.inaccessible)
-                                    {
-                                        output.Add(p);
-                                    }
-                                    break;
-                            }
-
-
-                        }
-                    }
-
-                }
-         */
-
 
 
 
     }
-
-    public enum PathExpandPattern
-    {
-        DIAMOND, SQUARE
-    }
-
 
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
@@ -211,7 +186,7 @@ namespace Reactics.Battle
         {
             return new Point(x + amount, y);
         }
-        public bool SafeShiftX(int amount, int max, out Point output)
+        public bool ShiftX(int amount, int max, out Point output)
         {
             int newX = x + amount;
             if (newX < 0 || newX >= max)
@@ -229,7 +204,7 @@ namespace Reactics.Battle
         {
             return new Point(x, y + amount);
         }
-        public bool SafeShiftY(int amount, int max, out Point output)
+        public bool ShiftY(int amount, int max, out Point output)
         {
             int newY = y + amount;
             if (newY < 0 || newY >= max)
@@ -244,14 +219,15 @@ namespace Reactics.Battle
             }
         }
 
-        public Point Shift(int xAmount,int yAmount) {
-            return new Point(x+xAmount,y+yAmount);
+        public Point Shift(int xAmount, int yAmount)
+        {
+            return new Point(x + xAmount, y + yAmount);
         }
 
-        public bool SafeShift(int xAmount,int yAmount, int xMax,int yMax, out Point output)
+        public bool Shift(int xAmount, int yAmount, int xMax, int yMax, out Point output)
         {
             int newY = y + yAmount;
-            int newX = y + xAmount;
+            int newX = x + xAmount;
             if (newY < 0 || newX < 0 || newX >= xMax || newY >= yMax)
             {
                 output = default;
@@ -259,16 +235,17 @@ namespace Reactics.Battle
             }
             else
             {
-                output = new Point(newX,newY);
+                output = new Point(newX, newY);
                 return true;
             }
         }
 
-        public uint Distance(Point other) {
-            return (uint) (abs(x-other.x)+ abs(y-other.y));
+        public uint Distance(Point other)
+        {
+            return (uint)(abs(x - other.x) + abs(y - other.y));
         }
 
-        public static bool SafeCreate(int x, int y, int maxX, int maxY, out Point output)
+        public static bool Create(int x, int y, int maxX, int maxY, out Point output)
         {
             if (x < 0 || x >= maxX || y < 0 || y >= maxY)
             {

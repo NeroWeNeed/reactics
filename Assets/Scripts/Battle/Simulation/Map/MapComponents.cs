@@ -1,4 +1,5 @@
 using System;
+using Reactics.Util;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -69,6 +70,8 @@ namespace Reactics.Battle
         /// Represents the offset from the tile center.
         /// </summary>
         public float3 offset;
+
+        public BlittableBool solid;
     }
 
     public struct MapBodyMeshOffset : IComponentData
@@ -128,14 +131,14 @@ namespace Reactics.Battle
         /// </summary>
         public Point point;
     }
-    public struct MapBodyTranslationPoint : IBufferElementData, IComparable<MapBodyTranslationPoint>
+    public struct MapBodyTranslationStep : IBufferElementData, IComparable<MapBodyTranslationStep>
     {
         public Point point;
         public int order;
 
         public float completion;
 
-        public int CompareTo(MapBodyTranslationPoint other)
+        public int CompareTo(MapBodyTranslationStep other)
         {
             return order.CompareTo(other.order);
 

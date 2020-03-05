@@ -1,10 +1,11 @@
+using System;
 using System.Runtime.InteropServices;
 
 namespace Reactics.Util
 {
     [System.Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public struct BlittableBool
+    public struct BlittableBool : IEquatable<BlittableBool>
     {
         public byte boolValue;
         public BlittableBool(bool value)
@@ -27,6 +28,11 @@ namespace Reactics.Util
             if (boolValue == 1)
                 return "true";
             return "false";
+        }
+
+        public bool Equals(BlittableBool other)
+        {
+            return boolValue == other.boolValue;
         }
     }
 }

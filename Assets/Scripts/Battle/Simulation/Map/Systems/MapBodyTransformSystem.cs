@@ -59,21 +59,37 @@ namespace Reactics.Battle
             var job = new TransformJob
             {
                 renderData = GetSingleton<MapRenderData>(),
-                mapData = GetSingleton<MapData>()
+                mapData = GetSingleton<MapData>(),
+                stepData = GetBufferFromEntity<MapBodyTranslationStep>(true)
             };
             return job.Schedule(this, inputDeps);
         }
 
-        public struct TransformJob : IJobForEach<LocalToWorld, MapBody>
+        public struct TransformJob : IJobForEachWithEntity<LocalToWorld, MapBody>
         {
             [ReadOnly]
             public MapRenderData renderData;
 
             [ReadOnly]
+            public BufferFromEntity<MapBodyTranslationStep> stepData;
+
+            [ReadOnly]
             public MapData mapData;
-            public void Execute(ref LocalToWorld ltw, ref MapBody body)
+
+            public void Execute(Entity entity, int index, ref LocalToWorld ltw, ref MapBody body)
             {
-                ltw.Value = float4x4.Translate(new float3(body.point.x + renderData.tileSize / 2 + body.offset.x, (mapData.map.Value[body.point].Elevation * renderData.elevationStep) + body.offset.y, body.point.y + renderData.tileSize / 2 + body.offset.z));
+                float3 position = new float3(body.point.x + renderData.tileSize / 2 + body.offset.x, (mapData.map.Value[body.point].Elevation * renderData.elevationStep) + body.offset.y, body.point.y + renderData.tileSize / 2 + body.offset.z);
+
+                if (stepData.Exists(entity))
+                {
+                    DynamicBuffer<MapBodyTranslationStep> steps = stepData[entity];
+                    if (steps.Length > 0 && steps.IsCreated)
+                    {
+                        MapBodyTranslationStep step = steps[steps.Length - 1];
+                        position += new float3((step.point.x - body.point.x) * step.completion, (mapData.map.Value[body.point].Elevation * renderData.elevationStep) - (mapData.map.Value[step.point].Elevation * renderData.elevationStep), (step.point.y - body.point.y) * step.completion);
+                    }
+                }
+                ltw.Value = float4x4.Translate(position);
             }
         }
     }

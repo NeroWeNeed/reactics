@@ -51,8 +51,10 @@ namespace Reactics.Battle
         private int maxTick = 100;
         private Entity highlightEntity;
         private int x, y;
+        private Unity.Mathematics.Random random;
         protected override void OnCreate()
         {
+            random = new Unity.Mathematics.Random((uint) System.DateTime.Now.ToFileTime());
             RequireSingletonForUpdate<MapData>();
         }
         protected override void OnStartRunning()
@@ -84,10 +86,11 @@ namespace Reactics.Battle
 
                 Entities.With(GetEntityQuery(typeof(MapBody))).ForEach((entity) =>
                 {
+
                     if (!EntityManager.HasComponent<MapBodyTranslation>(entity))
                         PostUpdateCommands.AddComponent(entity, new MapBodyTranslation
                         {
-                            point = new Point(x % data.Width, y % data.Length)
+                            point = new Point((ushort) random.NextUInt() % data.Width, (ushort) random.NextUInt() % data.Length)
                         });
                 });
                 tick = 0;

@@ -81,9 +81,9 @@ namespace Reactics.Battle
         private Mesh GenerateMesh(ushort width, ushort length, float tileSize) => GenerateMesh(new Mesh(), width, length, tileSize);
         private Mesh GenerateMesh(Mesh mesh, ushort width, ushort length, float tileSize)
         {
+            Mesh m = map.GenerateMesh(tileSize);
             
-            //Mesh m = map.GenerateMesh(tileSize);
-            Mesh m = new Mesh();
+            
             Width = width;
             Length = length;
             this.tileSize = tileSize;
