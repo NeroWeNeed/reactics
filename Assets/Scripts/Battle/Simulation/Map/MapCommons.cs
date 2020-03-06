@@ -13,6 +13,10 @@ namespace Reactics.Battle
     public static class MapUtils
     {
 
+        public static Point GetTilePoint(this ref MapData self, int index)
+        {
+            return new Point((ushort)(index % self.Width), (ushort)(index / self.Width));
+        }
         public static Mesh GenerateMesh(this ref MapBlob map, float tileSize = 1f, float elevationStep = 0.25f)
         {
 

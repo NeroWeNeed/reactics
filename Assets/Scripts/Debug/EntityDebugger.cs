@@ -60,14 +60,14 @@ namespace Reactics.Util
             {
                 layer = MapLayer.HOVER
             });
-            
-            for (int i = 0; i < 10; i++)
+            for (int j=0;j<2;j++) 
+            for (int i = 0; i < 4; i++)
             {
             var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(MapBodyMeshOffset));
                 EntityManager.SetComponentData(body, new MapBody
                 {
-                    point = new Point(i % map.Width, 0),
-                    speed = 8,
+                    point = new Point(i % map.Width, j),
+                    speed = 4,
                     solid = true
                 });
                 EntityManager.SetComponentData(body, new MapBodyMeshOffset

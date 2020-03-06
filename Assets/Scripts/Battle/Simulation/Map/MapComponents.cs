@@ -130,6 +130,11 @@ namespace Reactics.Battle
         /// Represents the final point the MapBody should be on before removal.
         /// </summary>
         public Point point;
+
+        /// <summary>
+        /// Represents the maximum distance the MapBody can move. Set to -1 for infinite distance.
+        /// </summary>
+        public int maxDistance;
     }
     public struct MapBodyTranslationStep : IBufferElementData, IComparable<MapBodyTranslationStep>
     {

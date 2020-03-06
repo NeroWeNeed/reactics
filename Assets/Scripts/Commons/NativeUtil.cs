@@ -49,5 +49,46 @@ namespace Reactics.Util
             return result;
 
         }
+        public static bool Any<T>(this ref NativeArray<T> self, Func<T, bool> tester) where T : struct
+        {
+            if (!self.IsCreated)
+                return false;
+            for (int i = 0; i < self.Length; i++)
+            {
+                if (tester.Invoke(self[i]))
+                    return true;
+            }
+            return false;
+        }
+        public static bool Any<T, Arg1>(this ref NativeArray<T> self, ref Arg1 arg1, RefFunc<T, Arg1, bool> tester) where T : struct where Arg1 : struct
+        {
+            if (!self.IsCreated)
+                return false;
+            T value;
+            for (int i = 0; i < self.Length; i++)
+            {
+                value = self[i];
+                if (tester.Invoke(ref value, ref arg1))
+                    return true;
+            }
+            return false;
+        }
+        public static bool Any<T, Arg1, Arg2>(this ref NativeArray<T> self, ref Arg1 arg1, ref Arg2 arg2, RefFunc<T, Arg1, Arg2, bool> tester) where T : struct where Arg1 : struct where Arg2 : struct
+        {
+            if (!self.IsCreated)
+                return false;
+            T value;
+            for (int i = 0; i < self.Length; i++)
+            {
+                value = self[i];
+                if (tester.Invoke(ref value, ref arg1, ref arg2))
+                    return true;
+            }
+            return false;
+        }
+
+        public delegate TResult RefFunc<T1, out TResult>(ref T1 arg1) where T1 : struct;
+        public delegate TResult RefFunc<T1, T2, out TResult>(ref T1 arg1, ref T2 arg2) where T1 : struct where T2 : struct;
+        public delegate TResult RefFunc<T1, T2, T3, out TResult>(ref T1 arg1, ref T2 arg2, ref T3 arg3) where T1 : struct where T2 : struct where T3 : struct;
     }
 }
