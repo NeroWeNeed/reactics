@@ -1,5 +1,7 @@
 using System;
 using Reactics.Battle;
+using Reactics.UI;
+using TMPro;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Rendering;
@@ -25,7 +27,13 @@ namespace Reactics.Util
 
         [SerializeField]
         private Mesh mesh;
-        private void Start()
+
+        [SerializeField]
+        private Mesh uiMesh;
+
+        [SerializeField]
+        private TMP_FontAsset fontAsset;
+        private void Awake()
         {
             this.InjectResources();
 
@@ -60,28 +68,86 @@ namespace Reactics.Util
             {
                 layer = MapLayer.HOVER
             });
-            for (int j=0;j<2;j++) 
-            for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 2; j++)
+                for (int i = 0; i < 4; i++)
+                {
+                    var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(MapBodyMeshOffset));
+                    EntityManager.SetComponentData(body, new MapBody
+                    {
+                        point = new Point(i % map.Width, j),
+                        speed = 4,
+                        solid = true
+                    });
+                    EntityManager.SetComponentData(body, new MapBodyMeshOffset
+                    {
+                        anchor = MapBodyAnchor.BOTTOM_CENTER
+                    });
+                    EntityManager.SetSharedComponentData(body, new RenderMesh
+                    {
+                        mesh = mesh,
+                        material = baseMaterial,
+                        subMesh = 0
+                    });
+                }
+            var uiEntity = EntityManager.CreateEntity(typeof(LocalToScreen), typeof(RenderMesh), typeof(LocalToWorld), typeof(EntityGuid));
+            EntityManager.SetComponentData(uiEntity, new LocalToScreen
             {
-            var body = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(MapBodyMeshOffset));
-                EntityManager.SetComponentData(body, new MapBody
-                {
-                    point = new Point(i % map.Width, j),
-                    speed = 4,
-                    solid = true
-                });
-                EntityManager.SetComponentData(body, new MapBodyMeshOffset
-                {
-                    anchor = MapBodyAnchor.BOTTOM_CENTER
-                });
-                EntityManager.SetSharedComponentData(body, new RenderMesh
-                {
-                    mesh = mesh,
-                    material = baseMaterial,
-                    subMesh = 0
-                });
-            }
+                location = new Unity.Mathematics.float2(100, -100),
+                screenAnchor = UIAnchor.TOP_LEFT
+            });
+            EntityManager.SetSharedComponentData(uiEntity, new RenderMesh
+            {
+                mesh = uiMesh,
+                material = baseMaterial,
+                subMesh = 0,
+                layer = 5
 
+            });
+            var textEntity = EntityManager.CreateEntity(UIArchetypes.DirtyUIElement);
+            EntityManager.SetComponentData(textEntity, new LocalToScreen
+            {
+                location = new Unity.Mathematics.float2(-100, -100),
+                screenAnchor = UIAnchor.TOP_RIGHT,
+                localAnchor = UIAnchor.TOP_RIGHT
+                
+            });
+            EntityManager.SetSharedComponentData(textEntity, new Reactics.UI.UIElement
+            {
+                configurator = new TextMeshFactory()
+            });
+            EntityManager.AddComponent<UIText>(textEntity);
+            EntityManager.SetSharedComponentData(textEntity, new UIText
+            {
+                value = "Inject"
+            });
+            
+            EntityManager.AddSharedComponentData(textEntity,new UIFont
+            {
+                value = fontAsset
+            });
+            EntityManager.AddComponentData(textEntity,new UITextSettings
+            {
+                fontSize = 12
+            });
+            
+
+            /*             var textEntity = EntityManager.CreateEntity(UIArchetypes.DirtyUIElement);
+                        EntityManager.SetComponentData(textEntity, new LocalToScreen
+                        {
+                            location = new Unity.Mathematics.float2(-100, -100),
+                            screenAnchor = UIAnchor.TOP_RIGHT
+                        });
+                        EntityManager.AddSharedComponentData(textEntity, new UIText
+                        {
+                            text = "Testing",
+                            fontAsset = fontAsset
+                        }); */
+            /*             EntityManager.SetSharedComponentData(textEntity,new Reactics.UI.UIElement {
+                            configurator = new TextMeshFactory()
+                        });
+                        Debug.Log(EntityManager.GetSharedComponentData<Reactics.UI.UIElement>(textEntity).configurator); */
+
+            //world.GetExistingSystem<BattleSimulationSystemGroup>().UpdateCallback = (x) => false;
             /*             var renderMap = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
                         var renderMap2 = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
                         var otherHighlightEntity = EntityManager.CreateEntity(typeof(HighlightTile));

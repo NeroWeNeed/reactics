@@ -11,17 +11,18 @@ public class BattlePlayer : MonoBehaviour
     private static BattlePlayer _instance;
     public static BattlePlayer instance => _instance;
 
-    [SerializeField]
+    [HideInInspector]
     private Camera camera;
 
     public Controls input;
-
+    [HideInInspector]
     public UnityEngine.InputSystem.PlayerInput playerInput;
 
     private void Awake()
     {
         _instance = this;
         input = new Controls();
+        camera = Camera.main;
         playerInput = GetComponent<UnityEngine.InputSystem.PlayerInput>();
         input.Enable();
     }

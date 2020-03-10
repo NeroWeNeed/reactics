@@ -1,0 +1,17 @@
+{
+    "name": "PlayerInputProcessingAssembly",
+    "references": [
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:415cfcc5dc95f4249bb8b29d52a6a714",
+        "GUID:17816a867c5d49c459115b1bfd7a0f70"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

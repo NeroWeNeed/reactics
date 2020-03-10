@@ -151,12 +151,11 @@ namespace Reactics.Battle
             NativeHashMap<int, MapBodySystemGroup.MapBodyPoint> bodyPoints = mbSystem.BodyPoints;
             Entities.With(query).ForEach((Entity entity, DynamicBuffer<MapBodyTranslationStep> steps, ref MapBody body) =>
             {
-
                 float amount = deltaTime * body.speed;
-                int stepIndex = steps.Length - 1;
+                int stepIndex = 0;
                 MapBodyTranslationStep step;
                 float newCompletion;
-                while (amount > 0 && stepIndex >= 0)
+                while (amount > 0 && stepIndex < steps.Length)
                 {
                     step = steps[stepIndex];
                     if (step.completion == 0f)
@@ -172,12 +171,12 @@ namespace Reactics.Battle
                                 if (EntityManager.HasComponent<MapBodyTranslation>(entity))
                                     ecb.SetComponent(entity, new MapBodyTranslation
                                     {
-                                        point = steps[0].point
+                                        point = steps[steps.Length - 1].point
                                     });
                                 else
                                     ecb.AddComponent(entity, new MapBodyTranslation
                                     {
-                                        point = steps[0].point
+                                        point = steps[steps.Length - 1].point
                                     });
                                 ecb.RemoveComponent<MapBodyTranslationStep>(entity);
                                 bodyPoints.Remove(entity.Index);
@@ -196,12 +195,12 @@ namespace Reactics.Battle
                                     if (EntityManager.HasComponent<MapBodyTranslation>(entity))
                                         ecb.SetComponent(entity, new MapBodyTranslation
                                         {
-                                            point = steps[0].point
+                                            point = steps[steps.Length - 1].point
                                         });
                                     else
                                         ecb.AddComponent(entity, new MapBodyTranslation
                                         {
-                                            point = steps[0].point
+                                            point = steps[steps.Length - 1].point
                                         });
                                     ecb.RemoveComponent<MapBodyTranslationStep>(entity);
                                     bodyPoints.Remove(entity.Index);
@@ -220,7 +219,6 @@ namespace Reactics.Battle
                     if (newCompletion >= 1.0f)
                     {
                         steps.RemoveAt(stepIndex);
-                        stepIndex--;
                         amount -= newCompletion - step.completion;
                         body.point = step.point;
 
@@ -230,13 +228,9 @@ namespace Reactics.Battle
                         step.completion = newCompletion;
                         amount = 0;
                         steps[stepIndex] = step;
-
                     }
-
-
-
                 }
-                if (stepIndex >= 0)
+                if (stepIndex < steps.Length)
                 {
                     bodyPoints.Remove(entity.Index);
                     bodyPoints.Add(entity.Index, new MapBodySystemGroup.MapBodyPoint(body.point, steps[stepIndex].point, steps[stepIndex].completion, body.speed));
@@ -394,38 +388,89 @@ namespace Reactics.Battle
 
         private BattleSimulationEntityCommandBufferSystem ecbSystem;
         private MapBodySystemGroup mbSystem;
+        private EntityQuery query;
+
+        private NativeHashMap<int, Entity> removes;
+
+        private NativeMultiHashMap<Entity, MapBodyTranslationStep> steps;
 
         protected override void OnCreate()
         {
             RequireSingletonForUpdate<MapData>();
             ecbSystem = World.GetOrCreateSystem<BattleSimulationEntityCommandBufferSystem>();
             mbSystem = World.GetExistingSystem<MapBodySystemGroup>();
-            RequireForUpdate(GetEntityQuery(ComponentType.ReadOnly(typeof(MapBody)), typeof(MapBodyTranslation)));
+            query = GetEntityQuery(ComponentType.ReadOnly(typeof(MapBody)), typeof(MapBodyTranslation));
+            RequireForUpdate(query);
         }
 
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
-
-            var job = new PathFindingJob
+            int entityCount = query.CalculateEntityCount();
+            if (!removes.IsCreated)
             {
-                ecb = ecbSystem.CreateCommandBuffer().ToConcurrent(),
+                removes = new NativeHashMap<int, Entity>(entityCount, Allocator.Persistent);
+            }
+            else if (entityCount > removes.Capacity)
+            {
+                removes.Dispose();
+                removes = new NativeHashMap<int, Entity>(entityCount, Allocator.Persistent);
+            }
+            if (!steps.IsCreated)
+            {
+                steps = new NativeMultiHashMap<Entity, MapBodyTranslationStep>(64, Allocator.Persistent);
+            }
+            removes.Clear();
+            steps.Clear();
+
+
+            var pathFindingJob = new PathFindingJob
+            {
                 mapData = GetSingleton<MapData>(),
                 bodyPoints = mbSystem.BodyPoints,
-                stepData = GetBufferFromEntity<MapBodyTranslationStep>(true)
-            };
-            var handle = job.Schedule(this, inputDeps);
-            ecbSystem.AddJobHandleForProducer(handle);
-            handle.Complete();
-            return handle;
+                stepData = GetBufferFromEntity<MapBodyTranslationStep>(true),
+                removes = removes.AsParallelWriter(),
+                steps = steps.AsParallelWriter()
+            }.Schedule(this, inputDeps);
+            var pathCleanupJob = new PathFindingCleanupJob
+            {
+                ecb = ecbSystem.CreateCommandBuffer(),
+                removes = removes,
+                steps = steps
+            }.Schedule(pathFindingJob);
+            ecbSystem.AddJobHandleForProducer(pathCleanupJob);
+
+            return pathCleanupJob;
         }
+        protected override void OnDestroy()
+        {
+            if (removes.IsCreated)
+            {
+                removes.Dispose();
+            }
+            if (steps.IsCreated)
+            {
+                steps.Dispose();
+            }
+        }
+        protected override void OnStartRunning()
+        {
+            int entityCount = query.CalculateEntityCount();
+            if (!removes.IsCreated)
+            {
+                removes = new NativeHashMap<int, Entity>(entityCount, Allocator.Persistent);
+            }
+            if (!steps.IsCreated)
+            {
+                steps = new NativeMultiHashMap<Entity, MapBodyTranslationStep>(64, Allocator.Persistent);
+            }
 
 
 
-        public struct PathFindingJob : IJobForEachWithEntity_ECC<MapBody, MapBodyTranslation>
+        }
+        //Not sure why this won't burstcompile
+        public struct PathFindingJob : IJobForEachWithEntity<MapBody, MapBodyTranslation>
         {
 
-
-            public EntityCommandBuffer.Concurrent ecb;
             [ReadOnly]
             public MapData mapData;
             [ReadOnly]
@@ -433,13 +478,18 @@ namespace Reactics.Battle
             [ReadOnly]
             public BufferFromEntity<MapBodyTranslationStep> stepData;
 
+            public NativeMultiHashMap<Entity, MapBodyTranslationStep>.ParallelWriter steps;
+            public NativeHashMap<int, Entity>.ParallelWriter removes;
+
 
 
             public void Execute(Entity entity, int index, ref MapBody body, ref MapBodyTranslation translation)
             {
                 if (body.point.Equals(translation.point) || mapData[translation.point].Inaccessible || stepData.Exists(entity))
                 {
-                    ecb.RemoveComponent<MapBodyTranslation>(index, entity);
+
+                    removes.TryAdd(index, entity);
+                    //ecb.RemoveComponent<MapBodyTranslation>(index, entity);
                     return;
                 }
                 NativeList<PathNode> history = new NativeList<PathNode>(Allocator.Temp);
@@ -449,10 +499,11 @@ namespace Reactics.Battle
                 history.Add(origin);
                 PathNode current;
                 PathNode closest = frontier.Peek();
+                NativeArray<PathNode> expansion = new NativeArray<PathNode>(8, Allocator.Temp);
                 while (frontier.Pop(out current) && !current.point.Equals(translation.point))
                 {
                     closest = closest.distanceToDestination > current.distanceToDestination ? current : closest;
-                    NativeArray<PathNode> expansion = ExpandPoint(mapData, current.point, translation.point, body.point);
+                    ExpandPoint(mapData, current.point, translation.point, body.point, ref expansion);
                     int historyIndex = history.IndexOf(current);
                     var keys = bodyPoints.GetKeyArray(Allocator.Temp);
                     for (int i = 0; i < expansion.Length; i++)
@@ -483,45 +534,67 @@ namespace Reactics.Battle
                     SkipExpansionPoint:;
                     }
                     keys.Dispose();
-                    expansion.Dispose();
 
                 }
-                if (current.IsCreated && current.point.Equals(translation.point))
+                var node = (current.IsCreated && current.point.Equals(translation.point) ? current : (closest.IsCreated && !closest.point.Equals(origin) ? closest : default));
+                if (node.IsCreated && node.point.Equals(translation.point))
                 {
-                    DynamicBuffer<MapBodyTranslationStep> steps = ecb.AddBuffer<MapBodyTranslationStep>(index, entity);
-                    while (current.previous != -1)
+                    while (node.previous != -1)
                     {
-                        steps.Add(new MapBodyTranslationStep
+
+                        steps.Add(entity, new MapBodyTranslationStep
                         {
-                            point = current.point
+                            point = node.point
                         });
 
-                        current = history[current.previous];
+                        node = history[node.previous];
                     }
                 }
-                else if (closest.IsCreated && !closest.point.Equals(origin))
-                {
-                    DynamicBuffer<MapBodyTranslationStep> steps = ecb.AddBuffer<MapBodyTranslationStep>(index, entity);
-                    while (closest.previous != -1)
-                    {
-                        steps.Add(new MapBodyTranslationStep
-                        {
-                            point = closest.point
-                        });
-
-                        closest = history[closest.previous];
-                    }
-                }
-                ecb.RemoveComponent<MapBodyTranslation>(index, entity);
+                removes.TryAdd(index, entity);
                 history.Dispose();
                 frontier.Dispose();
+
+                expansion.Dispose();
 
 
             }
         }
-        private static NativeArray<PathNode> ExpandPoint(MapData mapData, Point point, Point destination, Point origin)
+        [BurstCompile]
+        public struct PathFindingCleanupJob : IJob
         {
-            NativeArray<PathNode> expansion = new NativeArray<PathNode>(8, Allocator.Temp);
+            [ReadOnly]
+
+            public NativeHashMap<int, Entity> removes;
+
+            [ReadOnly]
+
+            public NativeMultiHashMap<Entity, MapBodyTranslationStep> steps;
+
+            public EntityCommandBuffer ecb;
+            public void Execute()
+            {
+                var values = removes.GetValueArray(Allocator.Temp);
+                for (int i = 0; i < values.Length; i++)
+                {
+                    ecb.RemoveComponent<MapBodyTranslation>(values[i]);
+                }
+                var keys = steps.GetKeyArray(Allocator.Temp);
+
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    var buffer = ecb.AddBuffer<MapBodyTranslationStep>(keys[i]);
+                    var keyValues = steps.GetValuesForKey(keys[i]);
+                    while (keyValues.MoveNext())
+                    {
+                        buffer.Add(keyValues.Current);
+                    }
+
+                }
+
+            }
+        }
+        private static void ExpandPoint(MapData mapData, Point point, Point destination, Point origin, ref NativeArray<PathNode> expansion)
+        {
             BlittableTile tile;
             Point cornerPoint, sidePoint;
 
@@ -554,7 +627,6 @@ namespace Reactics.Battle
                 }
 
             }
-            return expansion;
         }
 
 

@@ -1,0 +1,16 @@
+{
+    "name": "PlayerInputAssembly",
+    "references": [
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:415cfcc5dc95f4249bb8b29d52a6a714"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

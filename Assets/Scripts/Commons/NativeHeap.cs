@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -8,9 +9,11 @@ namespace Reactics.Commons
 
 
     [NativeContainer]
+    [StructLayout(LayoutKind.Sequential)]
 
     public unsafe struct NativeHeap<T> : IDisposable where T : struct, IComparable<T>
     {
+        [NativeDisableUnsafePtrRestriction]
         internal void* arr;
         internal long arrSize;
 
@@ -19,11 +22,12 @@ namespace Reactics.Commons
         private float loadFactor;
 
         private Allocator allocator;
-
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
         internal AtomicSafetyHandle safetyHandle;
 
+        [NativeSetClassTypeToNullOnSchedule]
         internal DisposeSentinel disposeSentinel;
-
+#endif
 
         public int Length { get; private set; }
 

@@ -49,6 +49,7 @@ namespace Reactics.Battle
     {
         protected override void OnCreate()
         {
+            
             RequireSingletonForUpdate<MapData>();
             RequireSingletonForUpdate<MapRenderData>();
             RequireForUpdate(GetEntityQuery(typeof(LocalToWorld), typeof(MapBody)));
@@ -85,7 +86,7 @@ namespace Reactics.Battle
                     DynamicBuffer<MapBodyTranslationStep> steps = stepData[entity];
                     if (steps.Length > 0 && steps.IsCreated)
                     {
-                        MapBodyTranslationStep step = steps[steps.Length - 1];
+                        MapBodyTranslationStep step = steps[0];
                         position += new float3((step.point.x - body.point.x) * step.completion, ((mapData.map.Value[body.point].Elevation * renderData.elevationStep) - (mapData.map.Value[step.point].Elevation * renderData.elevationStep)) * step.completion, (step.point.y - body.point.y) * step.completion);
                     }
                 }

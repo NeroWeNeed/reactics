@@ -1,0 +1,17 @@
+{
+    "name": "BattleSimulationAssembly",
+    "references": [
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:63afb046c8423dd448ae7aba042ea63d",
+        "GUID:a5baed0c9693541a5bd947d336ec7659"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
