@@ -16,7 +16,18 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: 10af95eeb3c36a94ebbc427f85e58226
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 58a65f22bffd8794e81aa573fac1893a
+    m_Address: MapMaterial
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_mainAssetType: UnityEngine.Material, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  - m_GUID: febf1b09b380b7d46ab5ebfccfca54d2
+    m_Address: Assets/ResourceData/OutlineMaterial.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_mainAssetType: 
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: bcb6fb4a03d8ef248a61eb20fb3a922e, type: 2}
   m_SchemaSet:

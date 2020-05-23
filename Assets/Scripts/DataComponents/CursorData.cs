@@ -2,6 +2,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using Reactics.Battle;
+using Reactics.Battle.Map;
 
 [GenerateAuthoringComponent]
 public struct CursorData : IComponentData

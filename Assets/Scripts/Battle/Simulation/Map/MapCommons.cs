@@ -1,170 +1,177 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Reactics.Util;
+using Reactics.Commons;
 using Unity.Collections;
-using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using static Unity.Mathematics.math;
+using UnityEngine.Rendering;
 
-namespace Reactics.Battle
+namespace Reactics.Battle.Map
 {
-    public static class MapUtils
+    public static class MapCommons
     {
 
-        public static Point GetTilePoint(this ref MapData self, int index)
+        public static readonly float MAX_CAMERA_DISTANCE_PADDING = 5f;
+        public static int IndexOf<T, S>(this IMap<T, S> map, int x, int y) where T : IMapTile where S : IMapSpawnGroup
         {
-            return new Point((ushort)(index % self.Width), (ushort)(index / self.Width));
+            return (y * map.Width) + x;
         }
-        public static Mesh GenerateMesh(this ref MapBlob map, float tileSize = 1f, float elevationStep = 0.25f)
+        public static int IndexOf<T, S>(this IMap<T, S> map, ushort x, ushort y) where T : IMapTile where S : IMapSpawnGroup
         {
-
-            int vertexCount = map.Width * map.Length * 4;
-            Vector3[] vertices = new Vector3[vertexCount];
-            Vector2[] uv = new Vector2[vertexCount];
-            Vector3[] normals = new Vector3[vertexCount];
-            int[] triangles = new int[map.Width * map.Length * 6];
-            int x, y, index;
-            for (y = 0; y < map.Length; y++)
-            {
-                for (x = 0; x < map.Width; x++)
-                {
-                    index = (y * map.Width + x) * 4;
-
-                    vertices[index] = new Vector3(x * tileSize, map[x, y].Elevation * elevationStep, y * tileSize);
-                    uv[index] = new Vector2((float)x / map.Width, (float)y / map.Length);
-                    normals[index] = Vector3.up;
-
-                    vertices[index + 1] = new Vector3((x + 1) * tileSize, map[x, y].Elevation * elevationStep, y * tileSize);
-                    uv[index + 1] = new Vector2(((float)x + 1) / map.Width, (float)y / map.Length);
-                    normals[index + 1] = Vector3.up;
-
-                    vertices[index + 2] = new Vector3(x * tileSize, map[x, y].Elevation * elevationStep, (y + 1) * tileSize);
-                    uv[index + 2] = new Vector2((float)x / map.Width, ((float)y + 1) / map.Length);
-                    normals[index + 2] = Vector3.up;
-
-                    vertices[index + 3] = new Vector3((x + 1) * tileSize, map[x, y].Elevation * elevationStep, (y + 1) * tileSize);
-                    uv[index + 3] = new Vector2(((float)x + 1) / map.Width, ((float)y + 1) / map.Length);
-                    normals[index + 3] = Vector3.up;
-                }
-            }
-            for (y = 0; y < map.Length; y++)
-            {
-                for (x = 0; x < map.Width; x++)
-                {
-                    GenerateMeshTileTriangles(triangles, (y * map.Width + x) * 6, x, y, map.Width);
-                }
-            }
-
-            Mesh mesh = new Mesh();
-            mesh.Clear();
-            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-            mesh.vertices = vertices;
-            mesh.uv = uv;
-            mesh.triangles = triangles;
-            mesh.subMeshCount = 2;
-            mesh.normals = normals;
-            return mesh;
+            return (y * map.Width) + x;
         }
-        public static Mesh GenerateMesh<T, S>(this IMap<T, S> map, float tileSize = 1f, float elevationStep = 0.25f) where T : IMapTile where S : IMapSpawnGroup
+        public static int IndexOf<T, S>(this IMap<T, S> map, Point point) where T : IMapTile where S : IMapSpawnGroup
         {
-            int vertexCount = map.Width * map.Length * 4;
-            Vector3[] vertices = new Vector3[vertexCount];
-            Vector2[] uv = new Vector2[vertexCount];
-            Vector3[] normals = new Vector3[vertexCount];
-            int[] triangles = new int[map.Width * map.Length * 6];
-            int x, y, index;
-            for (y = 0; y < map.Length; y++)
-            {
-                for (x = 0; x < map.Width; x++)
-                {
-                    index = (y * map.Width + x) * 4;
-
-                    vertices[index] = new Vector3(x * tileSize, map[x, y].Elevation * elevationStep, y * tileSize);
-                    uv[index] = new Vector2((float)x / map.Width, (float)y / map.Length);
-                    normals[index] = Vector3.up;
-
-                    vertices[index + 1] = new Vector3((x + 1) * tileSize, map[x, y].Elevation * elevationStep, y * tileSize);
-                    uv[index + 1] = new Vector2(((float)x + 1) / map.Width, (float)y / map.Length);
-                    normals[index + 1] = Vector3.up;
-
-                    vertices[index + 2] = new Vector3(x * tileSize, map[x, y].Elevation * elevationStep, (y + 1) * tileSize);
-                    uv[index + 2] = new Vector2((float)x / map.Width, ((float)y + 1) / map.Length);
-                    normals[index + 2] = Vector3.up;
-
-                    vertices[index + 3] = new Vector3((x + 1) * tileSize, map[x, y].Elevation * elevationStep, (y + 1) * tileSize);
-                    uv[index + 3] = new Vector2(((float)x + 1) / map.Width, ((float)y + 1) / map.Length);
-                    normals[index + 3] = Vector3.up;
-                }
-            }
-            for (y = 0; y < map.Length; y++)
-            {
-                for (x = 0; x < map.Width; x++)
-                {
-                    GenerateMeshTileTriangles(triangles, (y * map.Width + x) * 6, x, y, map.Width);
-                }
-            }
-
-            Mesh mesh = new Mesh();
-            mesh.Clear();
-            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-            mesh.vertices = vertices;
-            mesh.uv = uv;
-            mesh.triangles = triangles;
-            mesh.subMeshCount = 2;
-            mesh.normals = normals;
-            return mesh;
+            return (point.y * map.Width) + point.x;
         }
-
-
-        public static void GenerateMeshTileTriangles(int[] triangles, int index, int x, int y, int stride)
+        public static int IndexOf(Point point, ushort width)
         {
-            triangles[index] = (y * stride + x) * 4;
-            triangles[index + 1] = ((y * stride + x) * 4) + 2;
-            triangles[index + 2] = ((y * stride + x) * 4) + 1;
-            triangles[index + 3] = ((y * stride + x) * 4) + 2;
-            triangles[index + 4] = ((y * stride + x) * 4) + 3;
-            triangles[index + 5] = ((y * stride + x) * 4) + 1;
+            return (point.y * width) + point.x;
         }
-        public static void GenerateMeshTileTriangles(ref NativeArray<int> triangles, int index, int x, int y, int stride)
+        public static float3 GetCenterInWorldCoordinates<T, S>(this IMap<T, S> map, float tileSize = 1f, float elevationStep = 0.25f) where T : IMapTile where S : IMapSpawnGroup
         {
-            triangles[index] = (y * stride + x) * 4;
-            triangles[index + 1] = ((y * stride + x) * 4) + 2;
-            triangles[index + 2] = ((y * stride + x) * 4) + 1;
-            triangles[index + 3] = ((y * stride + x) * 4) + 2;
-            triangles[index + 4] = ((y * stride + x) * 4) + 3;
-            triangles[index + 5] = ((y * stride + x) * 4) + 1;
+            return new float3(map.Width * tileSize / 2f, map.Elevation * elevationStep, map.Length * tileSize / 2f);
         }
-
-        public static void GenerateMeshTileTriangles(int[] triangles, int index, int stride, params Point[] points)
+        public static float GetMaxDistance<T, S>(this IMap<T, S> map, float tileSize = 1f, float elevationStep = 0.25f) where T : IMapTile where S : IMapSpawnGroup
         {
-            for (int i = 0; i < points.Length; i++)
-            {
-                GenerateMeshTileTriangles(triangles, index + (i * 6), points[i].x, points[i].y, stride);
-            }
-        }
-        public static void GenerateMeshTileTriangles(int[] triangles, int index, int stride, IEnumerator<Point> points)
-        {
-            for (int i = 0; points.MoveNext(); i++)
-            {
-                GenerateMeshTileTriangles(triangles, index + (i * 6), points.Current.x, points.Current.y, stride);
-            }
+            return math.sqrt(math.pow(map.Width * tileSize / 2f, 2) + math.pow(map.Length * tileSize / 2f, 2)) + MAX_CAMERA_DISTANCE_PADDING;
 
         }
-        public static void GenerateMeshTileTriangles(ref NativeArray<int> triangles, int index, int stride, IEnumerator<Point> points)
-        {
-            for (int i = 0; points.MoveNext(); i++)
-            {
-                GenerateMeshTileTriangles(ref triangles, index + (i * 6), points.Current.x, points.Current.y, stride);
-            }
-
-        }
-
-
-
 
     }
+
+
+    public static class MapMeshCommons
+    {
+        public static readonly uint[] TILE_INDICES = new uint[] { 0, 2, 1, 2, 3, 1 };
+        public static Mesh CreateMesh<T, S>(this IMap<T, S> map, float tileSize = 1f, float elevationStep = 0.25f, Mesh mesh = null) where T : IMapTile where S : IMapSpawnGroup
+        {
+
+            if (mesh == null)
+                mesh = new Mesh();
+            var meshDataArray = Mesh.AllocateWritableMeshData(1);
+            var meshData = meshDataArray[0];
+
+            meshData.SetIndexBufferParams(map.Width * map.Length * 6, IndexFormat.UInt32);
+
+            meshData.SetVertexBufferParams(map.Width * map.Length * 4, new VertexAttributeDescriptor[]
+            {
+            new VertexAttributeDescriptor(VertexAttribute.Position,VertexAttributeFormat.Float32,3),
+            new VertexAttributeDescriptor(VertexAttribute.Normal,VertexAttributeFormat.Float32,3),
+            new VertexAttributeDescriptor(VertexAttribute.TexCoord0,VertexAttributeFormat.Float32,2)
+            });
+            meshData.subMeshCount = MapLayers.Count;
+            var vertexData = meshData.GetVertexData<VertexData>();
+            var indexData = meshData.GetIndexData<uint>();
+            for (ushort y = 0; y < map.Length; y++)
+            {
+                for (ushort x = 0; x < map.Width; x++)
+                {
+                    for (byte i = 0; i < 4; i++)
+                    {
+                        vertexData[(y * map.Width + x) * 4 + i] = new VertexData
+                        {
+                            position = new float3((x + (i & 0b0001)) * tileSize, map.GetTile(x, y).Elevation * elevationStep, (y + ((i >> 1) & 0b0001)) * tileSize),
+                            normal = new float3(0, 1, 0),
+                            uv = new float2(((float)(x + (i & 0b0001))) / map.Width, ((float)y + ((i >> 1) & 0b0001)) / map.Length)
+                        };
+                    }
+                    for (byte j = 0; j < 6; j++)
+                    {
+                        indexData[(y * map.Width + x) * 6 + j] = (ushort)(((y * map.Width + x) * 4) + TILE_INDICES[j]);
+                    }
+                }
+            }
+
+            meshData.SetSubMesh(0, new SubMeshDescriptor(0, 6 * map.Width * map.Length)
+            {
+                firstVertex = 0,
+                vertexCount = 4 * map.Width * map.Length
+            });
+
+            meshData.subMeshCount = MapLayers.Count;
+
+            Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, mesh);
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        public static bool GetPoint<T, S>(this IMap<T, S> map, float3 worldCoordinates, out Point point, bool ignoreHeight = true, float tileSize = 1f, float elevationStep = 0.25f) where T : IMapTile where S : IMapSpawnGroup => GetPoint(map, worldCoordinates, float3.zero, out point, ignoreHeight, tileSize, elevationStep);
+        public static bool GetPoint<T, S>(this IMap<T, S> map, float3 worldCoordinates, float3 mapOffset, out Point point, bool ignoreHeight = true, float tileSize = 1f, float elevationStep = 0.25f) where T : IMapTile where S : IMapSpawnGroup
+        {
+            if (worldCoordinates.x < mapOffset.x || worldCoordinates.x >= mapOffset.x + map.Width * tileSize || worldCoordinates.z < mapOffset.z || worldCoordinates.z >= mapOffset.z + map.Length * tileSize)
+            {
+                point = default;
+                return false;
+            }
+
+
+            var coords = worldCoordinates - mapOffset;
+            var p = new Point((ushort)(coords.x / tileSize), (ushort)(coords.z / tileSize));
+            if (!ignoreHeight && map.GetTile(p).Elevation * elevationStep != worldCoordinates.y - mapOffset.y)
+            {
+                point = default;
+                return false;
+            }
+            point = p;
+            return true;
+
+        }
+
+        public static bool UpdateRenderLayerBuffer(IMapHighlightInfo info, ushort mapWidth, MapLayer layer, List<int> buffer, List<uint> processedBuffer) => UpdateRenderLayerBuffer(info, mapWidth, (ushort)layer, buffer, processedBuffer);
+        public static bool UpdateRenderLayerBuffer(IMapHighlightInfo info, ushort mapWidth, ushort layer, List<int> buffer, List<uint> processedBuffer)
+        {
+            if ((info.Dirty & layer) == 0)
+                return false;
+            var enumerator = info.GetPoints(layer);
+            processedBuffer.Clear();
+            while (enumerator.MoveNext())
+            {
+                
+                uint j = (uint)MapCommons.IndexOf(enumerator.Current, mapWidth);
+                if (processedBuffer.Contains(j))
+                    continue;
+                for (byte k = 0; k < 6; k++)
+                    buffer.Add((int)(j * 4 + TILE_INDICES[k]));
+                processedBuffer.Add(j);
+            }
+            return true;
+        }
+
+        private struct VertexData
+        {
+            public float3 position;
+            public float3 normal;
+            public float2 uv;
+        }
+    }
+
+    public interface IMapHighlightInfo
+    {
+        ushort Dirty { get; }
+
+        IEnumerator<Point> GetPoints(ushort layer);
+
+        IEnumerator<Point> GetPoints(MapLayer layer);
+    }
+
+    public struct MapHighlightInfo : IMapHighlightInfo
+    {
+
+        public ushort Dirty => throw new NotImplementedException();
+
+        public IEnumerator<Point> GetPoints(ushort layer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerator<Point> GetPoints(MapLayer layer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
@@ -179,6 +186,12 @@ namespace Reactics.Battle
         {
             this.x = x;
             this.y = y;
+        }
+        public Point(uint2 coordinates)
+        {
+
+            this.x = (ushort)coordinates.x;
+            this.y = (ushort)coordinates.y;
         }
         public Point(int x, int y)
         {
@@ -228,7 +241,22 @@ namespace Reactics.Battle
             return new Point(x + xAmount, y + yAmount);
         }
 
-        public bool Shift(int xAmount, int yAmount, int xMax, int yMax, out Point output)
+        public bool TryShift(int xAmount, int yAmount, int xMax, int yMax, out Point output)
+        {
+            int newY = y + yAmount;
+            int newX = x + xAmount;
+            if (newY < 0 || newX < 0 || newX >= xMax || newY >= yMax)
+            {
+                output = default;
+                return false;
+            }
+            else
+            {
+                output = new Point(newX, newY);
+                return true;
+            }
+        }
+        public bool TryShift(sbyte xAmount, sbyte yAmount, int xMax, int yMax, out Point output)
         {
             int newY = y + yAmount;
             int newX = x + xAmount;
@@ -244,10 +272,12 @@ namespace Reactics.Battle
             }
         }
 
-        public uint Distance(Point other)
+        public float Distance(Point other)
         {
-            return (uint)(abs(x - other.x) + abs(y - other.y));
+            return math.distance(x - other.x, y - other.y);
+
         }
+
 
         public static bool Create(int x, int y, int maxX, int maxY, out Point output)
         {
@@ -262,6 +292,7 @@ namespace Reactics.Battle
                 return true;
             }
         }
+
 
 
         public bool Equals(Point other)
@@ -302,130 +333,67 @@ namespace Reactics.Battle
                 throw new InvalidCastException("Vector must be positive");
         }
 
+
+
     }
 
-
-    public class PointComparerByX : IComparer<Point>
-    {
-        private static PointComparerByX INSTANCE;
-
-        public static PointComparerByX GetInstance()
-        {
-            if (INSTANCE == null)
-                INSTANCE = new PointComparerByX();
-            return INSTANCE;
-        }
-        public int Compare(Point a, Point b)
-        {
-            int yCompare = a.y.CompareTo(b.y);
-            return yCompare != 0 ? yCompare : a.x.CompareTo(b.x);
-        }
-
-        private PointComparerByX() { }
-    }
-
-    public class PointComparerByY : IComparer<Point>
-    {
-        private static PointComparerByY INSTANCE;
-
-        public static PointComparerByY GetInstance()
-        {
-            if (INSTANCE == null)
-                INSTANCE = new PointComparerByY();
-            return INSTANCE;
-        }
-        public int Compare(Point a, Point b)
-        {
-            int xCompare = a.x.CompareTo(b.x);
-            return xCompare != 0 ? xCompare : a.y.CompareTo(b.y);
-        }
-        private PointComparerByY() { }
-    }
-
-    [Serializable]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct SpawnGroup : IMapSpawnGroup
-    {
-        [SerializeField]
-        public Point[] points;
-
-        public Point this[int index] => points[index];
-
-        public int Count => points.Length;
-    }
-
-    [Serializable]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct Tile : IMapTile
-    {
-        public int elevation;
-
-
-        public bool inaccessible;
-
-        public int Elevation => elevation;
-
-        public bool Inaccessible => inaccessible;
-    }
-
-    public struct BlittableTile : IMapTile
-    {
-
-        public int elevation;
-
-        public BlittableBool inaccessible;
-        public int Elevation { get => elevation; }
-
-        public bool Inaccessible { get => inaccessible; }
-
-        public static implicit operator Tile(BlittableTile tile) => new Tile
-        {
-            elevation = tile.elevation,
-            inaccessible = tile.inaccessible
-        };
-
-
-        public static explicit operator BlittableTile(Tile tile) => new BlittableTile
-        {
-            elevation = tile.elevation,
-            inaccessible = tile.inaccessible
-        };
-
-    }
-    public struct TileInfo : IEquatable<TileInfo>
-    {
-        public readonly Point point;
-        public readonly Tile tile;
-        public TileInfo(Point point, Tile tile)
-        {
-            this.point = point;
-            this.tile = tile;
-        }
-
-        bool IEquatable<TileInfo>.Equals(TileInfo other)
-        {
-            return other.point.Equals(point) && other.tile.Equals(tile);
-        }
-    }
-
+    [Flags]
     public enum MapLayer
     {
-        BASE,
-        HOVER,
-        PLAYER_MOVE,
-        PLAYER_ATTACK,
-        PLAYER_SUPPORT,
-        PLAYER_ALL,
-        ENEMY_MOVE,
-        ENEMY_ATTACK,
-        ENEMY_SUPPORT,
-        ENEMY_ALL,
-        ALLY_MOVE,
-        ALLY_ATTACK,
-        ALLY_SUPPORT,
-        ALLY_ALL,
-        UTILITY
+        Base = 0,
+        PlayerMove = 1,
+        PlayerAttack = 2,
+        PlayerSupport = 4,
+        PlayerAll = 8,
+        EnemyMove = 16,
+        EnemyAttack = 32,
+        EnemySupport = 64,
+        EnemyAll = 128,
+        AllyMove = 256,
+        AllyAttack = 512,
+        AllySupport = 1024,
+        AllyAll = 2048,
+        Hover = 4096,
+        //Placeholders
+        UtilityOne = 8192,
+        UtilityTwo = 16384
+
+
     }
 
+    
+    public static class MapLayers
+    {
+
+        private static readonly ushort[] Values = { 0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384 };
+
+
+        public static readonly int Count = Values.Length;
+        public static ushort Get(int index) => Values[index];
+        public static ushort Get(byte index) => Values[index];
+        public static ushort Get(ushort index) => Values[index];
+
+        public static int IndexOf(MapLayer layer) => IndexOf((ushort)layer);
+        public static int IndexOf(ushort layer) => Array.IndexOf(Values, layer);
+
+        public static EnumDictionary<MapLayer, Color> CreateDefaultColorMap() => new EnumDictionary<MapLayer, Color>(
+            GeneralCommons.ParseColor("C0C0C0"),
+            GeneralCommons.ParseColor("41EAD4"),
+            GeneralCommons.ParseColor("41EAD4"),
+            GeneralCommons.ParseColor("41EAD4"),
+            GeneralCommons.ParseColor("41EAD4"),
+            GeneralCommons.ParseColor("F71735"),
+            GeneralCommons.ParseColor("F71735"),
+            GeneralCommons.ParseColor("F71735"),
+            GeneralCommons.ParseColor("F71735"),
+            GeneralCommons.ParseColor("95E06C"),
+            GeneralCommons.ParseColor("95E06C"),
+            GeneralCommons.ParseColor("95E06C"),
+            GeneralCommons.ParseColor("95E06C"),
+            GeneralCommons.ParseColor("FF9F1C"),
+            GeneralCommons.ParseColor("FDFFFC"),
+            GeneralCommons.ParseColor("011627")
+            );
+    }
 
 }

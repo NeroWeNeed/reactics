@@ -1,0 +1,19 @@
+{
+    "name": "EditorAssembly",
+    "references": [
+        "GUID:1d0af8e976d3e2548a7ada9a6c6ce405",
+        "GUID:ef3e215e6ff4954459c0747dd3e51120",
+        "GUID:82b0cb0ae8111e643934b14d68857ded",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:e0cd26848372d4e5c891c569017e11f1"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

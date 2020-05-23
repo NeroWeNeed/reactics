@@ -67,6 +67,7 @@ namespace Reactics.Battle
 
         public UnitData CreateComponent()
         {
+            
             BlobBuilder builder = new BlobBuilder(Allocator.Temp);
             ref UnitBlob blob = ref builder.ConstructRoot<UnitBlob>();
             blob.defense = defense;

@@ -1,0 +1,42 @@
+.widget-body {
+    background-color: rgb(194, 194, 194);
+}
+
+.widget-header {
+}
+
+.widget {
+    border-left-color: rgb(0, 0, 0);
+    border-right-color: rgb(0, 0, 0);
+    border-top-color: rgb(0, 0, 0);
+    border-bottom-color: rgb(0, 0, 0);
+    border-bottom-width: 1px;
+}
+
+.widget-header > Toggle {
+    background-color: rgb(203, 203, 203);
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-top: 1px;
+    padding-bottom: 3px;
+    -unity-font-style: bold;
+    border-bottom-color: rgb(186, 186, 186);
+    border-bottom-width: 1px;
+}
+
+.widget > #unity-content {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 15px;
+    background-color: rgb(194, 194, 194);
+}
+
+.footer {
+    background-color: rgb(138, 138, 138);
+}

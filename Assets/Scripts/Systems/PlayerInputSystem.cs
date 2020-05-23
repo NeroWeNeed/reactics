@@ -13,10 +13,10 @@ using Reactics.Battle;
 //always synchronize? not sure if necessary on component system
 [AlwaysSynchronizeSystem]
 [UpdateInGroup(typeof(Unity.Entities.SimulationSystemGroup))]
-public class PlayerInputSystem : JobComponentSystem
+public class PlayerInputSystem : SystemBase
 {
-    /*[SerializeField] figure out later...
-    private Camera battleCamera;*/
+    //[SerializeField] figure out later...
+    //private Camera battleCamera;
     private float screenEdgeLength = 40f;
     private Vector2 hoverInput;
     protected override JobHandle OnUpdate(JobHandle inputDeps) 

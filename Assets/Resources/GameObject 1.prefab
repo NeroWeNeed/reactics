@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8406800229251779872
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8406800229251779874}
+  - component: {fileID: 8406800229251779873}
+  m_Layer: 0
+  m_Name: GameObject 1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8406800229251779874
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8406800229251779872}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.025382, y: -1.1243448, z: 2.014018}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8406800229251779873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8406800229251779872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f33d9c646eb1ab64aa363f93e13d5408, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  map: {fileID: 0}
+  layerColors:
+    entries:
+    - key: 0
+      value: {r: 1, g: 0.28773582, b: 0.28773582, a: 0}
+    - key: 1
+      value: {r: 1, g: 0.4009434, b: 0.4009434, a: 0}
+    - key: 2
+      value: {r: 1, g: 0.11792451, b: 0.11792451, a: 0}
+    - key: 3
+      value: {r: 0.08170167, g: 0.6415094, b: 0.21981668, a: 0}
+    - key: 4
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 5
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 6
+      value: {r: 0.8301887, g: 0.1527234, b: 0.1527234, a: 0}
+    - key: 7
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 8
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 9
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 10
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 11
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 12
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 13
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 14
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 15
+      value: {r: 1, g: 0.33490568, b: 0.33490568, a: 0}

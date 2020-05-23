@@ -4,7 +4,7 @@ using Unity.Mathematics;
 
 namespace Reactics.Battle
 {
-
+/* 
     public interface IActionTarget<T> where T : struct
     {
         float3 WorldPosition { get; }
@@ -35,6 +35,8 @@ namespace Reactics.Battle
 
         public MapTileActionTarget(Point point, float3 worldPosition)
         {
+
+            
             this.point = point;
             this.worldPosition = worldPosition;
         }
@@ -49,5 +51,5 @@ namespace Reactics.Battle
 
         void Invoke(Entity entity,EntityManager entityManager, T target);
     }
-
+ */
 }

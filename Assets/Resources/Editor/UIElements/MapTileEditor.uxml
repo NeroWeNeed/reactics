@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:Foldout text="Tile (0,0)" style="-unity-font-style: bold;&#10;">
+        <Style src="MapTileEditor.uss" />
+        <ui:Toggle label="Inaccessible" name="inaccessible" binding-path="inaccessible" style="-unity-font-style: normal;&#10;" />
+        <ui:Slider picking-mode="Ignore" label="Elevation" value="0" high-value="100" low-value="-100" binding-path="elevation" style="-unity-font-style: normal;&#10;" />
+        <ui:Button text="Apply To All" name="apply-to-all" style="-unity-font-style: normal;&#10;" />
+    </ui:Foldout>
+</ui:UXML>
