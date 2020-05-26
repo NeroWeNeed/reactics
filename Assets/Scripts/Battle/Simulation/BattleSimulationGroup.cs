@@ -13,7 +13,7 @@ namespace Reactics.Battle
     /// <summary>
     /// Group responsible for all simulation. Should be updated at a reliable, constant rate for all users.
     /// </summary>
-    [UpdateAfter(typeof(PlayerInputProcessingSystemGroup))]
+    //[UpdateAfter(typeof(PlayerInputProcessingSystemGroup))]
     [UpdateInGroup(typeof(BattleSystemGroup))]
     public class BattleSimulationSystemGroup : ComponentSystemGroup
     {

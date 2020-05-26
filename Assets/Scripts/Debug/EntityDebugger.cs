@@ -9,6 +9,7 @@ using Unity.Transforms;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.LowLevel;
+using Unity.Mathematics;
 
 namespace Reactics.Util
 {
@@ -17,9 +18,12 @@ namespace Reactics.Util
     //also this is just a debugger so seeing those changes doesn't *really* matter much
     public class EntityDebugger : MonoBehaviour
     {
-
         [SerializeField]
         private Map map;
+        [SerializeField]
+        private Unit testUnit;
+        [SerializeField]
+        private Unit testUnit2;
         [ResourceField("Materials/Map/HoverMaterial.mat")]
         private Material hoverMaterial;
         [ResourceField("Materials/Map/MapMaterial.mat")]
@@ -40,7 +44,7 @@ namespace Reactics.Util
 
             var simSystems = new Type[] { typeof(MapSystemGroup), typeof(MapRenderSystemGroup), typeof(MapRenderSystem), typeof(MapLayerRenderSystem), typeof(MapBodyPathFindingSystem) };
 
-
+            //EntityManager EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             World world = World.DefaultGameObjectInjectionWorld;
             World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BattleSimulationSystemGroup>();
             World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<BattleSimulationEntityCommandBufferSystem>();
@@ -49,17 +53,21 @@ namespace Reactics.Util
 
             EditorApplication.playModeStateChanged += Cleanup;
             EntityManager EntityManager = world.EntityManager;
-            var mapEntity = EntityManager.CreateEntity(typeof(MapData), typeof(MapRenderData));
+            var mapEntity = EntityManager.CreateEntity(typeof(MapData), typeof(MapRenderData), typeof(MapTileEffect));
 
             EntityManager.SetComponentData(mapEntity, map.CreateComponent());
-            EntityManager.SetComponentData(mapEntity, new MapRenderData
-            {
-                tileSize = 1f,
+            float mapTileSize = 1f;
+            EntityManager.SetComponentData(mapEntity,new MapRenderData {
+                tileSize = mapTileSize,
                 elevationStep = 0.25f
             });
             var renderMap = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
             var renderMap2 = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
-            var otherHighlightEntity = EntityManager.CreateEntity(typeof(HighlightTile));
+            var renderMap3 = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
+            var renderMap4 = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
+            var renderMap5 = EntityManager.CreateEntity(typeof(RenderMap), typeof(Translation), typeof(LocalToWorld));
+            var inputEntity = EntityManager.CreateEntity(typeof(InputData));
+            var unitManagerEntity = EntityManager.CreateEntity(typeof(UnitManagerData));
             EntityManager.SetComponentData(renderMap, new RenderMap
             {
                 layer = MapLayer.BASE
@@ -68,6 +76,99 @@ namespace Reactics.Util
             {
                 layer = MapLayer.HOVER
             });
+            EntityManager.SetComponentData(renderMap3, new RenderMap
+            {
+                layer = MapLayer.PLAYER_MOVE
+            });
+            EntityManager.SetComponentData(renderMap4, new RenderMap
+            {
+                layer = MapLayer.PLAYER_ATTACK
+            });
+            EntityManager.SetComponentData(renderMap4, new RenderMap
+            {
+                layer = MapLayer.PLAYER_SUPPORT
+            });
+
+            EntityManager.SetName(inputEntity, "InputEntity");
+            EntityManager.SetComponentData(inputEntity, new InputData
+            {
+                currentActionMap = ActionMaps.BattleControls,
+                previousActionMap = ActionMaps.BattleControls,
+                menuOption = 1
+            });
+            EntityManager.SetName(unitManagerEntity, "UnitManager");
+            EntityManager.SetComponentData(unitManagerEntity, new UnitManagerData
+            {
+                commanding = false
+            });
+
+            //Create a map body unit
+            var mapBody = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(Translation), 
+                typeof(UnitData), typeof(ActionMeter), typeof(UnitCommand), typeof(MoveTilesTag), typeof(HighlightTile));
+            var mapBodyUnitData = EntityManager.GetComponentData<UnitData>(mapBody);
+            EntityManager.SetComponentData(mapBody, new MapBody
+            {
+                point = new Point(6, 9),
+                speed = 4,
+                self = mapBody
+            });
+            /*EntityManager.SetComponentData(mapBody, new MapBodyTranslation
+            {
+                point = new Point(4, 5)
+            });*/
+            EntityManager.SetSharedComponentData(mapBody, new RenderMesh
+            {
+                mesh = mesh,
+                material = baseMaterial,
+                subMesh = 0
+            });
+            EntityManager.SetComponentData(mapBody, new ActionMeter
+            {
+                rechargeRate = 10f,
+                chargeable = true,
+                charge = 0f
+            });
+            EntityManager.SetComponentData(mapBody, new UnitCommand
+            {
+                unitManagerEntity = unitManagerEntity
+            });
+            EntityManager.SetComponentData(mapBody, testUnit.CreateComponent());
+            DynamicBuffer<EffectBuffer> effectBuffer = EntityManager.AddBuffer<EffectBuffer>(mapBody);
+            EntityManager.SetName(mapBody, "Galvinius");
+
+            //Create a map body unit
+            var body2 = EntityManager.CreateEntity(typeof(MapBodyTranslation), typeof(MapBody), typeof(RenderMesh), typeof(LocalToWorld), typeof(Translation), 
+                typeof(UnitData), typeof(ActionMeter), typeof(UnitCommand), typeof(MoveTilesTag), typeof(HighlightTile));
+            EntityManager.SetComponentData(body2, new MapBody
+            {
+                point = new Point(6, 6),
+                speed = 4,
+                self = body2
+            });
+            /*EntityManager.SetComponentData(body2, new MapBodyTranslation
+            {
+                point = new Point(4, 9)
+            });*/
+            EntityManager.SetSharedComponentData(body2, new RenderMesh
+            {
+                mesh = mesh,
+                material = baseMaterial,
+                subMesh = 0
+            });
+            EntityManager.SetComponentData(body2, new ActionMeter
+            {
+                rechargeRate = 20f,
+                chargeable = true,
+                charge = 100f
+            });
+            EntityManager.SetComponentData(body2, new UnitCommand
+            {
+                unitManagerEntity = unitManagerEntity
+            });
+            EntityManager.SetComponentData(body2, testUnit2.CreateComponent());
+            DynamicBuffer<EffectBuffer> effectBuffer2 = EntityManager.AddBuffer<EffectBuffer>(body2);
+            EntityManager.SetName(body2, "Talfias");
+            /*
             for (int j = 0; j < 2; j++)
                 for (int i = 0; i < 4; i++)
                 {
@@ -185,7 +286,6 @@ namespace Reactics.Util
                             material = baseMaterial,
                             subMesh = 0
                         }); */
-
 
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, simSystems);
             /* 

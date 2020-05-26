@@ -11,17 +11,17 @@ using Reactics.Battle;
 using Unity.Physics;
 
 //always synchronize? not sure if necessary on component system
-[UpdateInGroup(typeof(Unity.Entities.SimulationSystemGroup))]
+[UpdateInGroup(typeof(RenderingSystemGroup))]
 [UpdateAfter(typeof(CameraRotationSystem))]
-public class CursorFollowSystem : JobComponentSystem
+public class CursorFollowSystem : SystemBase
 {
-    protected override JobHandle OnUpdate(JobHandle inputDeps) 
+    protected override void OnUpdate() 
     {
         ComponentDataFromEntity<CameraMovementData> cameraData = GetComponentDataFromEntity<CameraMovementData>(true);
         //Apparently doing this is just allowed.
         var physicsWorldSystem = this.World.GetExistingSystem<Unity.Physics.Systems.BuildPhysicsWorld>();
         var collisionWorld = physicsWorldSystem.PhysicsWorld.CollisionWorld;
-        Entities.ForEach((ref Translation trans, in CursorData cursorData, in ControlSchemeData controlSchemeData) =>
+        Entities.WithReadOnly(cameraData).ForEach((ref Translation trans, in CursorData cursorData, in ControlSchemeData controlSchemeData) =>
         {
             if (!cameraData.Exists(cursorData.cameraEntity))
                 return;
@@ -52,53 +52,45 @@ public class CursorFollowSystem : JobComponentSystem
                 //UnityEngine.Debug.DrawRay(cursorData.rayOrigin, cursorData.rayDirection * cursorData.rayMagnitude, UnityEngine.Color.yellow);
             }
         }).Run();
-        return default;
     }
 }
 
 //move to own cs file 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateInGroup(typeof(RenderingSystemGroup))]
 [UpdateAfter(typeof(CursorFollowSystem))]
-public class CursorHighlightSystem : JobComponentSystem
+public class CursorHighlightSystem : SystemBase
 {
-    protected override JobHandle OnUpdate(JobHandle inputDeps) 
-    {/* broken due to new map stuff
-        ComponentDataFromEntity<CameraMovementData> cameraData = GetComponentDataFromEntity<CameraMovementData>(true);
+    protected override void OnUpdate() 
+    {
         //tilesFromEntity = GetBufferFromEntity<MapTile>(),
-        BufferFromEntity<MapTile> tilesFromEntity = GetBufferFromEntity<MapTile>(true);
+        //BufferFromEntity<MapTile> tilesFromEntity = GetBufferFromEntity<MapTile>(true);
         BufferFromEntity<HighlightTile> highlightTilesFromEntity = GetBufferFromEntity<HighlightTile>(false);
-        ComponentDataFromEntity<MapHeader> headerFromEntity = GetComponentDataFromEntity<MapHeader>(true);
-        Entities.ForEach((ref Translation trans, ref CursorData cursorData) => //remove ref trans later it doesn't need to be ref
+        //ComponentDataFromEntity<MapHeader> headerFromEntity = GetComponentDataFromEntity<MapHeader>(true);
+        Entities.ForEach((Entity entity, ref Translation trans, ref CursorData cursorData) => //remove ref trans later it doesn't need to be ref
         {
-            /*float tileSize = 200f;
-            MapHeader header = headerFromEntity[cursorData.map];
-            if (highlightTilesFromEntity.Exists(cursorData.map))
+            //MapHeader header = headerFromEntity[cursorData.map];
+            if (highlightTilesFromEntity.Exists(entity))
             {
-                DynamicBuffer<HighlightTile> highlightTiles = highlightTilesFromEntity[cursorData.map];
-            }*//*
-            if (tilesFromEntity.Exists(cursorData.map))
-            {
-                DynamicBuffer<MapTile> tiles = tilesFromEntity[cursorData.map];
-                DynamicBuffer<HighlightTile> highlightTiles = highlightTilesFromEntity[cursorData.map];
+                //DynamicBuffer<HighlightTile> highlightTiles = highlightTilesFromEntity[cursorData.map];
+            //}
+            //if (tilesFromEntity.Exists(cursorData.map))
+            //{
+                //DynamicBuffer<MapTile> tiles = tilesFromEntity[cursorData.map];
+                DynamicBuffer<HighlightTile> highlightTiles = highlightTilesFromEntity[entity];
                 //MapHeader header = headerFromEntity[cursorData.map]; works
-                Point pointInfo = new Point((ushort)((trans.Value.x) / tileSize), (ushort)((trans.Value.z) / tileSize)); //this is what we want...? (apparently it should be x - trans.x)
-                cursorData.lastHoverPoint = pointInfo;
-
-                //Surely there's a better way? 
-                //Granted the thing can't be that big but still?
+                Point pointInfo = new Point((ushort)((trans.Value.x) / cursorData.tileSize), (ushort)((trans.Value.z) / cursorData.tileSize)); //this is what we want...? (apparently it should be x - trans.x)
+                cursorData.currentHoverPoint = pointInfo;
+                
                 for (int i = 0; i < highlightTiles.Length; i++)
                 {
                     if (highlightTiles[i].layer == MapLayer.HOVER)
                     {
-                        highlightTiles.RemoveAt(i);
+                        highlightTiles[i] = new HighlightTile { point = new Point((ushort)((trans.Value.x) / cursorData.tileSize), (ushort)((trans.Value.z) / cursorData.tileSize)), layer = MapLayer.HOVER };
                         //Realistically there should only be one hover tile...
                         break;
                     }
                 }
-                //Maybe add a Point constructor or clone function to make a Point using a Point
-                highlightTiles.Add(new HighlightTile { point = new Point((ushort)((trans.Value.x) / tileSize), (ushort)((trans.Value.z) / tileSize)), layer = MapLayer.HOVER });
             }
-        }).Run();*/
-        return default;
+        }).Run();
     }
 }

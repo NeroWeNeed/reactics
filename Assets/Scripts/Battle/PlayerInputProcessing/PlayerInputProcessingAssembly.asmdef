@@ -2,8 +2,12 @@
     "name": "PlayerInputProcessingAssembly",
     "references": [
         "GUID:734d92eba21c94caba915361bd5ac177",
-        "GUID:415cfcc5dc95f4249bb8b29d52a6a714",
-        "GUID:17816a867c5d49c459115b1bfd7a0f70"
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:6db09eeef14dfd24eb83963382f9a837",
+        "GUID:2ad32ccd660709443b768f0e460ddfb4",
+        "GUID:d59ed3d30272fa841a99d71d9b428040",
+        "GUID:64af8db273b05eb4b857ec3cf09683a5",
+        "GUID:3ea43dc6adf8e9c4ca9c949166effd48"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

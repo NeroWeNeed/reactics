@@ -57,7 +57,7 @@ namespace Reactics.Battle
         }
         protected override void OnUpdate()
         {
-            tick++;
+            /*tick++;
             if (tick > maxTick)
             {
                 MapData data = GetSingleton<MapData>();
@@ -77,7 +77,7 @@ namespace Reactics.Battle
                 });
                 prefBody = (prefBody + 1) % 2;
                 tick = 0;
-            }
+            }*/
         }
     }
 

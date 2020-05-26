@@ -151,9 +151,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   map: {fileID: 11400000, guid: bbed7164766b0bf4c9835155313d9e4b, type: 2}
-  mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
-  uiMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-  fontAsset: {fileID: 11400000, guid: ee6cf7d9f8dcdad4683147ba3ca69b34, type: 2}
+  testUnit: {fileID: 11400000, guid: 745c2609133ec1248aa081fad59a7867, type: 2}
+  testUnit2: {fileID: 11400000, guid: cb93f6d29967609489883715d3d6f3c9, type: 2}
+  mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  uiMesh: {fileID: -2432090755550338912, guid: ccfb81b1d319a37418705f7f72392a3a, type: 3}
+  fontAsset: {fileID: 11400000, guid: ca7332a7b675983488804089b6e208b5, type: 2}
 --- !u!4 &134202917
 Transform:
   m_ObjectHideFlags: 0
@@ -195,7 +197,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 235578752}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fee50fd20b6aecb43b6c252e24830e6f, type: 3}
+  m_Script: {fileID: 11500000, guid: 272da97f4615e98439b6ce126b1c532e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   playerInput: {fileID: 0}
@@ -213,7 +215,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Actions: {fileID: -944628639613478452, guid: 2f3d93a3446f7d849be0a776b7f145d4,
     type: 3}
-  m_NotificationBehavior: 0
+  m_NotificationBehavior: 2
   m_UIInputModule: {fileID: 0}
   m_DeviceLostEvent:
     m_PersistentCalls:
@@ -221,9 +223,45 @@ MonoBehaviour:
   m_DeviceRegainedEvent:
     m_PersistentCalls:
       m_Calls: []
-  m_ActionEvents: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: a5648adf-58d7-47a9-8cb2-d6fd752de626
+    m_ActionName: Battle Controls/Camera[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 4dd7095c-a83e-45b1-821c-6e1a30ac0e26
+    m_ActionName: Battle Controls/Hover
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 19bf0dcc-b4b2-4747-a460-c858ea85bffc
+    m_ActionName: Battle Controls/Camera Zoom[/Mouse/scroll/y]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: bded49ca-aeba-4234-b0f2-79ee2340e246
+    m_ActionName: Battle Controls/Tile Movement
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 79d2aada-7297-4954-960b-bdd7959dd46b
+    m_ActionName: Battle Controls/Select Tile
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: f91943f7-4b0c-4d8c-98ad-59541922d39b
+    m_ActionName: Battle Controls/Cancel Tile
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 8d43677c-8bfd-4094-ba71-e607e0c1f774
+    m_ActionName: Command Controls/Select Action
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 52e2496c-b937-4e20-b252-56c869d39c87
+    m_ActionName: Command Controls/Cancel Action
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 2e7f531c-48ca-4a77-9bef-6190f8fd3ee5
+    m_ActionName: Command Controls/Menu Movement
   m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
+  m_DefaultControlScheme: Gamepad
   m_DefaultActionMap: Battle Controls
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 1120031355}
@@ -253,6 +291,8 @@ GameObject:
   - component: {fileID: 1120031355}
   - component: {fileID: 1120031354}
   - component: {fileID: 1120031357}
+  - component: {fileID: 1120031359}
+  - component: {fileID: 1120031358}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -356,6 +396,31 @@ MonoBehaviour:
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
   m_Version: 2
+--- !u!114 &1120031358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1120031353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ef697ce6535f1f49bcb861cc8b2ace8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1120031359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1120031353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea7d7495833204790ba1d3a8755397f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ConversionMode: 1
 --- !u!1 &2037747263
 GameObject:
   m_ObjectHideFlags: 0

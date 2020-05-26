@@ -25,6 +25,15 @@ namespace Reactics.Battle
         [ResourceField("Materials/Map/MapMaterial.mat")]
         private Material mapMaterial;
 
+        [ResourceField("Materials/Map/PlayerMoveMaterial.mat")]
+        private Material playerMoveMaterial;
+
+        [ResourceField("Materials/Map/PlayerAttackMaterial.mat")]
+        private Material playerAttackMaterial;
+
+        [ResourceField("Materials/Map/PlayerSupportMaterial.mat")]
+        private Material playerSupportMaterial;
+
         private MapLayerRenderSystem mapLayerRenderSystem;
         protected override void OnCreate()
         {
@@ -61,7 +70,11 @@ namespace Reactics.Battle
                     {
                         mesh = MapMesh,
                         subMesh = (int)renderMap.layer,
-                        material = renderMap.layer == MapLayer.BASE ? mapMaterial : hoverMaterial
+                        material = renderMap.layer == MapLayer.BASE ? mapMaterial : 
+                        renderMap.layer == MapLayer.HOVER ? hoverMaterial : 
+                        renderMap.layer == MapLayer.PLAYER_MOVE ? playerMoveMaterial :
+                        renderMap.layer == MapLayer.PLAYER_ATTACK ? playerAttackMaterial :
+                        playerSupportMaterial
                     });
                 }
 
@@ -122,6 +135,7 @@ namespace Reactics.Battle
 
 
                     MapUtils.GenerateMeshTileTriangles(ref triangles, 0, mapData.Width, highlights.GetValuesForKey(layer));
+                    renderSystem.MapMesh.subMeshCount = 20;//*&*
                     renderSystem.MapMesh.SetTriangles(triangles.ToArray(), layer);
                     triangles.Dispose();
 

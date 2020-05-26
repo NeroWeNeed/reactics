@@ -2,7 +2,11 @@
     "name": "PlayerInputAssembly",
     "references": [
         "GUID:734d92eba21c94caba915361bd5ac177",
-        "GUID:415cfcc5dc95f4249bb8b29d52a6a714"
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:3ea43dc6adf8e9c4ca9c949166effd48",
+        "GUID:d59ed3d30272fa841a99d71d9b428040",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:2ad32ccd660709443b768f0e460ddfb4"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

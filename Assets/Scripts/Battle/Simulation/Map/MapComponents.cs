@@ -55,6 +55,7 @@ namespace Reactics.Battle
         public MapLayer layer;
 
     }
+
     /// <summary>
     /// Component to represent movable entities on the map. Point holds the current coordinate they are on.
     /// </summary>
@@ -72,6 +73,8 @@ namespace Reactics.Battle
         public float3 offset;
 
         public BlittableBool solid;
+
+        public Entity self; //this has to be an enormous meme??
     }
 
     public struct MapBodyMeshOffset : IComponentData
@@ -159,6 +162,7 @@ namespace Reactics.Battle
     public struct MapTileEffect : IBufferElementData
     {
         public Point point;
+        public Effect effect;
     }
 
 

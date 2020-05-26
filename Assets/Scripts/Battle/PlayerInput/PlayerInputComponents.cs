@@ -7,7 +7,7 @@ namespace Reactics.Battle
     /// </summary>
     public struct ClientInput : IComponentData
     {
-
+        
     }
 
     /// <summary>
@@ -16,5 +16,6 @@ namespace Reactics.Battle
     public struct SimulationInput : IComponentData
     {
         public ulong frame;
+        public bool commandQueued;
     }
 }

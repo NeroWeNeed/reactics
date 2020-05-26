@@ -186,6 +186,583 @@ namespace Reactics.Battle
             this.y = Convert.ToUInt16(y);
         }
 
+        public bool ComparePoints(Point comparePoint)
+        {
+            if (this.x == comparePoint.x && this.y == comparePoint.y)
+                return true;
+            return false;
+        }
+
+        public bool InRange(Point comparePoint, ushort range)
+        {
+            if (this.Distance(comparePoint) <= range)
+                return true;
+            else
+                return false;
+            /*if ((this.x + this.y) <= (comparePoint.x + comparePoint.y + range) &&
+            (this.x + this.y) >= (comparePoint.x + comparePoint.y - range) &&
+            (this.x <= comparePoint.x + range) &&
+            (this.x >= comparePoint.x - range) &&
+            (this.y <= comparePoint.y + range) &&
+            (this.y >= comparePoint.y - range))
+                return true;
+            return false;*/
+        }
+        
+        /// <summary>
+        /// Fill the NativeList given with all the end points in the range
+        /// </summary>
+        public void GetEndpoints(ref NativeList<Point> points, int range, ushort maxLength, ushort maxWidth)
+        {
+            //maybe useless
+        }
+
+        public bool IsEndpoint(Point targetPoint, int range, ushort maxLength, ushort maxWidth)
+        {
+            if (!this.ComparePoints(targetPoint))
+            {
+                if (this.Distance(targetPoint) == range)
+                    return true;
+                if (targetPoint.x == 0 || targetPoint.x == maxLength - 1 || targetPoint.y == 0 || targetPoint.y == maxWidth - 1)
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// used to do line of sight stuff. doesn't work yet oops
+        /// </summary>
+        public void CalculateLOS(ref NativeList<Point> fullPathToTargetPoint, Point targetPoint, int range, ushort maxLength, ushort maxWidth)
+        {
+            //Returns a list of points to sort of simulate line of sight from one point to another.
+            //int index = points.Length;
+            //points.Add(this);
+            //index++;
+            
+            //idk why this would happen but it could I guess
+            if (this.ComparePoints(targetPoint))
+                return;
+
+            //points.Add(targetPoint);
+            //index++;
+
+            /*//Again, not sure why this would happen but...
+            if (this.Distance(targetPoint) == 1) //oh. that uh. yeah. wow. I'm dumb???
+                return;*/
+
+            #region bleh
+            /*
+            if (this.x == targetPoint.x)
+            {
+                //then we just need to add every point from the origin, to the uhhh. Y. thing.
+                int deltaY = math.abs(targetPoint.y - this.y);
+                int sign = 1;
+                if (targetPoint.y < this.y)
+                    sign = -1;
+                for (int i = deltaY; i <= range; i++)
+                {
+                    int newY = this.y + (ushort)(sign * i);
+
+                    if (newY >= 0)
+                        points.Add(new Point(this.x, newY));
+                }
+            }
+            else if (this.y == targetPoint.y)
+            {
+                int deltaX = math.abs(targetPoint.x - this.x);
+                int sign = 1;
+                if (targetPoint.x < this.x)
+                    sign = -1;
+                for (int i = deltaX; i <= range; i++)
+                {
+                    int newX = this.x + (ushort)(sign * i);
+
+                    if (newX >= 0)
+                        points.Add(new Point(newX, this.y));
+                }
+            }*/
+            #endregion
+
+            if (this.x == targetPoint.x)//11 and 12
+            {
+                //just add every point between them...
+                if (targetPoint.y > this.y) //2 > 1
+                {
+                    for (int y = this.y; y <= targetPoint.y; y++)
+                    {
+                        fullPathToTargetPoint.Add(new Point(this.x, y));
+                    }
+                }
+                else
+                {
+                    for (int y = this.y; y >= targetPoint.y; y--)
+                    {
+                        fullPathToTargetPoint.Add(new Point(this.x, y));
+                    }
+                }
+            }
+            else if (this.y == targetPoint.y)
+            {
+                //just add every point between them...
+                if (targetPoint.x > this.x)
+                {
+                    for (int x = this.x; x <= targetPoint.x; x++)
+                    {
+                        fullPathToTargetPoint.Add(new Point(x, this.y));
+                    }
+                }
+                else
+                {
+                    for (int x = this.x; x >= targetPoint.x; x--)
+                    {
+                        fullPathToTargetPoint.Add(new Point(x, this.y));
+                    }
+                }
+            }
+            else
+            {
+                //bresenham line, look it up
+                //11 and 22, range 3
+                //so we should have x = 2, x < 4(?) x++
+                int x0 = this.x;
+                int y0 = this.y;
+                int x1 = targetPoint.x;
+                int y1 = targetPoint.y;
+                bool steep = math.abs(targetPoint.y - this.y) > math.abs(targetPoint.x - this.x);
+
+                if (steep)
+                {
+                    var temp = x0;
+                    x0 = y0;
+                    y0 = temp;
+
+                    temp = x1;
+                    x1 = y1;
+                    y1 = temp;
+                }
+                if (x0 > x1)
+                {
+                    //Note that this saves the list from target -> origin, instead of origin -> target
+                    var temp = x0;
+                    x0 = x1;
+                    x1 = temp;
+
+                    temp = y0;
+                    y0 = y1;
+                    y1 = temp;
+                }
+
+                int deltaX = x1 - x0; //1
+                int deltaY = Math.Abs(y1 - y0); //1
+                int error = 0;
+                int ystep;
+                int y = y0; //1
+                //int lastCheckXPoint = range - x1;
+                //need a number other than 10 here...
+                //x has to be <= origin.x + range - abs(range - deltaX)
+                //1 + 3 
+                if (y0 < y1) ystep = 1; else ystep = -1;//1
+                for (int x = x0; x <= x1; x++) 
+                {
+                    if (steep)
+                        fullPathToTargetPoint.Add(new Point(y, x));
+                    else
+                        fullPathToTargetPoint.Add(new Point(x, y));
+
+                    error += deltaY;
+                    
+                    if (2 * error >= deltaX) 
+                    {
+                        y += ystep;
+                        error -= deltaX;
+                    }
+                }
+
+                #region bleh
+                /*
+                for (int x = x1; x <= 10; x++) //x=2, x<
+                {
+                    //weird break that I can fix later
+                    if (x > maxLength || x < 0 || y > maxWidth || y < 0)
+                        break;
+                    if (steep) 
+                        result.Add(new Point(y, x));
+                    else 
+                        result.Add(new Point(x, y));
+
+                    error += deltaY;
+                    if (2 * error >= deltaX) 
+                    {
+                        y += ystep;
+                        error -= deltaX;
+                    }
+                }
+                */
+                #endregion
+            }
+        }
+
+        
+        public void CalculateLOS2(ref NativeList<Point> fullPathToTargetPoint, ref NativeList<Point> obstructions, ref DynamicBuffer<HighlightTile> tilesToHighlight, MapLayer layer,
+                                    Point targetPoint, int range, ushort maxLength, ushort maxWidth)
+        {
+            //inclusive(?)
+            //remember, the point of this is to take the list and *shave* it. which means this needs ahhh. the inaccessible tiles and stuff.
+            //TODO: Make this less dumb as fuck. (how to properly manipulate a native array list...?)
+            //think. is it easier to keep track of the ones to remove...? no probably not...
+
+            //so this one gets all the points that aren't obstructed and returns them as a list. easy enough.
+            if (this.x != fullPathToTargetPoint[0].x)
+            {
+                for (var i = fullPathToTargetPoint.Length - 1; i >= 0; i--)
+                {
+                    //first, find the index of the obstruction.
+                    for (var j = 0; j < obstructions.Length; j++)
+                    {
+                        if (fullPathToTargetPoint[i].ComparePoints(obstructions[j]))
+                        {
+                            return;
+                        }
+                    }
+                    //theres literally no way this works?
+                    tilesToHighlight.Add((new HighlightTile{ point = fullPathToTargetPoint[i], layer = layer}));
+                }
+            }
+            else
+            {
+                for (var i = 0; i < fullPathToTargetPoint.Length; i++)
+                {
+                    //first, find the index of the obstruction.
+                    for (var j = 0; j < obstructions.Length; j++)
+                    {
+                        if (fullPathToTargetPoint[i].ComparePoints(obstructions[j]))
+                        {
+                            return;
+                        }
+                    }
+                    //theres literally no way this works?
+                    tilesToHighlight.Add((new HighlightTile{ point = fullPathToTargetPoint[i], layer = layer}));
+                }
+            }
+        }
+
+        public void CalculateLOS3(ref NativeList<Point> fullPathToTargetPoint, ref NativeList<Point> obstructions, ref NativeList<Point> tilesToRemove, MapLayer layer,
+                                    Point targetPoint, int range, ushort maxLength, ushort maxWidth, int startingIndex)
+        {
+            //we gotta do this so that it calculates on a per-point basis... otherwise we're kinda fucked. which means... yeah.
+            //this is gonna eat up some power!!! ahhhhh!!!!
+            //exclusive(?)
+            //remember, the point of this is to take the list and *shave* it. which means this needs ahhh. the inaccessible tiles and stuff.
+            //TODO: Make this less dumb as fuck. (how to properly manipulate a native array list...?)
+            //think. is it easier to keep track of the ones to remove...? no probably not...
+
+            //so this one gets all the points that aren't obstructed and returns them as a list. easy enough.
+            if (fullPathToTargetPoint.Length > 0)
+            {
+                bool found = false;
+                if (this.x != fullPathToTargetPoint[startingIndex].x)
+                {
+                    for (var i = fullPathToTargetPoint.Length - 1; i >= startingIndex; i--)
+                    {
+                        //first, find the index of the obstruction.
+                        if (!found)
+                        {
+                            for (var j = 0; j < obstructions.Length; j++)
+                            {
+                                if (fullPathToTargetPoint[i].ComparePoints(obstructions[j]))
+                                {
+                                    found = true;
+                                    tilesToRemove.Add(targetPoint);
+                                    return;
+                                }
+                            }
+                        }
+                        //theres literally no way this works?
+                        else
+                            tilesToRemove.Add(fullPathToTargetPoint[i]);
+                    }
+                }
+                else
+                {
+                    for (var i = startingIndex; i < fullPathToTargetPoint.Length; i++)
+                    {
+                        if (!found)
+                        {
+                            //first, find the index of the obstruction.
+                            for (var j = 0; j < obstructions.Length; j++)
+                            {
+                                if (fullPathToTargetPoint[i].ComparePoints(obstructions[j]))
+                                {
+                                    found = true;
+                                    tilesToRemove.Add(targetPoint);
+                                    return;
+                                }
+                            }
+                        }
+                        //theres literally no way this works?
+                        else
+                            tilesToRemove.Add(fullPathToTargetPoint[i]);
+                    }
+                }
+            }
+        }
+        
+        public void CalculateLOSXW(ref NativeList<Point> fullPathToTargetPoint, Point targetPoint, int range, ushort maxLength, ushort maxWidth, double leniency)
+        {
+            //idk why this would happen but it could I guess
+            if (this.ComparePoints(targetPoint))
+                return;
+
+            if (this.x == targetPoint.x)
+            {
+                if (targetPoint.y > this.y) //2 > 1
+                {
+                    for (int y = this.y; y <= targetPoint.y; y++)
+                    {
+                        fullPathToTargetPoint.Add(new Point(this.x, y));
+                    }
+                }
+                else
+                {
+                    for (int y = this.y; y >= targetPoint.y; y--)
+                    {
+                        fullPathToTargetPoint.Add(new Point(this.x, y));
+                    }
+                }
+            }
+            else if (this.y == targetPoint.y)
+            {
+                if (targetPoint.x > this.x)
+                {
+                    for (int x = this.x; x <= targetPoint.x; x++)
+                    {
+                        fullPathToTargetPoint.Add(new Point(x, this.y));
+                    }
+                }
+                else
+                {
+                    for (int x = this.x; x >= targetPoint.x; x--)
+                    {
+                        fullPathToTargetPoint.Add(new Point(x, this.y));
+                    }
+                }
+            }
+            else
+            {
+                int x0 = this.x;
+                int y0 = this.y;
+                int x1 = targetPoint.x;
+                int y1 = targetPoint.y;
+                bool steep = math.abs(targetPoint.y - this.y) > math.abs(targetPoint.x - this.x);
+
+                if (steep)
+                {
+                    var temp = x0;
+                    x0 = y0;
+                    y0 = temp;
+
+                    temp = x1;
+                    x1 = y1;
+                    y1 = temp;
+                }
+                if (x0 > x1)
+                {
+                    //Note that this saves the list from target -> origin, instead of origin -> target
+                    var temp = x0;
+                    x0 = x1;
+                    x1 = temp;
+
+                    temp = y0;
+                    y0 = y1;
+                    y1 = temp;
+                }
+
+                //Don't trust this at all. Debug it. gradient probably being converted to some int or something.
+                double dx = x1 - x0;
+                double dy = y1 - y0;
+                double gradient = dy / dx;
+                if (dx == 0)
+                    gradient = 1.0;
+
+                //First endpoint
+                var xEnd = math.floor(x0 + 0.5);
+                var yEnd = y0 + gradient * (xEnd - x0);
+                var xGap = 1 - ((x0 + 0.5) - math.floor(x0 + 0.5)); 
+
+                var xpxl1 = xEnd;
+                var ypxl1 = math.floor(yEnd);
+                var firstEndPoint = new Point(0,0);
+
+                if (steep)
+                {
+                    var thing = (1 - ((yEnd) - math.floor(yEnd))) * xGap;
+                    if (thing > leniency)
+                        firstEndPoint = new Point((int)ypxl1, (int)xpxl1);
+                    var thing2 = (yEnd - math.floor(yEnd)) * xGap;
+                    if (thing2 > leniency)
+                        firstEndPoint = new Point((int)ypxl1 + 1, (int)xpxl1);
+                }
+                else
+                {
+                    var thing = (1 - ((yEnd) - math.floor(yEnd))) * xGap;
+                    if (thing > leniency)
+                        firstEndPoint = new Point((int)xpxl1, (int)ypxl1);
+                    var thing2 = (yEnd - math.floor(yEnd)) * xGap;
+                    if (thing2 > leniency)
+                        firstEndPoint = new Point((int)xpxl1, (int)ypxl1 + 1);
+                }
+                var interY = yEnd + gradient;
+
+                //Second endpoint
+                xEnd = math.floor(x1 + 0.5);
+                yEnd = y1 + gradient * (xEnd - x1);
+                xGap = 1 - ((x1 + 0.5) - math.floor(x1 + 0.5));
+
+                var xpxl2 = xEnd;
+                var ypxl2 = math.floor(yEnd);
+                Point secondEndPoint = new Point (0,0);
+
+                if (steep)
+                {
+                    var thing = (1 - ((yEnd) - math.floor(yEnd))) * xGap;
+                    if (thing > leniency)
+                        secondEndPoint = new Point((int)ypxl2, (int)xpxl2);
+                    var thing2 = (yEnd - math.floor(yEnd)) * xGap;
+                    if (thing2 > leniency)
+                        secondEndPoint = new Point((int)ypxl2 + 1, (int)xpxl2);
+                }
+                else
+                {
+                    var thing = (1 - ((yEnd) - math.floor(yEnd))) * xGap;
+                    if (thing > leniency)
+                        secondEndPoint = new Point((int)xpxl2, (int)ypxl2);
+                    var thing2 = (yEnd - math.floor(yEnd)) * xGap;
+                    if (thing2 > leniency)
+                        secondEndPoint = new Point((int)xpxl2, (int)ypxl2 + 1);
+                }
+                
+                //not sure if right
+                fullPathToTargetPoint.Add(firstEndPoint);
+
+                //main loop
+                if (steep)
+                {
+                    for (int x = (int)xpxl1 + 1; x < (int)xpxl2; x++)
+                    {
+                        var thing = 1 - ((interY) - math.floor(interY));
+                        if (thing > leniency)
+                            fullPathToTargetPoint.Add(new Point((ushort)math.floor(interY), x));
+                        var thing2 = interY - math.floor(interY);
+                        if (thing2 > leniency)
+                            fullPathToTargetPoint.Add(new Point((ushort)math.floor(interY) + 1, x));
+                        interY += gradient;
+                    }
+                }
+                else
+                {
+                    for (int x = (int)xpxl1 + 1; x < (int)xpxl2; x++)
+                    {
+                        var thing = 1 - ((interY) - math.floor(interY));
+                        if (thing > leniency)
+                            fullPathToTargetPoint.Add(new Point(x, (ushort)math.floor(interY)));
+                        var thing2 = interY - math.floor(interY);
+                        if (thing2 > leniency)
+                            fullPathToTargetPoint.Add(new Point(x, (ushort)math.floor(interY) + 1));
+                        interY += gradient;
+                    }
+                }
+
+                fullPathToTargetPoint.Add(secondEndPoint);
+            }
+        }
+        /*
+        1 - ((x) - math.abs(x)) is rfpart
+        (x) - math.floor(x) is fpart
+        math.floor(x) is ipart
+        math.floor(x + 0.5) is round
+        function plot(x, y, c) is
+    plot the pixel at (x, y) with brightness c (where 0 ≤ c ≤ 1)
+
+// integer part of x
+function ipart(x) is
+    return floor(x)
+
+function round(x) is
+    return ipart(x + 0.5)
+
+// fractional part of x
+function fpart(x) is
+    return x - floor(x)
+
+function rfpart(x) is
+    return 1 - fpart(x)
+
+function drawLine(x0,y0,x1,y1) is
+    boolean steep := abs(y1 - y0) > abs(x1 - x0)
+    
+    if steep then
+        swap(x0, y0)
+        swap(x1, y1)
+    end if
+    if x0 > x1 then
+        swap(x0, x1)
+        swap(y0, y1)
+    end if
+    
+    dx := x1 - x0
+    dy := y1 - y0
+    gradient := dy / dx
+    if dx == 0.0 then
+        gradient := 1.0
+    end if
+
+    // handle first endpoint
+    xend := round(x0)
+    yend := y0 + gradient * (xend - x0)
+    xgap := rfpart(x0 + 0.5)
+    xpxl1 := xend // this will be used in the main loop
+    ypxl1 := ipart(yend)
+    if steep then
+        plot(ypxl1,   xpxl1, rfpart(yend) * xgap)
+        plot(ypxl1+1, xpxl1,  fpart(yend) * xgap)
+    else
+        plot(xpxl1, ypxl1  , rfpart(yend) * xgap)
+        plot(xpxl1, ypxl1+1,  fpart(yend) * xgap)
+    end if
+    intery := yend + gradient // first y-intersection for the main loop
+    
+    // handle second endpoint
+    xend := round(x1)
+    yend := y1 + gradient * (xend - x1)
+    xgap := fpart(x1 + 0.5)
+    xpxl2 := xend //this will be used in the main loop
+    ypxl2 := ipart(yend)
+    if steep then
+        plot(ypxl2  , xpxl2, rfpart(yend) * xgap)
+        plot(ypxl2+1, xpxl2,  fpart(yend) * xgap)
+    else
+        plot(xpxl2, ypxl2,  rfpart(yend) * xgap)
+        plot(xpxl2, ypxl2+1, fpart(yend) * xgap)
+    end if
+    
+    // main loop
+    if steep then
+        for x from xpxl1 + 1 to xpxl2 - 1 do
+           begin
+                plot(ipart(intery)  , x, rfpart(intery))
+                plot(ipart(intery)+1, x,  fpart(intery))
+                intery := intery + gradient
+           end
+    else
+        for x from xpxl1 + 1 to xpxl2 - 1 do
+           begin
+                plot(x, ipart(intery),  rfpart(intery))
+                plot(x, ipart(intery)+1, fpart(intery))
+                intery := intery + gradient
+           end
+    end if
+end function
+        */
         public Point ShiftX(int amount)
         {
             return new Point(x + amount, y);
@@ -411,7 +988,6 @@ namespace Reactics.Battle
     public enum MapLayer
     {
         BASE,
-        HOVER,
         PLAYER_MOVE,
         PLAYER_ATTACK,
         PLAYER_SUPPORT,
@@ -424,7 +1000,8 @@ namespace Reactics.Battle
         ALLY_ATTACK,
         ALLY_SUPPORT,
         ALLY_ALL,
-        UTILITY
+        UTILITY,
+        HOVER
     }
 
 

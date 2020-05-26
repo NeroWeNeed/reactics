@@ -9,11 +9,11 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Users;
 using Reactics.Battle;
 
-[AlwaysSynchronizeSystem]
+[UpdateInGroup(typeof(RenderingSystemGroup))]
 [UpdateAfter(typeof(CameraMovementSystem))]
-public class CameraRotationSystem : JobComponentSystem //change this to OrbitSystem, perhaps
+public class CameraRotationSystem : SystemBase //change this to OrbitSystem, perhaps
 {
-    protected override JobHandle OnUpdate(JobHandle inputDeps) 
+    protected override void OnUpdate() 
     {
         float deltaTime = Time.DeltaTime;
         
@@ -45,14 +45,7 @@ public class CameraRotationSystem : JobComponentSystem //change this to OrbitSys
                 {
                     //float3 upwardDirection = math.mul(rot.Value, new float3(0, 0, data.speed));
                     //upwardDirection.y = 0;
-                    if (rotData.lockToHalfVerticalSphere)
-                    {
-                        rotationDegrees = math.radians(180f/rotData.verticalAngles);
-                    }
-                    else
-                    {
-                        rotationDegrees = math.radians(360f/rotData.verticalAngles);
-                    }
+                    rotationDegrees = math.radians(180f/rotData.verticalAngles);
                     //do something once it works
                     float3 dir = trans.Value - trans.Value;
                     quaternion killme = math.mul(quaternion.Euler(math.radians(30),0,0), rot.Value);
@@ -61,14 +54,7 @@ public class CameraRotationSystem : JobComponentSystem //change this to OrbitSys
                 }
                 else if (rotData.rotationDirection.y < -0.1f)
                 {
-                    if (rotData.lockToHalfVerticalSphere)
-                    {
-                        rotationDegrees = -math.radians(180f/rotData.verticalAngles);
-                    }
-                    else
-                    {
-                        rotationDegrees = -math.radians(360f/rotData.verticalAngles);
-                    }
+                    rotationDegrees = -math.radians(180f/rotData.verticalAngles);
                     //float3 dir = trans.Value - movementData.cameraLookAtPoint;
                     float3 normVec = math.normalize(trans.Value); //maybe this will do something
                     normVec = math.mul(quaternion.Euler(math.radians(30), math.radians(rot.Value.value.y), 0), normVec);
@@ -209,6 +195,5 @@ public class CameraRotationSystem : JobComponentSystem //change this to OrbitSys
             rot.Value = quaternion.LookRotation(math.normalize(direction), Vector3.up);
             
         }).Run();
-        return default;
     }
 }

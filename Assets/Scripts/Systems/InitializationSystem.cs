@@ -44,7 +44,7 @@ class RandomStartingPositionSystem : JobComponentSystem {
     }
 }
 */
-
+/*
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -64,18 +64,18 @@ public class InitializationSystem : ComponentSystem
         //apparently tilesize isn't really in ecs anywhere but this is probably where I'd put it normally
         Entities.ForEach((Entity entity, ref InitializeTag initializeTag, ref CursorData cursorTag) =>
         {
-            cursorTag.rayMagnitude = 10000f;
+            //cursorTag.rayMagnitude = 10000f;
             PostUpdateCommands.RemoveComponent(entity, typeof(InitializeTag));
         });
 
         Entities.ForEach((Entity entity, ref InitializeTag initializeTag, ref Translation trans, ref CameraMovementData moveData) =>
         {
-            moveData.cameraLookAtPoint = new float3(0, 0, 0); //thsi is the origin, later it will be calculated or w/e.
-            trans.Value = math.normalize(trans.Value) * moveData.offsetValue;
-            moveData.zoomMagnitude = 1f;
-            moveData.lowerZoomLimit = 0.1f;
-            moveData.upperZoomLimit = 2.0f;
+            //moveData.cameraLookAtPoint = new float3(0, 0, 0); //thsi is the origin, later it will be calculated or w/e.
+            //trans.Value = math.normalize(trans.Value) * moveData.offsetValue;
+            //moveData.zoomMagnitude = 1f;
+            //moveData.lowerZoomLimit = 0.1f;
+            //moveData.upperZoomLimit = 2.0f;
             PostUpdateCommands.RemoveComponent(entity, typeof(InitializeTag));
         });
     }
-}
+}*/

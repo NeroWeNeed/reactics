@@ -9,19 +9,18 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Users;
 using Reactics.Battle;
 
-[UpdateInGroup(typeof(Unity.Entities.SimulationSystemGroup))]
-[UpdateAfter(typeof(PlayerInputSystem))]
-public class CameraMovementSystem : JobComponentSystem
+[UpdateInGroup(typeof(RenderingSystemGroup))]
+public class CameraMovementSystem : SystemBase
 {
-    protected override JobHandle OnUpdate(JobHandle inputDeps) 
+    protected override void OnUpdate() 
     {
         float deltaTime = Time.DeltaTime;
-
+        
         Entities.ForEach((ref Translation trans, ref CameraMovementData moveData, in Rotation rot, in CameraRotationData rotData, in CameraMapData mapData, in ControlSchemeData controlSchemeData) => 
         {
-            if (!rotData.rotating) //delete this if you want to move/zoom and rotate at the same time.
+            bool moving = false;
+            if (!moveData.returnToPoint && !rotData.rotating) //delete this if you want to move/zoom and rotate at the same time.
             {
-                bool moving = false;
                 if (math.abs(moveData.gridMovementDirection.x) > 0.8f || math.abs(moveData.gridMovementDirection.y) > 0.8f) //ignore diagonals
                 {
                     moveData.dummyBuffer++;
@@ -31,7 +30,6 @@ public class CameraMovementSystem : JobComponentSystem
                     {//if you like me as a person you won't indent this if statement. it's gonna get removed once I see how simulation and such works probably
                     float3 oldTranslation = trans.Value;
                     float3 oldLookAtPoint = moveData.cameraLookAtPoint;
-                    float tileSize = 200f; //here's tilesize meme again
                     float3 upwardDirection = new float3(0,0,0);
                     Quaternion rotation = rot.Value;
                     //This means we're not looking in the cardinal directions, so we gotta rotate the input a little.
@@ -41,11 +39,11 @@ public class CameraMovementSystem : JobComponentSystem
                         //Upward inputs should always be NE despite our rotation.
                         float rotationInRadians = (rotation.eulerAngles.y % 90) * (math.PI/180f);
                         quaternion rotationAmount = math.mul(rot.Value, quaternion.AxisAngle(Vector3.up,rotationInRadians));
-                        upwardDirection = math.mul(rotationAmount, new float3(0,0,tileSize));
+                        upwardDirection = math.mul(rotationAmount, new float3(0,0,mapData.tileSize));
                     }
                     else
                     {
-                        upwardDirection = math.mul(rot.Value, new float3(0,0,tileSize));
+                        upwardDirection = math.mul(rot.Value, new float3(0,0,mapData.tileSize));
                     }
                     upwardDirection.y = 0;
 
@@ -137,17 +135,26 @@ public class CameraMovementSystem : JobComponentSystem
                         moving = true;
                     }
                 }
-
-                if (!moving && controlSchemeData.currentControlScheme == ControlSchemes.Gamepad)
+            }
+            if (!moving && !rotData.rotating && controlSchemeData.currentControlScheme == ControlSchemes.Gamepad)
                 {
                     //ok so tilesize isn't in ecs anywhere, ask about that one, but for now here's tile snapping yaaaay
                     //this will probably end up going in another system with some kind of map component data... but for now it's here. oops.
-                    float tileSize = 200f;
                     float3 oldLookAtPoint = moveData.cameraLookAtPoint;
-
-                    //Put the cam look at point in the center of the tile
-                    moveData.cameraLookAtPoint.x = (moveData.cameraLookAtPoint.x - moveData.cameraLookAtPoint.x % tileSize + tileSize/2);
-                    moveData.cameraLookAtPoint.z = (moveData.cameraLookAtPoint.z - moveData.cameraLookAtPoint.z % tileSize + tileSize/2);
+                    
+                    if (!moveData.returnToPoint)
+                    {
+                        //Put the cam look at point in the center of the tile
+                        moveData.cameraLookAtPoint.x = (moveData.cameraLookAtPoint.x - moveData.cameraLookAtPoint.x % mapData.tileSize + mapData.tileSize/2);
+                        moveData.cameraLookAtPoint.z = (moveData.cameraLookAtPoint.z - moveData.cameraLookAtPoint.z % mapData.tileSize + mapData.tileSize/2);
+                    }
+                    else
+                    {
+                        //Put the cam look at point back on the currently selected unit
+                        moveData.cameraLookAtPoint.x = moveData.returnPoint.x * mapData.tileSize + mapData.tileSize/2;
+                        moveData.cameraLookAtPoint.z = moveData.returnPoint.y * mapData.tileSize + mapData.tileSize/2;
+                        moveData.returnToPoint = false;
+                    }
 
                     //Offset the camera by the exact same amount
                     trans.Value += (moveData.cameraLookAtPoint - oldLookAtPoint);
@@ -173,9 +180,6 @@ public class CameraMovementSystem : JobComponentSystem
                     
                 moveData.zoomMagnitude = Mathf.Clamp(moveData.zoomMagnitude, moveData.lowerZoomLimit, moveData.upperZoomLimit);
                 trans.Value = math.normalize(trans.Value - moveData.cameraLookAtPoint) * (moveData.offsetValue * moveData.zoomMagnitude) + moveData.cameraLookAtPoint;
-
-            }
         }).Run();
-        return default;
     }
 }

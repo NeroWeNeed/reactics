@@ -29,6 +29,7 @@ namespace Reactics.Battle
         ushort Movement { get; }
 
     }
+    [CreateAssetMenu(fileName = "Unit", menuName = "Reactics/Unit", order = 0)]
     public class Unit : ScriptableObject, IUnit
     {
 
@@ -65,6 +66,7 @@ namespace Reactics.Battle
 
         public Proficiency[] Proficiencies { get => proficiencies; }
 
+        private static ushort identifierInt = 1;
         public UnitData CreateComponent()
         {
             BlobBuilder builder = new BlobBuilder(Allocator.Temp);
@@ -77,13 +79,30 @@ namespace Reactics.Battle
             blob.resistance = resistance;
             blob.healthPoints = healthPoints;
             blob.speed = speed;
+            blob.identifierInt = identifierInt;
             
             builder.AllocateString(ref blob.identifier, identifier);
             BlobAssetReference<UnitBlob> reference = builder.CreateBlobAssetReference<UnitBlob>(Allocator.Persistent);
             builder.Dispose();
+            identifierInt += 1;
+            EntityManager EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            var highlightEntity = EntityManager.CreateEntity(typeof(HighlightTile));
+            DynamicBuffer<HighlightTile> highlights = EntityManager.AddBuffer<HighlightTile>(highlightEntity);
+            //highlights.Add(new HighlightTile { point = new Point(3, 3), layer = MapLayer.HOVER });
             return new UnitData
             {
-                unit = reference
+                unit = reference,
+                healthPoints = healthPoints,
+                maxHealthPoints = healthPoints,
+                magicPoints = magicPoints,
+                maxMagicPoints = magicPoints,
+                defense = defense,
+                resistance = resistance,
+                strength = strength,
+                magic = magic,
+                speed = speed,
+                movement = movement
+                //highlightEntity = highlightEntity
             };
 
         }
@@ -92,6 +111,9 @@ namespace Reactics.Battle
     public struct UnitBlob : IUnit
     {
         public BlobString identifier;
+
+        public ushort  identifierInt;
+        public ushort IdentifierInt => identifierInt;
 
         public string Identifier => identifier.ToString();
 

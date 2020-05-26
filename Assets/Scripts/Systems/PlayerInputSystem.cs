@@ -11,16 +11,28 @@ using UnityEngine.InputSystem.Users;
 using Reactics.Battle;
 
 //always synchronize? not sure if necessary on component system
+/*
 [AlwaysSynchronizeSystem]
 [UpdateInGroup(typeof(Unity.Entities.SimulationSystemGroup))]
 public class PlayerInputSystem : JobComponentSystem
-{
+{*/
     /*[SerializeField] figure out later...
-    private Camera battleCamera;*/
+    private Camera battleCamera;*&
     private float screenEdgeLength = 40f;
     private Vector2 hoverInput;
-    protected override JobHandle OnUpdate(JobHandle inputDeps) 
+    private DynamicBuffer<HighlightTile> highlightTiles;
+
+    protected override void OnStartRunning()
     {
+        /*&DynamicBuffer<MyBufferElement> dynamicBuffer
+            //= EntityManager.GetBuffer<MyBufferElement>(entity);
+        EntityQuery query = EntityManager.CreateEntityQuery(typeof(HighlightTile), typeof(InitializeTag));
+        NativeArray<Entity> entities = query.ToEntityArray(Allocator.TempJob);
+        highlightTiles = EntityManager.GetBuffer<HighlightTile>(entities[0]);
+        entities.Dispose();*&
+    }*/
+    /*protected override JobHandle OnUpdate(JobHandle inputDeps) 
+    {*//*
         //theoretically... this runs before all the other systems, yes?
         //moving the mouse makes this struggle. maybe that's normal since it's reading so many inputs? unsure.
         InputSystem.Update(); //just this line makes this take way longer (it's 0.3ms but like, that's way more than the normal 0.02 it was before?)
@@ -32,20 +44,36 @@ public class PlayerInputSystem : JobComponentSystem
         var input = BattlePlayer.instance.input;
         var playerInput = BattlePlayer.instance.playerInput;
         var controlScheme = BattlePlayer.instance.GetControlScheme();
+        var actionMap = BattlePlayer.instance.GetActionMap();
         Ray mousePositionRayCast = new Ray();
 
+        //playerInput.SwitchCurrentActionMap("Command Controls"); //Only switch if we actually find one... but how do we get them?
+
+        /*Entities.ForEach((ref CameraMovementData moveData, ref CameraRotationData rotData) => //Speed is set in the editor atm
+        {
+             //stop camera things from happening. may need to happen *after* rotation depending on how ui gets rendered? idk.
+            moveData.panMovementDirection = 0;
+            moveData.gridMovementDirection = 0;
+            moveData.zoomDirectionAndStrength = cameraZoom1;
+            rotData.rotationDirection = new Vector2(0,0);
+        }).Run();*&
         //Get any inputs 
+        if (playerInput.currentActionMap.name == "Battle Controls")
+        {
         hoverInput = input.BattleControls.Hover.ReadValue<Vector2>(); //for some reason, gamepad doesn't work here... very strange.
         Vector2 rotationDirection = input.BattleControls.Camera.ReadValue<Vector2>();
         Vector2 gridMovement = input.BattleControls.TileMovement.ReadValue<Vector2>();
         float cameraZoom = input.BattleControls.CameraZoom.ReadValue<float>();
+        bool selectInput = input.BattleControls.SelectTile.triggered;
 
         //find a way to make this not run every frame maybe, otherwise yeah.. waste of processing power
         Entities.ForEach((ref ControlSchemeData controlSchemeData) =>
         {
             controlSchemeData.currentControlScheme = controlScheme;
+            controlSchemeData.currentActionMap = actionMap;
         }).Run();
 
+        //if ()
         //In this case, we pan if the mouse is at the edge of the screen
         float2 panMovement = new float2(0, 0);
         if (playerInput.currentControlScheme == "Keyboard + Mouse")
@@ -85,10 +113,10 @@ public class PlayerInputSystem : JobComponentSystem
         }
         if (playerInput.currentControlScheme == "Gamepad")
         {
-            Entities.ForEach((ref CameraMovementData moveData) => 
+            /*Entities.ForEach((ref CameraMovementData moveData) => 
             {
                 //tile snap could theoretically go here
-            }).Run();
+            }).Run();*&
         }
         else if (playerInput.currentControlScheme == "Keyboard + Mouse") //Do the raycast stuff if we're in keyboard mode
         {
@@ -98,6 +126,70 @@ public class PlayerInputSystem : JobComponentSystem
                 cursorTag.rayDirection = mousePositionRayCast.direction;
             }).Run();
         }
-        return default;
+
+        if (selectInput)
+        {
+            //TODO: Streamline this.
+
+            ComponentDataFromEntity<CursorData> cursorDataFromEntity = GetComponentDataFromEntity<CursorData>(true);
+
+            Entities.ForEach((ref UnitCommand command, ref MapBody mapBody) =>
+            {
+                if (cursorDataFromEntity.Exists(mapBody.cursorEntity))
+                {
+                    if (!command.selected && mapBody.point.ComparePoints(cursorDataFromEntity[mapBody.cursorEntity].currentHoverPoint))
+                    {
+                        command.selected = true;
+                        //if ()
+                        //instead of doing this like this, just switch the action map if there's a mapbody here...
+                        //then at the BEGINNING of this function check the action map 
+                        //we can't set player input here because like... it gets mad.
+                        //clearly we need an entity to hold the action map and control scheme... that's what's seeming to be the problem here.
+                    }
+                    else if (command.selected)
+                    {
+                        //with more commands being added, this is where we'd set some component and return to the battle controls action map, maybe.
+                        mapBody.point = cursorDataFromEntity[mapBody.cursorEntity].currentHoverPoint;
+                        command.selected = false; //unselects. also puts the tile there.
+                    }
+                    //mapBody.point = cursorDataFromEntity[mapBody.cursorEntity].currentHoverPoint;
+                }
+                /*for (int i = 0; i < highlightTiles.Length; i++)
+                {
+                    if (highlightTiles[i].layer == MapLayer.HOVER)
+                    {
+                        mapBody.point = highlightTiles[i].point;
+                        break;
+                    }
+                }*&
+                //ok. but how do we know where we're "clicking" then? Well. That tile is highlighted, is it not?
+                //if (mapBody.point == new Point())
+            }).Run();
+            EntityQuery query = EntityManager.CreateEntityQuery(typeof(MapBody));
+            NativeArray<Entity> entities = query.ToEntityArray(Allocator.TempJob);
+            //if (entities[)
+            var selected = EntityManager.GetComponentData<UnitCommand>(entities[0]).selected;
+            if (selected)
+            {
+                var speed = EntityManager.GetComponentData<MapBody>(entities[0]).speed * 10;
+                Entities.ForEach((ref CameraMovementData moveData) =>
+                {
+                    moveData.speed = speed;
+                }).Run();
+            }
+            entities.Dispose();
+        }
+        }
+        else if (playerInput.currentActionMap.name == "Command Controls")
+        {
+            bool selectInput = input.CommandControls.SelectAction.triggered;
+            bool cancelInput = input.CommandControls.CancelAction.triggered;
+            if (cancelInput)
+            {
+                //Entities.ForEach()
+                //playerInput.SwitchCurrentActionMap("Battle Controls");
+            }
+        }*/
+        /*return default;
     }
-}
+}*/
