@@ -2,6 +2,6 @@ using Unity.Entities;
 
 public struct MoveTilesTag : IComponentData
 {
-    //not done witht his yet
+    //sorta works for highlighting tiles but y'know
     public bool toggle;
 }

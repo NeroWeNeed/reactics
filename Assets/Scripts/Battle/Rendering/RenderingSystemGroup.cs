@@ -8,7 +8,7 @@ namespace Reactics.Battle
     /// </summary>
 
     [UpdateInGroup(typeof(PresentationSystemGroup))]
-    [UpdateBefore(typeof(RenderMeshSystemV2))]
+    //[UpdateBefore(typeof(HybridRendererSystem))]
     public class RenderingSystemGroup : ComponentSystemGroup
     {
 

@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Reactics.Util
+namespace Reactics.Commons
 {
     [System.Serializable]
     [StructLayout(LayoutKind.Sequential)]

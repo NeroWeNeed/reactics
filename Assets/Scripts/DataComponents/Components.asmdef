@@ -1,0 +1,18 @@
+{
+    "name": "Components",
+    "references": [
+        "GUID:1d0af8e976d3e2548a7ada9a6c6ce405",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:82b0cb0ae8111e643934b14d68857ded"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

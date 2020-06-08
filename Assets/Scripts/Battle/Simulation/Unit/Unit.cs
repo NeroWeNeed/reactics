@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
+using Reactics.Battle.Map;
 namespace Reactics.Battle
 {
 
@@ -69,6 +70,7 @@ namespace Reactics.Battle
         private static ushort identifierInt = 1;
         public UnitData CreateComponent()
         {
+            
             BlobBuilder builder = new BlobBuilder(Allocator.Temp);
             ref UnitBlob blob = ref builder.ConstructRoot<UnitBlob>();
             blob.defense = defense;

@@ -6,6 +6,7 @@ using Unity.Jobs;
 using Unity.Transforms;
 using Unity.Mathematics;
 using Reactics.Battle;
+using Reactics.Battle.Map;
 
 //Why are we separating unit effects and tile effects?
 //I feel like they can be too different, depending on what we're doing.
@@ -60,6 +61,8 @@ public struct Effect
     //AOE data
     public ushort aoeRange;
     public bool aoeOnPierce;
+    public bool mapEffect;
+    public bool permanent;
 }
 
 //is this right? idk
@@ -74,25 +77,9 @@ public struct ConstantEffect : IComponentData
     public Entity targetedUnit;
 }
 
-//Unsure if these two are needed... for now we'll keep them.
-public struct InstantTileEffect : IComponentData
-{
-    public Point targetTile;
-}
-
-public struct ConstantTileEffect : IComponentData
-{
-    public Point targetTile;
-}
-
-public struct PointsBuffer : IBufferElementData
-{
-    public Point point;
-}
-
 public struct WaitToProcessTag : IComponentData { }
 
-//these most definitely need a translation btw.
+//these most definitely need a translation btw. or maybe they don't. weird.
 public struct Projectile : IComponentData
 {
     //reference to something that holds damage? or should it hold the damage?
@@ -113,9 +100,4 @@ public struct Projectile : IComponentData
     public Point lastPiercePoint;
     public Effect effect;
     public Effect aoeEffect;
-}
-
-public struct EffectThing
-{
-    //is it allowed if we just like. put. this. in. projectiles...?
 }

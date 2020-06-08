@@ -4,7 +4,7 @@ using Unity.Mathematics;
 
 namespace Reactics.Battle
 {
-
+/* 
     public interface IActionTarget<T> where T : struct
     {
         float3 WorldPosition { get; }
@@ -35,6 +35,8 @@ namespace Reactics.Battle
 
         public MapTileActionTarget(Point point, float3 worldPosition)
         {
+
+            
             this.point = point;
             this.worldPosition = worldPosition;
         }
@@ -49,21 +51,5 @@ namespace Reactics.Battle
 
         void Invoke(Entity entity,EntityManager entityManager, T target);
     }
-
-    //not sure what your plan was with this stuff but maybe it's better than mine which I did down here
-    //These should have dynamic buffers for storing affected tiles maybe.
-    /*public struct Action : IComponentData
-    {
-        /*public ushort magnitude;
-        public bool damage;
-        public ushort range;
-        public float cost;
-        public Entity targetedUnit;
-        public Point targetTile;
-        public Effect effect;
-        public aoeEffect
-        //aoe range go here
-        //public bool aoe;
-        //public ushort aoeRange;
-    }*/
+ */
 }

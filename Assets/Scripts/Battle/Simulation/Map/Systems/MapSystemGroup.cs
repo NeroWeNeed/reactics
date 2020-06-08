@@ -1,86 +1,58 @@
+using Reactics.Commons;
 using Unity.Entities;
-using Unity.Mathematics;
 using Unity.Rendering;
 using Unity.Transforms;
-using UnityEngine;
 
-namespace Reactics.Battle
+namespace Reactics.Battle.Map
 {
-
-
-    [UpdateInGroup(typeof(BattleSimulationSystemGroup))]
+    [UpdateBefore(typeof(MeshUpdateSystemUInt32))]
     public class MapSystemGroup : ComponentSystemGroup
     {
 
-
-    }
-
-
-
-    [UpdateInGroup(typeof(MapSystemGroup))]
-    public class RandomPointTickerSystem : ComponentSystem
-    {
-        private int tick = 0;
-
-        private int maxTick = 10;
-        private Entity highlightEntity;
-        private int x, y;
-        private Unity.Mathematics.Random random;
-        int prefBody = 0;
+        public ArchetypeContainer Archetypes { get; private set; }
         protected override void OnCreate()
         {
-            random = new Unity.Mathematics.Random((uint)System.DateTime.Now.ToFileTime());
-            RequireSingletonForUpdate<MapData>();
+            Archetypes = new ArchetypeContainer(EntityManager);
         }
-        protected override void OnStartRunning()
-        {
-            highlightEntity = EntityManager.CreateEntity(typeof(HighlightTile));
-            DynamicBuffer<HighlightTile> highlightMaker = EntityManager.GetBuffer<HighlightTile>(highlightEntity);
-            MapData data = GetSingleton<MapData>();
-            for (int i = 0; i < data.Tiles.Length; i++)
-            {
-                if (data.Tiles[i].Inaccessible)
-                {
-                    highlightMaker.Add(new HighlightTile
-                    {
 
-                        point = data.GetTilePoint(i),
-                        layer = MapLayer.HOVER
-                    });
-                }
+
+        public struct ArchetypeContainer
+        {
+            public readonly EntityArchetype Map;
+
+            public readonly EntityArchetype MapRenderLayer;
+
+            public readonly EntityArchetype MapTileHighlighter;
+
+            public readonly EntityArchetype MapBody;
+
+            public ArchetypeContainer(EntityManager manager)
+            {
+
+                //Map = manager.CreateArchetype(ComponentType.ChunkComponent<MapHighlightDirtyLayerData>(), typeof(MapHighlightData), typeof(MapData));
+                Map = manager.CreateArchetype(typeof(MapData),
+                typeof(MapHighlightState),
+                typeof(MapCollisionState),
+                typeof(MapLayerRenderer),
+                typeof(MapRenderInfo));
+                MapRenderLayer = manager.CreateArchetype(
+                typeof(MapHighlightColor),
+                typeof(MapElement),
+                typeof(RenderMesh),
+                typeof(RenderBounds),
+                typeof(LocalToWorld),
+                typeof(MeshIndexUpdate),
+                typeof(MeshIndexUpdateData32));
+                MapTileHighlighter = manager.CreateArchetype(typeof(MapElement), typeof(HighlightTile), typeof(HighlightSystemTile));
+                MapBody = manager.CreateArchetype(typeof(MapBody), typeof(MapElement));
             }
-        }
 
-        protected override void OnStopRunning()
-        {
-            EntityManager.DestroyEntity(highlightEntity);
-        }
-        protected override void OnUpdate()
-        {
-            /*tick++;
-            if (tick > maxTick)
-            {
-                MapData data = GetSingleton<MapData>();
-
-
-                int index = 0;
-                Entities.With(GetEntityQuery(typeof(MapBody))).ForEach((entity) =>
-                {
-                    if (index % 2 == prefBody)
-                        if (!EntityManager.HasComponent<MapBodyTranslation>(entity))
-                            PostUpdateCommands.AddComponent(entity, new MapBodyTranslation
-                            {
-                                point = new Point((ushort)random.NextUInt() % data.Width, (ushort)random.NextUInt() % data.Length),
-                                maxDistance = 10
-                            });
-                    index++;
-                });
-                prefBody = (prefBody + 1) % 2;
-                tick = 0;
-            }*/
         }
     }
+    
+    [UpdateInGroup(typeof(MapSystemGroup))]
+    public class MapHighlightSystemGroup : ComponentSystemGroup { }
 
-
-
+    [UpdateInGroup(typeof(MapSystemGroup))]
+    public class MapBodyManagementSystemGroup : ComponentSystemGroup {}
 }

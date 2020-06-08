@@ -1,6 +1,7 @@
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Collections;
+using Reactics.Battle.Map;
 
 namespace Reactics.Battle {
     /// <summary>
@@ -14,6 +15,7 @@ namespace Reactics.Battle {
     }
 
     //Processes inputs and shoves them into systems for the game to actually do stuff.
+    //I left a lot of comments in here because I think they'll be helpful eventually maybe. just ignore most of them probably
     [UpdateInGroup(typeof(PlayerInputProcessingSystemGroup))]
     public class PlayerInputProcessorSystem : SystemBase
     {
@@ -57,26 +59,20 @@ namespace Reactics.Battle {
                     if (!unitManagerDataArray[0].commanding)
                     {
                         //We are selecting a map body to begin issuing a command to. Only do so if the action meter is full.
-                        Entities.ForEach((Entity entity, ref MapBody mapBody, ref MoveTilesTag tag, in UnitData unitData, in ActionMeter actionMeter) =>
+                        Entities.ForEach((Entity entity, ref MapBody mapBody, /*ref MoveTilesTag tag,*/ in UnitData unitData, in ActionMeter actionMeter) =>
                         {
-                            tag.toggle = true;
+                            //tag.toggle = true;
                             if (actionMeter.Active() && mapBody.point.ComparePoints(cursorData.currentHoverPoint))
                             {
-                                //Doing this wrong maybe...? Not sure how else to get it.
-
-                                //This needs to go in another system? for now we're just testing.
-                                //That system will query unit data and well, yeah. we'll go from there~
                                 UnitManagerData unitManagerData = new UnitManagerData();
                                 unitManagerData.selectedUnit = entity;
                                 unitManagerData.commanding = true;
                                 unitManagerData.moveRange = unitData.Movement();
-                                /*unitManagerData.selectedUnitID = unitDataRef.unit.Value.identifierInt;
-                                unitManagerData.commanding = true;*/
                                 unitManagerDataArray[0] = unitManagerData;
                             }
                         }).Run();
                     }
-                    else if (!unitManagerDataArray[0].moveTileSelected && !mapData[cursorData.currentHoverPoint].inaccessible)
+                    else if (!unitManagerDataArray[0].moveTileSelected && !mapData.GetTile(cursorData.currentHoverPoint).Inaccessible)
                     {
                         //We are selecting a tile to move to. Make sure it's in range of our movement.
                         Point currentPoint = GetComponentDataFromEntity<MapBody>(true)[unitManagerDataArray[0].selectedUnit].point;
@@ -98,12 +94,12 @@ namespace Reactics.Battle {
                             inputDataArray[0] = inputData;
                         }
                     }
-                    else if (!mapData[cursorData.currentHoverPoint].inaccessible)
+                    else if (!mapData.GetTile(cursorData.currentHoverPoint).Inaccessible)
                     {
                         Point currentPoint = GetComponentDataFromEntity<MapBody>(true)[unitManagerDataArray[0].selectedUnit].point;
                         UnitManagerData unitManagerData = unitManagerDataArray[0];
                         if (unitManagerDataArray[0].moveTile.InRange(cursorData.currentHoverPoint, unitManagerDataArray[0].effect.range) &&
-                            !mapData[cursorData.currentHoverPoint].inaccessible)
+                            !mapData.GetTile(cursorData.currentHoverPoint).Inaccessible)
                         {
                             //The range is ok, so we should make sure now that the thing is targeting something it's allowed to
                             if (unitManagerDataArray[0].moveTile.ComparePoints(cursorData.currentHoverPoint))
@@ -127,7 +123,7 @@ namespace Reactics.Battle {
                             else if (unitManagerDataArray[0].effect.affectsTiles && !unitManagerDataArray[0].effect.affectsAllies && !unitManagerDataArray[0].effect.affectsEnemies)
                             {
                                 unitManagerData.effectReady = true;
-                                Entities.ForEach((Entity entity, ref UnitData unitData, ref MapBody mapBody, ref MoveTilesTag tag, in ActionMeter actionMeter) =>
+                                Entities.ForEach((Entity entity, ref UnitData unitData, ref MapBody mapBody, /*ref MoveTilesTag tag,*/ in ActionMeter actionMeter) =>
                                 {
                                     //TODO: Fix this so it works on current tile of selected mapbody
                                     //In this case we're making sure there is not a mapbody here. if there is then we set it to false
@@ -140,7 +136,7 @@ namespace Reactics.Battle {
                             else if (!unitManagerDataArray[0].effect.affectsTiles)
                             {
                                 unitManagerData.effectReady = false;
-                                Entities.ForEach((Entity entity, ref UnitData unitData, ref MapBody mapBody, ref MoveTilesTag tag, in ActionMeter actionMeter) =>
+                                Entities.ForEach((Entity entity, ref UnitData unitData, ref MapBody mapBody, /*ref MoveTilesTag tag,*/ in ActionMeter actionMeter) =>
                                 {
                                     if (cursorData.currentHoverPoint.ComparePoints(mapBody.point))
                                     {
@@ -159,9 +155,10 @@ namespace Reactics.Battle {
                             unitManagerDataArray[0] = unitManagerData;
                             if (unitManagerDataArray[0].effectReady)
                             {
-                                EntityManager.AddComponentData(unitManagerDataArray[0].selectedUnit, new MapBodyTranslation {
-                                    maxDistance = unitManagerDataArray[0].moveRange,
-                                    point = unitManagerDataArray[0].moveTile
+                                EntityManager.AddComponentData(unitManagerDataArray[0].selectedUnit, new FindingPathInfo {
+                                    //maxDistance = unitManagerDataArray[0].moveRange,
+                                    destination = unitManagerDataArray[0].moveTile,
+                                    speed = 5f
                                 });
                                 //this is where we'd want to get an effect somehow and like. put it there.
                                 EntityManager.AddComponentData(unitManagerDataArray[0].selectedUnit, new Projectile {
@@ -199,7 +196,7 @@ namespace Reactics.Battle {
                 //If I was wrong then it's easy enough to un-job and just add the component normally.
                 //Or if they never get to bursting the ecb then I can just set a flag, pass in a native array, and get the result like that, then add the component.
                 //var ecb = entityCommandBufferSystem.CreateCommandBuffer().ToConcurrent();
-                ComponentDataFromEntity<MoveTilesTag> tag = GetComponentDataFromEntity<MoveTilesTag>(false);
+                //ComponentDataFromEntity<MoveTilesTag> tag = GetComponentDataFromEntity<MoveTilesTag>(false);
                 Entities.ForEach((ref InputData inputDataData) =>
                 {
                     InputData inputData = inputDataArray[0];
@@ -210,14 +207,14 @@ namespace Reactics.Battle {
 
                     UnitManagerData unitManagerData = unitManagerDataArray[0];
 
-                    if (tag.Exists(unitManagerData.selectedUnit))
+                    /*if (tag.Exists(unitManagerData.selectedUnit))
                     {
                         //this is a neat feature but delete it...
                         //actually what if this is perfect and makes it so moving other blocks works... hmm....
                         //keep it for now.
                         MoveTilesTag thing = new MoveTilesTag{toggle = true};
                         tag[unitManagerData.selectedUnit] = thing;
-                    }
+                    }*/
                     if (inputData.select)
                     {
                         if (inputData.CurrentMenuOption() == 0)
@@ -235,11 +232,11 @@ namespace Reactics.Battle {
                                 And if the server decides that we shouldn't have added those two components it removes them and then rolls back to when we never did that as if it iddn't occur.
                                 Probably more likely but we'll have to read about rollback some more...
                                 */
-                                EntityManager.AddComponentData(unitManagerDataArray[0].selectedUnit, new MapBodyTranslation {
-                                    maxDistance = unitManagerDataArray[0].moveRange,
-                                    point = unitManagerDataArray[0].moveTile
+                                EntityManager.AddComponentData(unitManagerDataArray[0].selectedUnit, new FindingPathInfo {
+                                    //maxDistance = unitManagerDataArray[0].moveRange,
+                                    destination = unitManagerDataArray[0].moveTile,
+                                    speed = 5f
                                 });
-                                //*&* TODO: WRITE A SYSTEM THAT DEDUCTS FROM ACTION METER BASED ON MOVEMENT THAT ONLY QUERIES ACTIONMETER AND MAPBODYTRANSLATION.
 
                                 inputData.currentActionMap = ActionMaps.BattleControls;
 
@@ -249,7 +246,7 @@ namespace Reactics.Battle {
                         else
                         {
                             //For now this means we're selecting an action.
-                            //Normally we would like. do something here. 
+                            //Normally we would like. do something here regarding getting the action from wherever it's stored.
                             unitManagerData.effectSelected = true;
                             unitManagerData.effect = new Effect {
                                 physicalDmg = 105,

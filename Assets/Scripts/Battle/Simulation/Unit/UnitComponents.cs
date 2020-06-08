@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Reactics.Util;
+using Reactics.Commons;
 using Unity.Entities;
+using Reactics.Battle.Map;
 namespace Reactics.Battle
 {
     /// <summary>

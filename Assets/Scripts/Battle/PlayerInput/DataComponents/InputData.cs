@@ -7,7 +7,7 @@ public struct InputData : IComponentData
 {
     public ActionMaps currentActionMap;
     public ActionMaps previousActionMap;
-    public ControlSchemes currentControlScheme;
+    //public ControlSchemes currentControlScheme;
     public float2 pan;
     public float2 tileMovement;
     public bool menuMovement;
@@ -15,9 +15,10 @@ public struct InputData : IComponentData
     public float zoom;
     public float2 rotation;
     public bool select;
-    public bool selectHeld;
+    //public bool selectHeld;
     public bool cancel;
-    public bool cancelHeld;
+    //public bool cancelHeld;
     public int menuOption;
+    //incredibly temporary
     public int CurrentMenuOption() => menuOption % 2;
 }
