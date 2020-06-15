@@ -11,7 +11,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
-using System.Collections;
+using System.Collections.ObjectModel;
 
 namespace Reactics.Editor
 {
@@ -74,7 +74,7 @@ namespace Reactics.Editor
                     Target = value.targetObject as MapAsset;
                     oldWidth = obj.Width;
                     oldLength = obj.Length;
-                    EditorPrefs.SetInt(MAP_EDITOR_TARGET_PREF,obj.GetInstanceID());
+                    EditorPrefs.SetInt(MAP_EDITOR_TARGET_PREF, obj.GetInstanceID());
                     TopDownCamera();
                 }
                 else
@@ -98,10 +98,13 @@ namespace Reactics.Editor
         private HashSet<Point> selectedPoints = new HashSet<Point>();
         private EditorMapHighlightManager<MapAssetTile, MapAssetSpawnGroup> highlightManager;
 
+        private SelectionManager selectionManager = new SelectionManager();
+
+        private Type selectionBrushType = typeof(OutlineEllipseSelectionBrush);
         private void OnEnable()
         {
 
-            CreateScene();
+            InitializeScene();
             pointBuffers = new List<Point>[MapLayers.Count];
             for (int i = 0; i < pointBuffers.Length; i++)
                 pointBuffers[i] = new List<Point>();
@@ -112,7 +115,7 @@ namespace Reactics.Editor
             rootVisualElement.styleSheets.Add(styleSheet);
 
             cameraContainer = rootVisualElement.Q<IMGUIContainer>("camera-element");
-            CreateCameraControls(cameraContainer);
+            CreateControls(cameraContainer);
             CreateMeshFieldValidators(rootVisualElement);
             var lastId = EditorPrefs.GetInt(MAP_EDITOR_TARGET_PREF, -1);
             if (lastId > 0)
@@ -121,10 +124,15 @@ namespace Reactics.Editor
                 if (lastObj != null)
                     SerializedObject = lastObj;
             }
-
+            selectionManager.context.AddListener((evt) =>
+            {
+                UpdateTileEditors(evt.current);
+                highlightManager.Set(MapLayer.PlayerAll, evt.current);
+            });
+            
         }
 
-        private void CreateScene()
+        private void InitializeScene()
         {
             editorScene = EditorSceneManager.NewPreviewScene();
             if (cameraInfo.Equals(default))
@@ -141,7 +149,6 @@ namespace Reactics.Editor
             if (redrawMesh)
             {
                 mapInfo.Mesh = Target.UpdateMesh(1, 0.25f, oldWidth, oldLength, mapInfo.Mesh);
-
                 redrawMesh = false;
                 oldWidth = Target.Width;
                 oldLength = Target.Length;
@@ -190,7 +197,7 @@ namespace Reactics.Editor
                 }
             });
         }
-        private void CreateCameraControls(IMGUIContainer cameraContainer)
+        private void CreateControls(IMGUIContainer cameraContainer)
         {
             cameraContainer.RegisterCallback<MouseMoveEvent>((evt) =>
             {
@@ -211,9 +218,8 @@ namespace Reactics.Editor
                 {
                     if ((evt.pressedButtons & 1) != 0)
                     {
-                        selectedPointInfo.Select(point, false);
-                        UpdateTileEditors(selectedPointInfo.points);
-                        highlightManager.Set(MapLayer.PlayerAll, selectedPointInfo.points);
+                        selectionManager.TryUpdateStroke(point);
+
                     }
                     highlightManager.Set(point, MapLayer.Hover);
 
@@ -222,6 +228,7 @@ namespace Reactics.Editor
                 }
                 else
                 {
+                    
                     highlightManager.Clear(MapLayer.Hover);
                     rootVisualElement.Q<Label>("footer").text = "";
                 }
@@ -234,11 +241,15 @@ namespace Reactics.Editor
             {
                 if ((evt.pressedButtons & 1) != 0 && TryGetPoint(evt.mousePosition, cameraContainer, out Point point))
                 {
-                    selectedPointInfo.Select(point, !evt.ctrlKey);
-                    UpdateTileEditors(selectedPointInfo.points);
-                    highlightManager.Set(MapLayer.PlayerAll, selectedPointInfo.points);
+                    
+                    selectionManager.TryStartStroke(point, selectionBrushType, !evt.ctrlKey);
 
                 }
+            });
+            cameraContainer.RegisterCallback<MouseUpEvent>((evt) =>
+            {
+                selectionManager.TryEndStroke();
+                
             });
 
             cameraContainer.RegisterCallback<WheelEvent>((evt) =>
@@ -640,25 +651,6 @@ namespace Reactics.Editor
     }
 
 
-    /*     public interface ISelectionBrush
-        {
-            void StartSelection(Point point, bool clear);
 
-            void Add(Point point);
-
-            void FinishSelection(Point point);
-
-        }
-
-        public class SelectionHandler : MonoBehaviour, IEnumerable<Point>
-        {
-            private HashSet<Point> points = new HashSet<Point>();
-
-            public ISelectionBrush brush;
-
-            public IEnumerator<Point> GetEnumerator() => points.GetEnumerator();
-
-            IEnumerator IEnumerable.GetEnumerator() => points.GetEnumerator();
-        } */
 
 }

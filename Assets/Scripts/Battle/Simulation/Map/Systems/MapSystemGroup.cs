@@ -12,6 +12,7 @@ namespace Reactics.Battle.Map
         public ArchetypeContainer Archetypes { get; private set; }
         protected override void OnCreate()
         {
+            base.OnCreate();
             Archetypes = new ArchetypeContainer(EntityManager);
         }
 

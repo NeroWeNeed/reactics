@@ -70,7 +70,6 @@ namespace Reactics.Editor
             this.AddToClassList("unity-base-text-field");
             this.AddToClassList("unity-text-field");
             styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Resources/Editor/TypeSelector.uss");
-
             types.Clear();
             if (typeValidator != null)
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())

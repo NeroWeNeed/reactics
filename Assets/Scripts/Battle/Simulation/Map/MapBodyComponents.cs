@@ -50,6 +50,8 @@ namespace Reactics.Battle.Map
 
         public int maxElevationDifference;
 
+        public BlittableBool routeClosest;
+
 
     }
     [WriteGroup(typeof(LocalToWorld))]
@@ -68,5 +70,7 @@ namespace Reactics.Battle.Map
             this.completion = 0;
         }
     }
+
+    
 
 }

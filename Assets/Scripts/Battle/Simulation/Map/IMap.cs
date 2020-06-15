@@ -1,4 +1,6 @@
+using Reactics.Commons;
 using Unity.Collections;
+using Unity.Entities;
 
 namespace Reactics.Battle.Map
 {
@@ -27,6 +29,23 @@ namespace Reactics.Battle.Map
         int Count { get; }
     }
 
+    public interface IMapTileEffectHandler
+    {
+        void OnEnter(Entity entity, EntityCommandBuffer entityCommandBuffer, Point position);
+        void OnExit(Entity entity, EntityCommandBuffer entityCommandBuffer, Point position);
+        void OnTick(Entity entity, EntityCommandBuffer entityCommandBuffer, Point position);
+    }
+
+    public interface IMapTileEffectProvider
+    {
+        int KeyCount { get; }
+        Identifier GetKey(int index);
+
+
+    }
+    public interface IMapTileEffectProviderConfigurationBlock {
+        
+    }
 
 
 }

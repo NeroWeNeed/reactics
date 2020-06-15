@@ -128,7 +128,7 @@ namespace Reactics.Battle.Map
             processedBuffer.Clear();
             while (enumerator.MoveNext())
             {
-                
+
                 uint j = (uint)MapCommons.IndexOf(enumerator.Current, mapWidth);
                 if (processedBuffer.Contains(j))
                     continue;
@@ -275,9 +275,17 @@ namespace Reactics.Battle.Map
         public float Distance(Point other)
         {
             return math.distance(x - other.x, y - other.y);
-
         }
-
+        public int ManhattanDistance(Point other)
+        {
+            return math.abs(x - other.x) + math.abs(y - other.y);
+        }
+        public static Point FromIndex(int index, ushort width)
+        {
+            if (index < 0)
+                throw new ArgumentOutOfRangeException("index");
+            return new Point(index % width, index / width);
+        }
 
         public static bool Create(int x, int y, int maxX, int maxY, out Point output)
         {
@@ -333,10 +341,35 @@ namespace Reactics.Battle.Map
                 throw new InvalidCastException("Vector must be positive");
         }
 
+        public static NativeArray<Point> CreateMapPointSet(ushort width, ushort length, Allocator allocator = Allocator.Temp)
+        {
+            var result = new NativeArray<Point>(width * length, allocator);
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i] = Point.FromIndex(i, width);
+            }
+            return result;
+        }
 
 
     }
 
+    public class PointComparerXAxis : IComparer<Point>
+    {
+        public int Compare(Point x, Point y)
+        {
+            var comparison = x.x.CompareTo(y.x);
+            return comparison != 0 ? comparison : x.y.CompareTo(y.y);
+        }
+    }
+    public class PointComparerYAxis : IComparer<Point>
+    {
+        public int Compare(Point x, Point y)
+        {
+            var comparison = x.y.CompareTo(y.y);
+            return comparison != 0 ? comparison : x.x.CompareTo(y.x);
+        }
+    }
     [Flags]
     public enum MapLayer
     {
@@ -361,7 +394,7 @@ namespace Reactics.Battle.Map
 
     }
 
-    
+
     public static class MapLayers
     {
 
@@ -376,24 +409,31 @@ namespace Reactics.Battle.Map
         public static int IndexOf(MapLayer layer) => IndexOf((ushort)layer);
         public static int IndexOf(ushort layer) => Array.IndexOf(Values, layer);
 
-        public static EnumDictionary<MapLayer, Color> CreateDefaultColorMap() => new EnumDictionary<MapLayer, Color>(
-            GeneralCommons.ParseColor("C0C0C0"),
-            GeneralCommons.ParseColor("41EAD4"),
-            GeneralCommons.ParseColor("41EAD4"),
-            GeneralCommons.ParseColor("41EAD4"),
-            GeneralCommons.ParseColor("41EAD4"),
-            GeneralCommons.ParseColor("F71735"),
-            GeneralCommons.ParseColor("F71735"),
-            GeneralCommons.ParseColor("F71735"),
-            GeneralCommons.ParseColor("F71735"),
-            GeneralCommons.ParseColor("95E06C"),
-            GeneralCommons.ParseColor("95E06C"),
-            GeneralCommons.ParseColor("95E06C"),
-            GeneralCommons.ParseColor("95E06C"),
-            GeneralCommons.ParseColor("FF9F1C"),
-            GeneralCommons.ParseColor("FDFFFC"),
-            GeneralCommons.ParseColor("011627")
-            );
+        public static EnumDictionary<MapLayer, Color> CreateDefaultColorMap() => new EnumDictionary<MapLayer, Color>() {
+            { MapLayer.Base, GeneralCommons.ParseColor("C0C0C0")},
+            { MapLayer.PlayerMove, GeneralCommons.ParseColor("41EAD4") },
+            { MapLayer.PlayerAttack , GeneralCommons.ParseColor("41EAD4") },
+            { MapLayer.PlayerSupport, GeneralCommons.ParseColor("41EAD4") },
+            { MapLayer.PlayerAll , GeneralCommons.ParseColor("41EAD4") },
+            { MapLayer.EnemyMove , GeneralCommons.ParseColor("F71735") },
+            { MapLayer.EnemyAttack, GeneralCommons.ParseColor("F71735") },
+            { MapLayer.EnemySupport, GeneralCommons.ParseColor("F71735") },
+            { MapLayer.EnemyAll , GeneralCommons.ParseColor("F71735") },
+            { MapLayer.AllyMove , GeneralCommons.ParseColor("95E06C") },
+            { MapLayer.AllyAttack, GeneralCommons.ParseColor("95E06C") },
+            { MapLayer.AllySupport, GeneralCommons.ParseColor("95E06C") },
+            { MapLayer.AllyAll , GeneralCommons.ParseColor("95E06C") },
+            { MapLayer.Hover ,GeneralCommons.ParseColor("FF9F1C") },
+            { MapLayer.UtilityOne , GeneralCommons.ParseColor("FDFFFC") },
+            { MapLayer.UtilityTwo, GeneralCommons.ParseColor("011627") }
+        };
+
     }
+
+
+
+
+
+
 
 }

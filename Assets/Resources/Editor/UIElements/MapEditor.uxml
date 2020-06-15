@@ -13,7 +13,6 @@
                 <ui:Foldout text="Tile Properties" name="tile-properties" class="widget widget-header" style="border-bottom-width: 0;&#10;" />
                 <ui:Foldout text="Spawn Groups" name="spawn-groups" class="widget widget-header" style="border-bottom-width: 0;&#10;" />
             </ui:ScrollView>
-            <Reactics.Editor.PointList min-points="4" />
         </ui:VisualElement>
         <ui:IMGUIContainer name="camera-element" style="border-left-width: 1px;&#10;border-right-width: 1px;&#10;border-top-width: 1px;&#10;border-bottom-width: 1px;&#10;border-left-color: rgb(138, 138, 138);&#10;border-right-color: rgb(138, 138, 138);&#10;border-top-color: rgb(138, 138, 138);&#10;border-bottom-color: rgb(138, 138, 138);&#10;width: 70%;&#10;flex-direction: row-reverse;&#10;">
             <ui:VisualElement name="camera-controls" style="flex-direction: row-reverse;&#10;align-items: flex-end;&#10;">

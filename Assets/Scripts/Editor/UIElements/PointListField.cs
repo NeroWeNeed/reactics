@@ -8,7 +8,6 @@ namespace Reactics.Editor
 {
     public class PointList : BindableElement, INotifyValueChanged<Point[]>
     {
-
         private VisualElement container;
         private Point[] _value;
         public Point[] value

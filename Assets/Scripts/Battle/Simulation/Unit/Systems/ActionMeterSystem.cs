@@ -4,7 +4,7 @@ using Unity.Jobs;
 namespace Reactics.Battle
 {
 
-    public class ActionMeterSystem : ComponentSystem
+/*     public class ActionMeterSystem : ComponentSystem
     {
         
         private EntityQuery query;
@@ -27,5 +27,6 @@ namespace Reactics.Battle
                 }
             });
         }
-    }
+
+    } */
 }

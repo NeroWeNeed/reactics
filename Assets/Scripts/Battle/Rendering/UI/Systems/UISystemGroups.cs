@@ -44,6 +44,7 @@ namespace Reactics.UI
 
         protected override void OnCreate()
         {
+            base.OnCreate();
             Layouts = new LayoutArchetypes(EntityManager);
             Elements = new ElementArchetypes(EntityManager);
 

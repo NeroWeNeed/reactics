@@ -21,13 +21,14 @@ MonoBehaviour:
     m_Address: MapMaterial
     m_ReadOnly: 0
     m_SerializedLabels: []
-    m_mainAssetType: UnityEngine.Material, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
   - m_GUID: febf1b09b380b7d46ab5ebfccfca54d2
     m_Address: Assets/ResourceData/OutlineMaterial.mat
     m_ReadOnly: 0
     m_SerializedLabels: []
-    m_mainAssetType: 
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: bcb6fb4a03d8ef248a61eb20fb3a922e, type: 2}
   m_SchemaSet:

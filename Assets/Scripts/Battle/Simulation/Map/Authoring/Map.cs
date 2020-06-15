@@ -30,10 +30,10 @@ namespace Reactics.Battle.Map.Authoring
             Undo.RegisterCreatedObjectUndo(gameObject, "Create " + gameObject.name);
             Selection.activeObject = gameObject;
             var map = gameObject.GetComponent<Map>();
-            if (map.layerColors == null)
-                map.layerColors = MapLayers.CreateDefaultColorMap();
-        }
+            map.layerColors = MapLayers.CreateDefaultColorMap();
 
+
+        }
 
         [SerializeField]
         private Material mapMaterial;
@@ -42,7 +42,7 @@ namespace Reactics.Battle.Map.Authoring
         public MapAsset map;
 
         [SerializeField]
-        public EnumDictionary<MapLayer, Color> layerColors;
+        public EnumDictionary<MapLayer, Color> layerColors = new EnumDictionary<MapLayer, Color>();
 
         private Mesh _mesh;
 
@@ -75,6 +75,7 @@ namespace Reactics.Battle.Map.Authoring
         //TODO: Editor Rendering not working for some reason.
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
+
             if (map != null)
             {
                 var mapSystem = dstManager.World.GetOrCreateSystem<MapSystemGroup>();
@@ -83,17 +84,13 @@ namespace Reactics.Battle.Map.Authoring
                 mesh.RecalculateBounds();
                 dstManager.AddComponentData(entity, new MapData(map.CreateBlob()));
                 dstManager.AddComponentData(entity, new MapHighlightState { dirty = 0, states = new Unity.Collections.LowLevel.Unsafe.UnsafeMultiHashMap<ushort, Point>(16, Allocator.Persistent) });
-                dstManager.AddComponentData(entity, new MapCollisionState { value = new Unity.Collections.LowLevel.Unsafe.UnsafeHashMap<Point, Entity>(16,Allocator.Persistent) });
+                dstManager.AddComponentData(entity, new MapCollisionState { value = new Unity.Collections.LowLevel.Unsafe.UnsafeHashMap<Point, Entity>(16, Allocator.Persistent) });
                 dstManager.AddComponentData(entity, new MapRenderInfo { baseIndexCount = mesh.GetIndexCount(0), tileSize = 1f, elevationStep = 0.25f });
                 var layerEntities = new NativeArray<Entity>(MapLayers.Count, Allocator.Temp);
                 for (int i = 0; i < MapLayers.Count; i++)
                 {
-
                     layerEntities[i] = conversionSystem.CreateAdditionalEntity(this);
                     dstManager.AppendArchetype(layerEntities[i], mapSystem.Archetypes.MapRenderLayer);
-
-
-
                 }
 
                 var layers = (MapLayer[])Enum.GetValues(typeof(MapLayer));

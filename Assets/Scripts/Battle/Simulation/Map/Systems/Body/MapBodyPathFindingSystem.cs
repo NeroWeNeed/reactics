@@ -29,8 +29,6 @@ namespace Reactics.Battle.Map
         }
         protected override void OnUpdate()
         {
-
-
             Dependency = new PathFindingJob
             {
                 entityType = GetArchetypeChunkEntityType(),
@@ -49,7 +47,6 @@ namespace Reactics.Battle.Map
 
         public struct PathFindingJob : IJobChunk
         {
-
             [ReadOnly]
             public ArchetypeChunkEntityType entityType;
             [ReadOnly]
@@ -62,7 +59,6 @@ namespace Reactics.Battle.Map
             public ArchetypeChunkComponentType<MapElement> mapElementType;
             [ReadOnly]
             public ArchetypeChunkComponentType<FindingPathInfo> findingPathInfoType;
-
             public EntityCommandBuffer.Concurrent ecb;
             public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
             {
@@ -82,20 +78,18 @@ namespace Reactics.Battle.Map
                     var mapData = mapDataType[mapEntity];
                     var collisionState = collisionStateType[mapEntity];
                     var info = findingPathInfos[i];
-
-
+                    var destination = info.destination;
                     frontier.Clear();
                     nodeInfo.Clear();
                     var initialNode = new Node(start, start, 0, 0);
                     frontier.Add(initialNode);
                     nodeInfo[start] = initialNode;
                     bool found = false;
-                    
+                    bool canReachDestination = true;
+
                     while (frontier.Length > 0)
                     {
-
                         var step = frontier.Pop();
-                        
                         if (step.point.Equals(info.destination))
                         {
                             found = true;
@@ -103,11 +97,20 @@ namespace Reactics.Battle.Map
                         }
 
 
-                        ExpandNode(entity, step.point, start, info.destination, info, mapData, collisionState, nodes);
+                        canReachDestination = ExpandNode(entity, step.point, start, destination, info, mapData, collisionState, nodes);
+                        if (!canReachDestination)
+                        {
+                            if (info.routeClosest && !step.point.Equals(start))
+                            {
+                                destination = step.point;
+                                found = true;
+                            }
+                            break;
+                        }
                         for (int j = 0; j < nodes.Length; j++)
                         {
                             var node = nodes[j];
-                            
+
                             if (node.Equals(default))
                                 continue;
                             if (nodeInfo.TryGetValue(node.point, out Node oldNode))
@@ -132,9 +135,9 @@ namespace Reactics.Battle.Map
                     }
                     if (found)
                     {
-                        
+
                         var buffer = ecb.AddBuffer<MapBodyPathFindingRoute>(chunkIndex, entity);
-                        var current = info.destination;
+                        var current = destination;
                         while (!current.Equals(nodeInfo[current].previous))
                         {
                             buffer.Insert(0, new MapBodyPathFindingRoute(current, nodeInfo[current].previous, info.speed));
@@ -147,29 +150,48 @@ namespace Reactics.Battle.Map
 
             }
         }
-
-        private static void ExpandNode(Entity entity, Point point, Point origin, Point destination, FindingPathInfo info, MapData mapData, MapCollisionState collisionState, NativeArray<Node> nodes)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="point"></param>
+        /// <param name="origin"></param>
+        /// <param name="destination"></param>
+        /// <param name="info"></param>
+        /// <param name="mapData"></param>
+        /// <param name="collisionState"></param>
+        /// <param name="nodes"></param>
+        /// <returns>True if the destination was not found or the destination was found but is able to be traveled to. False otherwise</returns>
+        private static bool ExpandNode(Entity entity, Point point, Point origin, Point destination, FindingPathInfo info, MapData mapData, MapCollisionState collisionState, NativeArray<Node> nodes)
         {
             int index = 0;
+            bool canReachDestination = true;
             for (sbyte x = -1; x <= 1; x++)
             {
                 for (sbyte y = -1; y <= 1; y++)
                 {
-                    if ((x == 0 && y == 0) ||
-                    !point.TryShift(x, y, mapData.Width, mapData.Length, out Point target) ||
-                    collisionState.value.ContainsKey(target) ||
-                    (info.maxElevationDifference >= 0 && info.maxElevationDifference < math.abs(mapData.GetTile(origin).Elevation - mapData.GetTile(target).Elevation)) ||
-                    mapData.GetTile(target).Inaccessible ||
-                    (x != 0 && y != 0 && (mapData.GetTile(point.Shift(x, 0)).Inaccessible || mapData.GetTile(point.Shift(0, y)).Inaccessible))
-                    )
-                        nodes[index] = default;
-                    else {
-
-                        nodes[index] = new Node(target, point, target.Distance(origin), target.Distance(destination));
+                    if (x == 0 && y == 0)
+                        continue;
+                    if (!point.TryShift(x, y, mapData.Width, mapData.Length, out Point target))
+                        nodes[index++] = default;
+                    else if (
+                        (collisionState.value.TryGetValue(target, out Entity collision) && !collision.Equals(entity)) ||
+                        (info.maxElevationDifference >= 0 && info.maxElevationDifference < math.abs(mapData.GetTile(origin).Elevation - mapData.GetTile(target).Elevation)) ||
+                        mapData.GetTile(target).Inaccessible ||
+                        (x != 0 && y != 0 && (mapData.GetTile(point.Shift(x, 0)).Inaccessible || mapData.GetTile(point.Shift(0, y)).Inaccessible))
+                        )
+                    {
+                        nodes[index++] = default;
+                        if (target.Equals(destination))
+                            canReachDestination = false;
+                    }
+                    else
+                    {
+                        nodes[index++] = new Node(target, point, target.Distance(origin), target.Distance(destination));
                     }
                 }
-                index++;
             }
+            return canReachDestination;
         }
 
         [StructLayout(LayoutKind.Sequential)]

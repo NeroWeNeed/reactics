@@ -68,6 +68,20 @@ namespace Reactics.Battle.Map
         public float tileSize;
         public float elevationStep;
     }
+    public delegate void OnFindMapBody(Entity entity, Point point, MapBody mapBody, MapData mapData, EntityCommandBuffer entityCommandBuffer);
+    public struct PointToMapBody : IComponentData
+    {
+        public Point point;
+        public Entity map;
+    }
+    public struct PointToMapBodyResult : IComponentData
+    {
+        public Point point;
 
+        public Entity mapBodyEntity;
+
+        public Entity mapEntity;
+        public bool Found { get => !mapBodyEntity.Equals(Entity.Null); }
+    }
 
 }
