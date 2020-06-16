@@ -62,9 +62,9 @@ public class UnitTileHighlightSystem : SystemBase
         //var mapBodyData = mapBodiesQuery.ToComponentDataArray<MapBody>(Allocator.TempJob);
         MapData mapData = GetSingleton<MapData>();
         //we could do a change filter with some tag component that gets attached to moving/selected mapbodies, maybe. not the worst idea, yeah?
-        Entities/*.WithChangeFilter<MoveTilesTag>().WithAll<MoveTilesTag>()*/.ForEach((Entity entity, ref MapBody mapBody, in UnitData unitData, in MapElement mapElement) =>
+        Entities/*.WithChangeFilter<MoveTilesTag>().WithAll<MoveTilesTag>()*/.ForEach((Entity entity, ref MapBody mapBody, in UnitStatData unitData, in MapElement mapElement) =>
         {
-            var move = unitData.Movement();
+            var move = unitData.Movement;
             DynamicBuffer<HighlightTile> highlightTiles = highlightTilesFromEntity[entity];
             highlightTiles.Clear();
 

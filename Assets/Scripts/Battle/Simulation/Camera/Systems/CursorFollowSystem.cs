@@ -9,6 +9,7 @@ using Unity.Physics;
 [UpdateAfter(typeof(CameraRotationSystem))]
 public class CursorFollowSystem : SystemBase
 {
+    
     protected override void OnUpdate() 
     {
         ComponentDataFromEntity<CameraMovementData> cameraData = GetComponentDataFromEntity<CameraMovementData>(true);

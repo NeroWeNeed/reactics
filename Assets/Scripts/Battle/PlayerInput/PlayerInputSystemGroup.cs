@@ -13,9 +13,7 @@ namespace Reactics.Battle
     [UpdateInGroup(typeof(BattleSystemGroup))]
     public class PlayerInputSystemGroup : ComponentSystemGroup
     {
-
     }
-
     //Clean up inputs to a readable format for the PlayerInputProcessorSystem.
     [UpdateInGroup(typeof(PlayerInputSystemGroup))]
     public class PlayerInputInterpreterSystem : ComponentSystem
@@ -38,6 +36,7 @@ namespace Reactics.Battle
 
             Entities.ForEach((ref ControlSchemeData controlSchemeData) => //maybe this is really the way to go...
             {
+                
                 //CAN WE DO THE CHECK FOR CHANGES THING HERE?
                 controlSchemeData.currentControlScheme = controlScheme;
             });

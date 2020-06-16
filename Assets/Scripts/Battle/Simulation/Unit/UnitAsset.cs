@@ -52,7 +52,7 @@ namespace Reactics.Battle
         {
             dstManager.AddComponentData(entity, new HealthPointData(this));
             dstManager.AddComponentData(entity, new MagicPointData(this));
-            dstManager.AddComponentData(entity, new UnitStats(this));
+            dstManager.AddComponentData(entity, new UnitStatData(this));
             dstManager.AddComponentData(entity, ActionMeterData.Create());
             dstManager.AddSharedComponentData(entity, new UnitAssetReference(this));
             var tasks = new Task<ActionAsset>[personalActions.Length];

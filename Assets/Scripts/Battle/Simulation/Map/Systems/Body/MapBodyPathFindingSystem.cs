@@ -8,6 +8,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 
+
 namespace Reactics.Battle.Map
 {
     [UpdateInGroup(typeof(MapBodyManagementSystemGroup))]
@@ -193,16 +194,13 @@ namespace Reactics.Battle.Map
             }
             return canReachDestination;
         }
-
         [StructLayout(LayoutKind.Sequential)]
         private struct Node : IComparable<Node>, IEquatable<Node>
         {
             public Point point;
-
             public Point previous;
             public float gCost, hCost;
             public BlittableBool valid;
-
             public Node(Point point, Point previous, float gCost, float hCost)
             {
                 this.point = point;
@@ -227,7 +225,6 @@ namespace Reactics.Battle.Map
                     return gCost.CompareTo(other.gCost);
                 }
             }
-
 
             public bool Equals(Node other)
             {

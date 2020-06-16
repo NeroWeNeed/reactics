@@ -68,7 +68,7 @@ namespace Reactics.Battle
     /// <summary>
     /// Components for referencing Unit Information
     /// </summary>
-    public struct UnitStats : IComponentData
+    public struct UnitStatData : IComponentData
     {
         public ushort Defense { get; set; }
 
@@ -82,7 +82,7 @@ namespace Reactics.Battle
 
         public ushort Movement { get; set; }
 
-        public UnitStats(UnitAsset unitAsset)
+        public UnitStatData(UnitAsset unitAsset)
         {
             Defense = unitAsset.Defense;
             Resistance = unitAsset.Resistance;

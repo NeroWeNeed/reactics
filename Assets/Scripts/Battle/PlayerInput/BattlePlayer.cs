@@ -31,9 +31,9 @@ public class BattlePlayer : MonoBehaviour
     {
         input.Disable();
     }
-
     public ControlSchemes GetControlScheme()
     {
+        
         if (playerInput.currentControlScheme == "Gamepad")
             return ControlSchemes.Gamepad;
         return ControlSchemes.KeyboardAndMouse;

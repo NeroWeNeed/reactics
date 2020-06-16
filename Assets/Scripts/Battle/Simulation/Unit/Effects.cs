@@ -17,6 +17,8 @@ using Reactics.Battle.Map;
 //Well.. those tile warps? They could be like. Switching unit positions or something. Couldn't they? 
 //Either way we probably have to check if a unit is there or something. For now let's just....
 //Assume they can be the same thing. Alright? Seems fine.
+//
+//Yeah let's make tile and action effects the same.
 public struct Effect
 {
     //Having ten billion of these... not the best idea? Hmm.

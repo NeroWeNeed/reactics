@@ -26,7 +26,7 @@ public class ActionIssueSystem : SystemBase
             typeof(MapElement)
         });
     }
-    protected override void OnUpdate() 
+    protected override void OnUpdate()
     {
         var localArchetype = archetype;
         var ecb = entityCommandBufferSystem.CreateCommandBuffer().ToConcurrent();
@@ -36,7 +36,7 @@ public class ActionIssueSystem : SystemBase
         //hello temp map size
         var mapTileSize = 1f;
         //Only run if the unit isn't actively trying to reach its destination
-        Entities.WithNone<FindingPathInfo/*,MapBodyTranslationStep*/>().ForEach((int entityInQueryIndex, Entity entity, ref Projectile proj, ref ActionMeter meter, in Translation translation, in UnitData unitData) => 
+        Entities.WithNone<FindingPathInfo/*,MapBodyTranslationStep*/>().ForEach((int entityInQueryIndex, Entity entity, ref Projectile proj, ref ActionMeterData meter, in Translation translation, in UnitStatData unitData,in HealthPointData healthPointData, in MagicPointData magicPointData) =>
         {
             //Get rid of the component immediately.//what if we skip makingentities and go straight to applying the dynamic buffer?
             ecb.RemoveComponent<Projectile>(entityInQueryIndex, entity);
@@ -53,7 +53,7 @@ public class ActionIssueSystem : SystemBase
                 Point targetPoint = mapBodyDataFromEntity[proj.targetUnit].point;
                 if (currentPoint.InRange(targetPoint, proj.effect.range))
                 {
-                    meter.charge -= proj.effect.cost;
+                    meter.Current -= proj.effect.cost;
                 }
                 else
                 {
@@ -67,7 +67,8 @@ public class ActionIssueSystem : SystemBase
 
             //This successfully went through so here we create the entity to hold the action to perform on the target.
             Entity projEntity = ecb.CreateEntity(entityInQueryIndex, localArchetype);
-            ecb.SetComponent(entityInQueryIndex, projEntity, new Translation {
+            ecb.SetComponent(entityInQueryIndex, projEntity, new Translation
+            {
                 Value = translation.Value
             });
 
@@ -75,26 +76,27 @@ public class ActionIssueSystem : SystemBase
             if (mapElementDataFromEntity.Exists(entity))
             {
                 Entity mapEntity = mapElementDataFromEntity[entity].value;
-                
-                ecb.SetComponent(entityInQueryIndex, projEntity, new MapElement {
+
+                ecb.SetComponent(entityInQueryIndex, projEntity, new MapElement
+                {
                     value = mapEntity
                 });
             }
             Projectile newProj = proj;
             newProj.originPoint = mapBodyDataFromEntity[entity].point;
-            newProj.originPosition = new float3(mapBodyDataFromEntity[entity].point.x * mapTileSize + mapTileSize/2, 0, 
-                                            mapBodyDataFromEntity[entity].point.y * mapTileSize + mapTileSize/2);
+            newProj.originPosition = new float3(mapBodyDataFromEntity[entity].point.x * mapTileSize + mapTileSize / 2, 0,
+                                            mapBodyDataFromEntity[entity].point.y * mapTileSize + mapTileSize / 2);
 
             newProj.targetPoint = mapBodyDataFromEntity[proj.targetUnit].point;
             newProj.lastPiercePoint = newProj.originPoint;
 
             //This is where we take stats into account for damage/healing.
             if (newProj.effect.physicalDmg > 0)
-                newProj.effect.physicalDmg += unitData.Strength();
+                newProj.effect.physicalDmg += unitData.Strength;
             if (newProj.effect.magicDmg > 0)
-                newProj.effect.magicDmg += unitData.Magic();
+                newProj.effect.magicDmg += unitData.Magic;
             if (newProj.effect.healing > 0)
-                newProj.effect.healing += unitData.Magic(); //this is gonna be a solid maybe. for now we're throwing it in b/c whatever.
+                newProj.effect.healing += unitData.Magic; //this is gonna be a solid maybe. for now we're throwing it in b/c whatever.
 
             //projectile. this is wher we'd like. edit projectile fields or something isn't it? no... not really. just the targets, maybe.
             ecb.SetComponent(entityInQueryIndex, projEntity, newProj);

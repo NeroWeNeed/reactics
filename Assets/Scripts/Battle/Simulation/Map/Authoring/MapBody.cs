@@ -13,7 +13,7 @@ namespace Reactics.Battle.Map.Authoring
         [SerializeField]
         public Point position;
         [SerializeField]
-        public Unit unit;
+        public UnitAsset unit;
 
         private void OnValidate()
         {
@@ -42,7 +42,7 @@ namespace Reactics.Battle.Map.Authoring
                     speed = 8,
                     maxElevationDifference = 1
                 });
-                dstManager.AddComponentData(entity, new ActionMeter{
+/*                 dstManager.AddComponentData(entity, new ActionMeter{
                     rechargeRate = 10f,
                     chargeable = true,
                     charge = 100f
@@ -50,7 +50,7 @@ namespace Reactics.Battle.Map.Authoring
                 dstManager.AddComponentData(entity, new UnitCommand{
                     unitManagerEntity = unitManagerArray[0]
                 });
-                dstManager.AddComponentData(entity, unit.CreateComponent());
+                dstManager.AddComponentData(entity, unit.CreateComponent()); */
                 //dstManager.AddComponentData(entity, new MoveTilesTag());
                 dstManager.AddBuffer<HighlightTile>(entity);
                 dstManager.AddBuffer<EffectBuffer>(entity);

@@ -14,15 +14,17 @@ public class EffectProcessingSystem : SystemBase
 {
     protected override void OnUpdate() 
     {
-        Entity mapData = GetSingletonEntity<MapData>();
+        /* Entity mapData = GetSingletonEntity<MapData>();
         BufferFromEntity<MapTileEffect> tileEffectBufferFromEntity = GetBufferFromEntity<MapTileEffect>(false);
-        Entities/*.WithNone<WaitToProcessTag>()*/.ForEach((int entityInQueryIndex, Entity entity, ref DynamicBuffer<EffectBuffer> effectBuffer, ref UnitData unitData, in MapBody mapBody) => 
+        Entities
+        //.WithNone<WaitToProcessTag>()
+        .ForEach((int entityInQueryIndex, Entity entity, ref DynamicBuffer<EffectBuffer> effectBuffer, ref UnitStatData unitData,in HealthPointData healthPointData, in MagicPointData magicPointData, in MapBody mapBody) => 
         {
             //First get the buffer from the map.
             DynamicBuffer<MapTileEffect> mapEffects = tileEffectBufferFromEntity[mapData];
 
             //Then loop through and find the tile the current map body is on.
-            /*
+            
             don't look at this
             for (var i = 0; i < mapEffects.Length; i++)
             {
@@ -31,7 +33,7 @@ public class EffectProcessingSystem : SystemBase
                     //Add the effect to the unit's effect buffer.
                     effectBuffer.Add(new EffectBuffer {effect = mapEffects[i].effect});
                 }
-            }*/
+            }
 
             if (effectBuffer.Length > 0)
             {
@@ -45,9 +47,9 @@ public class EffectProcessingSystem : SystemBase
                     if (effect.effect.currentFrames == 0)
                     {
                         //Physical damage calculation
-                        totalDmg += effect.effect.physicalDmg - unitData.Defense() > 0 ? effect.effect.physicalDmg - unitData.Defense() : 0;
+                        totalDmg += effect.effect.physicalDmg - unitData.Defense > 0 ? effect.effect.physicalDmg - unitData.Defense : 0;
                         //Magic damage calculation
-                        totalDmg += effect.effect.magicDmg - unitData.Resistance() > 0 ? effect.effect.magicDmg - unitData.Resistance() : 0;
+                        totalDmg += effect.effect.magicDmg - unitData.Resistance > 0 ? effect.effect.magicDmg - unitData.Resistance : 0;
                         //True damage calculation
                         totalDmg += effect.effect.trueDmg;
                         //Healing calculation
@@ -116,7 +118,7 @@ public class EffectProcessingSystem : SystemBase
                     unitData.healthPoints = (ushort)newHealthPoints;
                 }
             }
-        }).Schedule();
+        }).Schedule(); */
     }
 }
 // don't look at this

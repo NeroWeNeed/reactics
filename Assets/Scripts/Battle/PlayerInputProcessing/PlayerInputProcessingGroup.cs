@@ -14,6 +14,8 @@ namespace Reactics.Battle {
 
     }
 
+    
+
     //Processes inputs and shoves them into systems for the game to actually do stuff.
     //I left a lot of comments in here because I think they'll be helpful eventually maybe. just ignore most of them probably
     [UpdateInGroup(typeof(PlayerInputProcessingSystemGroup))]
@@ -33,6 +35,7 @@ namespace Reactics.Battle {
             NativeArray<InputData> inputDataArray = new NativeArray<InputData>(1, Allocator.TempJob);
             inputDataArray[0] = GetSingleton<InputData>();
 
+
             NativeArray<UnitManagerData> unitManagerDataArray = new NativeArray<UnitManagerData>(1, Allocator.TempJob);
             unitManagerDataArray[0] = GetSingleton<UnitManagerData>();
 
@@ -48,7 +51,6 @@ namespace Reactics.Battle {
                     rotData.rotationDirection = inputDataArray[0].rotation;
                 }
             }).WithName("CameraInputsJob").Run();
-            
             if (inputDataArray[0].currentActionMap == ActionMaps.BattleControls)
             {
                 if (inputDataArray[0].select)
@@ -59,15 +61,15 @@ namespace Reactics.Battle {
                     if (!unitManagerDataArray[0].commanding)
                     {
                         //We are selecting a map body to begin issuing a command to. Only do so if the action meter is full.
-                        Entities.ForEach((Entity entity, ref MapBody mapBody, /*ref MoveTilesTag tag,*/ in UnitData unitData, in ActionMeter actionMeter) =>
+                        Entities.ForEach((Entity entity, ref MapBody mapBody, /*ref MoveTilesTag tag,*/ in UnitStatData unitData, in ActionMeterData actionMeter) =>
                         {
                             //tag.toggle = true;
-                            if (actionMeter.Active() && mapBody.point.ComparePoints(cursorData.currentHoverPoint))
+                            if (actionMeter.Active && mapBody.point.ComparePoints(cursorData.currentHoverPoint))
                             {
                                 UnitManagerData unitManagerData = new UnitManagerData();
                                 unitManagerData.selectedUnit = entity;
                                 unitManagerData.commanding = true;
-                                unitManagerData.moveRange = unitData.Movement();
+                                unitManagerData.moveRange = unitData.Movement;
                                 unitManagerDataArray[0] = unitManagerData;
                             }
                         }).Run();
@@ -123,8 +125,9 @@ namespace Reactics.Battle {
                             else if (unitManagerDataArray[0].effect.affectsTiles && !unitManagerDataArray[0].effect.affectsAllies && !unitManagerDataArray[0].effect.affectsEnemies)
                             {
                                 unitManagerData.effectReady = true;
-                                Entities.ForEach((Entity entity, ref UnitData unitData, ref MapBody mapBody, /*ref MoveTilesTag tag,*/ in ActionMeter actionMeter) =>
+                                Entities.ForEach((Entity entity, ref MapBody mapBody, in UnitStatData unitData, /*ref MoveTilesTag tag,*/ in ActionMeterData actionMeter) =>
                                 {
+
                                     //TODO: Fix this so it works on current tile of selected mapbody
                                     //In this case we're making sure there is not a mapbody here. if there is then we set it to false
                                     if (cursorData.currentHoverPoint.ComparePoints(mapBody.point))
@@ -136,8 +139,9 @@ namespace Reactics.Battle {
                             else if (!unitManagerDataArray[0].effect.affectsTiles)
                             {
                                 unitManagerData.effectReady = false;
-                                Entities.ForEach((Entity entity, ref UnitData unitData, ref MapBody mapBody, /*ref MoveTilesTag tag,*/ in ActionMeter actionMeter) =>
+                                Entities.ForEach((Entity entity, ref MapBody mapBody, in UnitStatData unitData, /*ref MoveTilesTag tag,*/ in ActionMeterData actionMeter) =>
                                 {
+
                                     if (cursorData.currentHoverPoint.ComparePoints(mapBody.point))
                                     {
                                         //If affects allies and this is an ally, cool.
@@ -318,7 +322,6 @@ namespace Reactics.Battle {
                 inputDataArray[0] = inputData;
                 unitManagerDataArray[0] = unitManagerData;
             }
-
             SetSingleton<InputData>(inputDataArray[0]);
             SetSingleton<UnitManagerData>(unitManagerDataArray[0]);
             inputDataArray.Dispose();

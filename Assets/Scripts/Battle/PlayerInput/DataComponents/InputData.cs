@@ -7,6 +7,7 @@ public struct InputData : IComponentData
 {
     public ActionMaps currentActionMap;
     public ActionMaps previousActionMap;
+
     //public ControlSchemes currentControlScheme;
     public float2 pan;
     public float2 tileMovement;

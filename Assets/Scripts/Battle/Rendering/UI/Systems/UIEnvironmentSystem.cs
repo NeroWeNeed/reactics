@@ -14,7 +14,6 @@ namespace Reactics.UI
     [DisableAutoCreation]
     public class UIEnvironmentSystem : SystemBase
     {
-
         public Camera MainCamera { get; private set; }
         public Camera UICamera { get; private set; }
         public static readonly int UI_LAYER = LayerMask.NameToLayer("UI");
