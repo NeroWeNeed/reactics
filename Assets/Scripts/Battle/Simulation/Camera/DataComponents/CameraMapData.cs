@@ -4,7 +4,7 @@ using Unity.Entities;
 [GenerateAuthoringComponent]
 public struct CameraMapData : IComponentData
 {
-    //width, length, tilesize
+    //width, length, tilesize (all unnecessary most likely.)
     public float tileSize;
     public float mapWidth;
     public float mapLength;

@@ -83,5 +83,10 @@ namespace Reactics.Battle.Map
         public Entity mapEntity;
         public bool Found { get => !mapBodyEntity.Equals(Entity.Null); }
     }
+	public struct MapTileEffect : IBufferElementData
+    {
+        public Point point;
+        public Effect effect;
+    }
 
 }

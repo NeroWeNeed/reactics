@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
+using Reactics.Battle.Map;
 namespace Reactics.Battle
 {
 
@@ -26,10 +27,12 @@ namespace Reactics.Battle
         ushort Movement { get; }
 
     }
-
     public struct UnitBlob : IUnit
     {
         public BlobString identifier;
+
+        public ushort  identifierInt;
+        public ushort IdentifierInt => identifierInt;
 
         public string Identifier => identifier.ToString();
 

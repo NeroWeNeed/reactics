@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Reactics.Battle.Unit;
 using Reactics.Commons;
 using Unity.Entities;
+using Reactics.Battle.Map;
 namespace Reactics.Battle
 {
 
@@ -136,6 +137,31 @@ namespace Reactics.Battle
         {
             return -1584136870 + EqualityComparer<List<ActionAsset>>.Default.GetHashCode(value);
         }
+    }
+    /// <summary>
+    /// Singleton to help out with unit selection and movement logic.
+    /// </summary>
+    public struct UnitManagerData : IComponentData
+    {
+        public bool commanding;
+        //public ushort selectedUnitID;
+        //public bool unitTargeted;
+        //public Point actionTile;
+        public Point moveTile;
+        public bool moveTileSelected;
+        public bool effectReady;
+        public bool effectSelected;
+        public Effect effect;
+        //public bool affectsTiles;
+        //public bool affectsEnemies;
+        //public bool affectsAllies;
+        //public bool affectsSelf;
+        //public ushort targetedUnitID;
+        public Entity selectedUnit;
+        public Entity targetedUnit;
+        public ushort moveRange;
+        //public ushort actionRange;
+        //public bool commandIssued; //maybe not needed
     }
 
 }

@@ -2,6 +2,7 @@ using Reactics.Commons;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
+using Unity.Collections;
 namespace Reactics.Battle.Map.Authoring
 {
 
@@ -11,6 +12,8 @@ namespace Reactics.Battle.Map.Authoring
     {
         [SerializeField]
         public Point position;
+        [SerializeField]
+        public Unit unit;
 
         private void OnValidate()
         {
@@ -22,6 +25,8 @@ namespace Reactics.Battle.Map.Authoring
         {
             if (dstManager.TryGetComponent<Parent>(entity, out Parent parent) && dstManager.HasComponent<MapData>(parent.Value))
             {
+                EntityQuery unitManagerQuery = dstManager.CreateEntityQuery(typeof(UnitManagerData));
+                var unitManagerArray = unitManagerQuery.ToEntityArray(Allocator.TempJob); //there should only be one... maybe two actually. for right now this is fine.
                 dstManager.AddComponentData(entity, new Reactics.Battle.Map.MapBody
                 {
                     point = position,
@@ -29,7 +34,7 @@ namespace Reactics.Battle.Map.Authoring
                 });
                 dstManager.AddComponent<MapCollidableData>(entity);
                 dstManager.AddComponentData(entity, new MapElement { value = parent.Value });
-                dstManager.RemoveComponent<Translation>(entity);
+                //dstManager.RemoveComponent<Translation>(entity);
                 conversionSystem.ConfigureEditorRenderData(entity, gameObject, false);
                 dstManager.AddComponentData(entity, new FindingPathInfo
                 {
@@ -37,6 +42,20 @@ namespace Reactics.Battle.Map.Authoring
                     speed = 8,
                     maxElevationDifference = 1
                 });
+                dstManager.AddComponentData(entity, new ActionMeter{
+                    rechargeRate = 10f,
+                    chargeable = true,
+                    charge = 100f
+                });
+                dstManager.AddComponentData(entity, new UnitCommand{
+                    unitManagerEntity = unitManagerArray[0]
+                });
+                dstManager.AddComponentData(entity, unit.CreateComponent());
+                //dstManager.AddComponentData(entity, new MoveTilesTag());
+                dstManager.AddBuffer<HighlightTile>(entity);
+                dstManager.AddBuffer<EffectBuffer>(entity);
+
+                unitManagerArray.Dispose();
             }
         }
     }

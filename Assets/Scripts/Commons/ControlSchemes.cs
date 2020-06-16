@@ -8,4 +8,9 @@ namespace Reactics.Battle
     {
         KeyboardAndMouse, Gamepad
     }
+
+    public enum ActionMaps
+    {
+        BattleControls, CommandControls
+    }
 }

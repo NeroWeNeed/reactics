@@ -1,5 +1,4 @@
 using System;
-using Reactics.Commons;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -119,6 +118,7 @@ namespace Reactics.Battle.Map.Authoring
                     //Overlapping submeshes can't overlap anymore so offset position slightly upward for each layer.
                     dstManager.SetComponentData(layerEntities[i], new LocalToWorld { Value = float4x4.Translate(new float3(0, transform.position.y + (LAYER_OFFSET * i), 0)) });
                     dstManager.GetBuffer<MapLayerRenderer>(entity).Add(new MapLayerRenderer { entity = layerEntities[i], layer = layers[i] });
+                    dstManager.AddBuffer<MapTileEffect>(entity);
 
                 }
                 conversionSystem.DeclareLinkedEntityGroup(this.gameObject);

@@ -6,6 +6,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Physics.Systems;
 using Unity.Transforms;
+using Reactics.Battle;
 
 namespace Reactics.Battle
 {
@@ -14,7 +15,7 @@ namespace Reactics.Battle
     /// Group responsible for all simulation. Should be updated at a reliable, constant rate for all users.
     /// </summary>
     //[UpdateAfter(typeof(PlayerInputProcessingSystemGroup))]
-    [UpdateInGroup(typeof(BattleSystemGroup))]
+    //[UpdateInGroup(typeof(BattleSystemGroup))]FIX LATER
 
     public class BattleSimulationSystemGroup : ComponentSystemGroup
     {

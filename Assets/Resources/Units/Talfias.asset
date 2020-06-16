@@ -9,6 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: NormalTile
+  m_Script: {fileID: 11500000, guid: f190d6211fb6e0049b5663a7b89ff825, type: 3}
+  m_Name: Talfias
   m_EditorClassIdentifier: 
+  identifier: Talfias
+  healthPoints: 2000
+  magicPoints: 50
+  defense: 50
+  resistance: 40
+  strength: 50
+  magic: 20
+  speed: 65
+  movement: 7

@@ -135,6 +135,8 @@ GameObject:
   - component: {fileID: 60095646}
   - component: {fileID: 60095645}
   - component: {fileID: 60095644}
+  - component: {fileID: 60095649}
+  - component: {fileID: 60095648}
   m_Layer: 0
   m_Name: Plane
   m_TagString: Untagged
@@ -219,6 +221,68 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &60095648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 60095643}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38a3d42b8a8ba92498e2d4b6dd0feb9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mapMaterial: {fileID: -3033667219593020291, guid: ccfb81b1d319a37418705f7f72392a3a,
+    type: 3}
+  map: {fileID: 11400000, guid: 30b67e2f949b2354f958274a3a1d2d12, type: 2}
+  layerColors:
+    entries:
+    - key: 0
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 1
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 2
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 4
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 8
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 16
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 32
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 64
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 128
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 256
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 512
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 1024
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 2048
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 4096
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 8192
+      value: {r: 0, g: 0, b: 0, a: 0}
+    - key: 16384
+      value: {r: 0, g: 0, b: 0, a: 0}
+--- !u!114 &60095649
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 60095643}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea7d7495833204790ba1d3a8755397f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ConversionMode: 0
 --- !u!1 &134202915
 GameObject:
   m_ObjectHideFlags: 0
@@ -248,10 +312,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8b433f46989987408caa8a068ae2f1a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  map: {fileID: 11400000, guid: bbed7164766b0bf4c9835155313d9e4b, type: 2}
+  testUnit: {fileID: 11400000, guid: 745c2609133ec1248aa081fad59a7867, type: 2}
+  testUnit2: {fileID: 11400000, guid: cb93f6d29967609489883715d3d6f3c9, type: 2}
   mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
-  uiMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-  fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  baseMaterial: {fileID: -3033667219593020291, guid: ccfb81b1d319a37418705f7f72392a3a,
+    type: 3}
 --- !u!4 &134202917
 Transform:
   m_ObjectHideFlags: 0
@@ -296,7 +361,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fee50fd20b6aecb43b6c252e24830e6f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerInput: {fileID: 0}
 --- !u!114 &235578754
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -311,7 +375,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Actions: {fileID: -944628639613478452, guid: 2f3d93a3446f7d849be0a776b7f145d4,
     type: 3}
-  m_NotificationBehavior: 0
+  m_NotificationBehavior: 2
   m_UIInputModule: {fileID: 0}
   m_DeviceLostEvent:
     m_PersistentCalls:
@@ -322,7 +386,55 @@ MonoBehaviour:
   m_ControlsChangedEvent:
     m_PersistentCalls:
       m_Calls: []
-  m_ActionEvents: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: a5648adf-58d7-47a9-8cb2-d6fd752de626
+    m_ActionName: Battle Controls/Camera[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 4dd7095c-a83e-45b1-821c-6e1a30ac0e26
+    m_ActionName: Battle Controls/Hover
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 19bf0dcc-b4b2-4747-a460-c858ea85bffc
+    m_ActionName: Battle Controls/Camera Zoom[/Mouse/scroll/y]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: bded49ca-aeba-4234-b0f2-79ee2340e246
+    m_ActionName: Battle Controls/Tile Movement
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 79d2aada-7297-4954-960b-bdd7959dd46b
+    m_ActionName: Battle Controls/Select Tile
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: f91943f7-4b0c-4d8c-98ad-59541922d39b
+    m_ActionName: Battle Controls/Cancel Tile
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 8d43677c-8bfd-4094-ba71-e607e0c1f774
+    m_ActionName: Command Controls/Select Action
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 52e2496c-b937-4e20-b252-56c869d39c87
+    m_ActionName: Command Controls/Cancel Action
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 2e7f531c-48ca-4a77-9bef-6190f8fd3ee5
+    m_ActionName: Command Controls/Menu Movement
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 7f6a1313-255a-4c17-bba4-8cf826deb3ac
+    m_ActionName: Menu Controls/Navigation[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d,/Mouse/position]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 4174d118-1ea2-4ccd-b3f8-f9eb32741c65
+    m_ActionName: Menu Controls/Select[/Keyboard/enter,/Mouse/leftButton]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 525a8958-619f-4610-9424-0e7fc321749e
+    m_ActionName: Menu Controls/Back[/Keyboard/escape]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Battle Controls
