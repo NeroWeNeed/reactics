@@ -38,7 +38,7 @@ namespace Reactics.Battle.Map.Authoring
                 conversionSystem.ConfigureEditorRenderData(entity, gameObject, false);
                 dstManager.AddComponentData(entity, new FindingPathInfo
                 {
-                    destination = new Point(10, 10),
+                    destination = new Point(10, 4),
                     speed = 8,
                     maxElevationDifference = 1
                 });

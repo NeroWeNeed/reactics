@@ -213,7 +213,7 @@ namespace Reactics.Battle.Map
             else
                 return false;
         }
-        
+
         public void GetPathToTargetTile(ref NativeList<Point> fullPathToTargetPoint, Point targetPoint, int range, ushort maxLength, ushort maxWidth, double leniency)
         {
             //idk why this would happen but it could I guess
@@ -294,11 +294,11 @@ namespace Reactics.Battle.Map
                 //First endpoint
                 var xEnd = math.floor(x0 + 0.5);
                 var yEnd = y0 + gradient * (xEnd - x0);
-                var xGap = 1 - ((x0 + 0.5) - math.floor(x0 + 0.5)); 
+                var xGap = 1 - ((x0 + 0.5) - math.floor(x0 + 0.5));
 
                 var xpxl1 = xEnd;
                 var ypxl1 = math.floor(yEnd);
-                var firstEndPoint = new Point(0,0);
+                var firstEndPoint = new Point(0, 0);
 
                 if (steep)
                 {
@@ -327,7 +327,7 @@ namespace Reactics.Battle.Map
 
                 var xpxl2 = xEnd;
                 var ypxl2 = math.floor(yEnd);
-                Point secondEndPoint = new Point (0,0);
+                Point secondEndPoint = new Point(0, 0);
 
                 if (steep)
                 {
@@ -347,7 +347,7 @@ namespace Reactics.Battle.Map
                     if (thing2 > leniency)
                         secondEndPoint = new Point((int)xpxl2, (int)ypxl2 + 1);
                 }
-                
+
                 //not sure if right
                 fullPathToTargetPoint.Add(firstEndPoint);
 
@@ -382,7 +382,7 @@ namespace Reactics.Battle.Map
                 fullPathToTargetPoint.Add(secondEndPoint);
             }
         }
-        
+
         public Point ShiftX(int amount)
         {
             return new Point(x + amount, y);
@@ -458,7 +458,8 @@ namespace Reactics.Battle.Map
 
         public float Distance(Point other)
         {
-            return math.distance(x - other.x, y - other.y);
+            return math.distance(new float2(x, y), new float2(other.x, other.y));
+
         }
         public int ManhattanDistance(Point other)
         {

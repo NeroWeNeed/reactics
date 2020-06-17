@@ -212,16 +212,16 @@ namespace Reactics.Battle.Map
 
             public int CompareTo(Node other)
             {
-                var f1 = gCost + hCost;
-                var f2 = other.gCost + other.hCost;
-                var fCompare = f1.CompareTo(f2);
-                if (fCompare != 0)
-                    return fCompare;
+                var fcost = gCost + hCost;
+                var otherFcost = other.gCost + other.hCost;
+                var comparison = fcost.CompareTo(otherFcost);
+                if (comparison != 0)
+                    return comparison;
                 else
                 {
-                    var hCompare = hCost.CompareTo(other.hCost);
-                    if (hCompare != 0)
-                        return hCompare;
+                    comparison = hCost.CompareTo(other.hCost);
+                    if (comparison != 0)
+                        return comparison;
                     return gCost.CompareTo(other.gCost);
                 }
             }
@@ -229,10 +229,15 @@ namespace Reactics.Battle.Map
             public bool Equals(Node other)
             {
                 return point.Equals(other.point) &&
-       previous.Equals(other.previous) &&
-       gCost == other.gCost &&
-       hCost == other.hCost &&
-       valid == other.valid;
+                        previous.Equals(other.previous) &&
+                        gCost == other.gCost &&
+                        hCost == other.hCost &&
+                        valid == other.valid;
+            }
+
+            public override string ToString()
+            {
+                return $"Node(Point={point},PreviousPoint={previous},GCost={gCost},HCost={hCost})";
             }
         }
     }
