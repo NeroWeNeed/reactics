@@ -46,7 +46,3 @@ sysinfo.txt
 
 # Crashlytics generated file
 crashlytics-build.properties
-
-
-# Meta Files
-*.meta

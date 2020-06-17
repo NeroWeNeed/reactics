@@ -99,6 +99,8 @@ namespace Reactics.Battle.Map.Authoring
                 {
 #if UNITY_EDITOR
                     dstManager.SetName(layerEntities[i], $"{this.name} ({layers[i]} Layer)");
+
+
 #endif
                     dstManager.SetSharedComponentData(layerEntities[i], new RenderMesh
                     {
@@ -121,10 +123,10 @@ namespace Reactics.Battle.Map.Authoring
                     dstManager.SetComponentData(layerEntities[i], new LocalToWorld { Value = float4x4.Translate(new float3(0, transform.position.y + (LAYER_OFFSET * i), 0)) });
                     dstManager.GetBuffer<MapLayerRenderer>(entity).Add(new MapLayerRenderer { entity = layerEntities[i], layer = layers[i] });
                     dstManager.AddBuffer<MapTileEffect>(entity);
-
+                    conversionSystem.ConfigureEditorRenderData(layerEntities[i], this.gameObject, true);
                 }
                 conversionSystem.DeclareLinkedEntityGroup(this.gameObject);
-                conversionSystem.ConfigureEditorRenderData(entity, this.gameObject, false);
+                conversionSystem.ConfigureEditorRenderData(entity, this.gameObject, true);
             }
 
         }
