@@ -86,7 +86,7 @@ namespace Reactics.Battle.Map
                     frontier.Add(initialNode);
                     nodeInfo[start] = initialNode;
                     bool found = false;
-                    bool canReachDestination = true;
+                    bool canReachDestination;
 
                     while (frontier.Length > 0)
                     {

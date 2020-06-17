@@ -7,7 +7,7 @@ using System.Collections;
 namespace Reactics.Commons
 {
     [Serializable]
-    public class EnumDictionary<TEnum, TValue> : IDictionary<TEnum, TValue> where TEnum : Enum
+    public class EnumDictionary<TEnum, TValue> : IDictionary<TEnum, TValue>, ISerializationCallbackReceiver where TEnum : Enum
     {
 
         public TValue this[TEnum key]
@@ -55,7 +55,6 @@ namespace Reactics.Commons
                 return valueCollection;
             }
         }
-
         public int Count { get; private set; }
         public bool IsReadOnly { get; private set; }
         [SerializeField]
@@ -85,6 +84,7 @@ namespace Reactics.Commons
                 Add(kv.Key, kv.Value);
             }
         }
+
         private void Initialize()
         {
             var enums = Enum.GetValues(typeof(TEnum));
@@ -255,18 +255,34 @@ namespace Reactics.Commons
 
             return new Enumerator(this);
         }
+
+        public void OnBeforeSerialize()
+        {
+
+        }
+
+        public void OnAfterDeserialize()
+        {
+            Count = 0;
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (values[i].exists)
+                    Count++;
+            }
+
+        }
+
         [Serializable]
         public struct Entry
         {
             [SerializeField]
             internal TEnum key;
-
             public TEnum Key { get => key; }
             [SerializeField]
             internal TValue value;
 
             public TValue Value { get => value; }
-
+            [SerializeField]
             internal bool exists;
 
         }

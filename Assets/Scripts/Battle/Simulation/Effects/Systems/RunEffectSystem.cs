@@ -2,12 +2,17 @@ using Unity.Entities;
 
 namespace Reactics.Battle
 {
+    public struct Sample : IComponentData
+    {
+        public System.Guid id;
+    }
     public class RunEffectSystem : SystemBase
     {
         protected override void OnUpdate()
         {
             Entities.ForEach((Entity entity, in EffectReference effectReference) =>
             {
+
 
             }).WithoutBurst().Run();
         }

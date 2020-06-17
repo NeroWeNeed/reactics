@@ -85,6 +85,8 @@ namespace Reactics.Commons
         /// </summary>
         public static readonly Guid IsoOidNamespace = new Guid("6ba7b812-9dad-11d1-80b4-00c04fd430c8");
 
+        
+
         // Converts a GUID (expressed as a byte array) to/from network order (MSB-first).
         internal static void SwapByteOrder(byte[] guid)
         {

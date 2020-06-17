@@ -43,13 +43,17 @@ namespace Reactics.Battle
 
         public EffectCursor(int index, T target)
         {
+
             this.index = index;
             this.target = target;
         }
     }
     public struct RunEffectCursor : IComponentData { }
 
+    public struct ExecuteEffect
+    {
 
+    }
     public struct DoEffect<T> : IComponentData where T : unmanaged
     {
         public Entity effectDataEntity;
@@ -58,6 +62,7 @@ namespace Reactics.Battle
         public T data;
         public DoEffect(Entity effectDataEntity, int index, Entity dataEntity, T data)
         {
+
             this.effectDataEntity = effectDataEntity;
             this.index = index;
             this.dataEntity = dataEntity;

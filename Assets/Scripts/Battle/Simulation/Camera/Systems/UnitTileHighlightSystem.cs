@@ -16,10 +16,11 @@ cost for movement, maybe? ask. for now it's just inaccessible stuff. bleh.
 */
 [UpdateInGroup(typeof(RenderingSystemGroup))]
 [UpdateAfter(typeof(CursorHighlightSystem))]
+[DisableAutoCreation]
 public class UnitTileHighlightSystem : SystemBase
 {
     private EntityQuery query;
-    
+
     public struct Thing : IComparable<Thing>, IEquatable<Thing>
     {
         public Point point;
@@ -45,17 +46,17 @@ public class UnitTileHighlightSystem : SystemBase
             return false;
         }
     }
-    
+
     protected override void OnCreate()
     {
         //query all map bodies to see if we are colliding with one of them...
         query = GetEntityQuery(typeof(MapBody), ComponentType.ReadOnly<MapElement>());
         RequireForUpdate(query);
         //mapBodiesQuery = GetEntityQuery(typeof(MapBody));//, 
-           //ComponentType.ReadOnly<SomeType>());
+        //ComponentType.ReadOnly<SomeType>());
     }
 
-    protected override void OnUpdate() 
+    protected override void OnUpdate()
     {
         BufferFromEntity<HighlightTile> highlightTilesFromEntity = GetBufferFromEntity<HighlightTile>(false);
         UnitManagerData unitManagerData = GetSingleton<UnitManagerData>();
@@ -77,6 +78,7 @@ public class UnitTileHighlightSystem : SystemBase
                 {
                     //highlight tiles
                     NativeList<Thing> visited = new NativeList<Thing>(Allocator.Temp);
+
                     NativeSortedSet<Thing> toVisit = new NativeSortedSet<Thing>(8);
                     Thing origin = new Thing(originPoint, 0);
                     toVisit.Add(origin);
@@ -84,10 +86,10 @@ public class UnitTileHighlightSystem : SystemBase
                     //Thing closest = frontier.Peek();
                     //NativeArray<Thing> expansion = new NativeArray<Thing>(4, Allocator.Temp);
 
-                    Thing leftNeighbor = new Thing(new Point(0,0), 0);
-                    Thing rightNeighbor = new Thing(new Point(0,0), 0);
-                    Thing upNeighbor = new Thing(new Point(0,0), 0);
-                    Thing downNeighbor = new Thing(new Point(0,0), 0);
+                    Thing leftNeighbor = new Thing(new Point(0, 0), 0);
+                    Thing rightNeighbor = new Thing(new Point(0, 0), 0);
+                    Thing upNeighbor = new Thing(new Point(0, 0), 0);
+                    Thing downNeighbor = new Thing(new Point(0, 0), 0);
 
                     while (toVisit.Length > 0)
                     {
@@ -100,25 +102,25 @@ public class UnitTileHighlightSystem : SystemBase
                         //That is to say, when ti says current.cost + 1, that 1 should be calculated from a tile effect if applicable.
                         if (current.point.x > 0)
                         {
-                            leftNeighbor.point = new Point(current.point.x-1, current.point.y);
+                            leftNeighbor.point = new Point(current.point.x - 1, current.point.y);
                             leftNeighbor.cost = (ushort)(current.cost + 1);
                         }
-                        
+
                         if (current.point.x < mapData.Length - 1)
                         {
-                            rightNeighbor.point = new Point(current.point.x+1, current.point.y);
+                            rightNeighbor.point = new Point(current.point.x + 1, current.point.y);
                             rightNeighbor.cost = (ushort)(current.cost + 1);
                         }
-                        
+
                         if (current.point.y > 0)
                         {
-                            downNeighbor.point = new Point(current.point.x, current.point.y-1);
+                            downNeighbor.point = new Point(current.point.x, current.point.y - 1);
                             downNeighbor.cost = (ushort)(current.cost + 1);
                         }
 
                         if (current.point.y < mapData.Width - 1)
                         {
-                            upNeighbor.point = new Point(current.point.x, current.point.y+1);
+                            upNeighbor.point = new Point(current.point.x, current.point.y + 1);
                             upNeighbor.cost = (ushort)(current.cost + 1);
                         }
 
@@ -167,7 +169,7 @@ public class UnitTileHighlightSystem : SystemBase
                     //NativeList<Point> endPoints = new NativeList<Point>(Allocator.Temp);
                     NativeList<Point> pathToTargetTile = new NativeList<Point>(Allocator.Temp);
                     NativeList<Point> fullEffectHighlightRange = new NativeList<Point>(Allocator.Temp);
-                    
+
                     if (unitManagerData.effect.harmful)
                         highlightLayer = MapLayer.PlayerAttack;
                     else
@@ -259,7 +261,7 @@ public class UnitTileHighlightSystem : SystemBase
                             }
 
                             if (addTileToHighlightTiles)
-                                highlightTiles.Add(new HighlightTile{point = fullEffectHighlightRange[i], state = (ushort)highlightLayer});
+                                highlightTiles.Add(new HighlightTile { point = fullEffectHighlightRange[i], state = (ushort)highlightLayer });
                         }
                     }
                     pathToTargetTile.Clear();
@@ -269,5 +271,7 @@ public class UnitTileHighlightSystem : SystemBase
                 }
             }
         }).Schedule();
+    
+    
     }
 }

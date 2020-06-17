@@ -16,7 +16,7 @@ using UnityEditor;
 namespace Reactics.Battle.Map.Authoring
 {
     [RequiresEntityConversion]
-    [ConverterVersion("Nero", 1)]
+    [ConverterVersion("Nero", 2)]
 
     public class Map : MonoBehaviour, IConvertGameObjectToEntity
     {
@@ -30,6 +30,7 @@ namespace Reactics.Battle.Map.Authoring
             Selection.activeObject = gameObject;
             var map = gameObject.GetComponent<Map>();
             map.layerColors = MapLayers.CreateDefaultColorMap();
+
 
 
         }
@@ -86,6 +87,7 @@ namespace Reactics.Battle.Map.Authoring
                 dstManager.AddComponentData(entity, new MapCollisionState { value = new Unity.Collections.LowLevel.Unsafe.UnsafeHashMap<Point, Entity>(16, Allocator.Persistent) });
                 dstManager.AddComponentData(entity, new MapRenderInfo { baseIndexCount = mesh.GetIndexCount(0), tileSize = 1f, elevationStep = 0.25f });
                 var layerEntities = new NativeArray<Entity>(MapLayers.Count, Allocator.Temp);
+
                 for (int i = 0; i < MapLayers.Count; i++)
                 {
                     layerEntities[i] = conversionSystem.CreateAdditionalEntity(this);
@@ -93,7 +95,6 @@ namespace Reactics.Battle.Map.Authoring
                 }
 
                 var layers = (MapLayer[])Enum.GetValues(typeof(MapLayer));
-
                 for (int i = 0; i < layers.Length; i++)
                 {
 #if UNITY_EDITOR

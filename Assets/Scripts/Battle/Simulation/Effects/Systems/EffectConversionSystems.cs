@@ -29,6 +29,7 @@ namespace Reactics.Battle
                     var cursor = ecb.CreateEntity();
                     ecb.AddComponent(cursor, new DoEffect<MapBody>(effectIndexData.effectDataEntity, effectIndexData.index, pointToMapBodyResult.mapBodyEntity, body[pointToMapBodyResult.mapEntity]));
                 }
+                
                 ecb.DestroyEntity(entity);
             }).Schedule();
 
