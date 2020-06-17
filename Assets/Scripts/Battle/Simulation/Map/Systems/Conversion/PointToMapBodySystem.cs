@@ -12,7 +12,7 @@ namespace Reactics.Battle.Map
         private EntityQuery mapBodyQuery;
         protected override void OnCreate()
         {
-            mapBodyQuery = GetEntityQuery(typeof(MapBody), typeof(MapBody), typeof(MapElement));
+            mapBodyQuery = GetEntityQuery(typeof(MapBody), typeof(MapElement));
             conversionQuery = GetEntityQuery(typeof(PointToMapBody));
             entityCommandBufferSystem = World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>();
             RequireForUpdate(conversionQuery);

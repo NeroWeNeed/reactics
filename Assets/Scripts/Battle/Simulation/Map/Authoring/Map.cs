@@ -109,6 +109,7 @@ namespace Reactics.Battle.Map.Authoring
                         receiveShadows = false,
                         layer = transform.gameObject.layer
                     });
+                    dstManager.SetComponentData(layerEntities[i], new MapElement { value = entity });
                     dstManager.SetComponentData(layerEntities[i], new MapHighlightColor(layerColors[layers[i]]));
                     dstManager.SetComponentData(layerEntities[i], new RenderBounds { Value = mesh.bounds.ToAABB() });
                     /*                 dstManager.AddComponentData(layerEntities[i], new Translation { Value = new float3(0, 0, 0) });

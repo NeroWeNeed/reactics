@@ -3,7 +3,7 @@ using Unity.Entities;
 
 namespace Reactics.Battle
 {
-    public class EffectDataPointToBodySystem : SystemBase
+ /*    public class EffectDataPointToBodySystem : SystemBase
     {
         private EntityQuery mapBodyQuery;
 
@@ -13,7 +13,7 @@ namespace Reactics.Battle
         protected override void OnCreate()
         {
 
-            mapBodyQuery = GetEntityQuery(typeof(MapBody), typeof(MapBody), typeof(MapElement));
+            mapBodyQuery = GetEntityQuery(typeof(MapBody), typeof(MapElement));
             //conversionQuery = GetEntityQuery(typeof(PointToMapBody), typeof())
             entityCommandBufferSystem = World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>();
 
@@ -34,5 +34,5 @@ namespace Reactics.Battle
             }).Schedule();
 
         }
-    }
+    } */
 }

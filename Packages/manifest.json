@@ -56,11 +56,5 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  },
-  "lock": {
-    "com.jacksondunstan.native-collections": {
-      "revision": "HEAD",
-      "hash": "5e9142f62f39096988ba9fa40c69cfba45c4ac25"
-    }
   }
 }
