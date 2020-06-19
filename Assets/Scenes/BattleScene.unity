@@ -771,7 +771,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f33d9c646eb1ab64aa363f93e13d5408, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mapMaterial: {fileID: 2100000, guid: 58a65f22bffd8794e81aa573fac1893a, type: 2}
+  mapMaterial:
+    m_AssetGUID: 58a65f22bffd8794e81aa573fac1893a
+    m_SubObjectName: 
   map: {fileID: 11400000, guid: 9c723874f0f88d246bcad89b1098644d, type: 2}
   layerColors:
     values:

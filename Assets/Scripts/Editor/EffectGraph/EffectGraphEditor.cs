@@ -40,8 +40,6 @@ namespace Reactics.Editor
 
         }
 
-        [MenuItem("Reactics/EffectGraph2")]
-        private static EffectGraphEditor ShowWindow() => ShowWindow("Effect Graph");
         private static EffectGraphEditor ShowWindow(string title)
         {
             var window = GetWindow<EffectGraphEditor>();

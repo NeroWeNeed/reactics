@@ -36,16 +36,35 @@ namespace Reactics.Editor
             }
             initialized = true;
         }
-
-        public static GraphField Create(Type type, string label = null, object initialValue = default)
+        private static Type FindType(Type type)
         {
-            var result = Activator.CreateInstance(providers[type]) as GraphField;
-            result.Initialize(label, initialValue);
+            if (providers.ContainsKey(type))
+            {
+                return type;
+            }
+            else
+            {
+                if (type.BaseType != null)
+                {
+                    return FindType(type.BaseType);
+                }
+                else
+                    return null;
+            }
+        }
+        public static GraphField Create(Type type, string label = null, object initialValue = default, Attribute[] attributes = null)
+        {
+            var t = FindType(type);
+            if (t == null)
+                throw new ArgumentException("Invalid Type");
+            var result = Activator.CreateInstance(providers[t]) as GraphField;
+            result.Initialize(label, initialValue, attributes);
             return result;
         }
-        public static bool TryCreate<V>(Type type, out GraphField<V> result, string label = null, V initialValue = default)
+        public static bool TryCreate<V>(Type type, out GraphField<V> result, string label = null, V initialValue = default, Attribute[] attributes = null)
         {
-            providers.TryGetValue(type, out Type t);
+            var t = FindType(type);
+
             if (t == null)
             {
                 result = null;
@@ -53,8 +72,8 @@ namespace Reactics.Editor
             }
             else
             {
-                result = Activator.CreateInstance(t) as GraphField<V>;
-                result.Initialize(label, initialValue);
+                result = Activator.CreateInstance(providers[t]) as GraphField<V>;
+                result.Initialize(label, initialValue, attributes);
                 return true;
             }
         }
@@ -63,7 +82,7 @@ namespace Reactics.Editor
     public abstract class GraphField : VisualElement
     {
 
-        public abstract void Initialize(string label, object initialValue);
+        public abstract void Initialize(string label, object initialValue, Attribute[] attributes = null);
 
 
         public abstract void TrySetValue(object value);
@@ -71,41 +90,10 @@ namespace Reactics.Editor
         public abstract object GetUntypedValue();
 
     }
-    public abstract class GraphField<V> : GraphField, INotifyValueChanged<V>
+    public abstract class GraphField<TValue> : GraphField, INotifyValueChanged<TValue>
     {
-        public abstract V value { get; set; }
-        public abstract void SetValueWithoutNotify(V newValue);
-        public abstract void Initialize(string label, V initialValue);
-
-        public override void Initialize(string label, object initialValue) => Initialize(label, (V)initialValue);
-        public override void TrySetValue(object value)
-        {
-
-            if (value is V typed)
-                this.value = typed;
-        }
-        public override void TrySetValueWithoutNotify(object value)
-        {
-
-            if (value is V typed)
-                SetValueWithoutNotify(typed);
-
-        }
-        public override object GetUntypedValue()
-        {
-            return value;
-        }
-    }
-
-
-    public abstract class BaseNumberGraphField<TValue> : GraphField<TValue> where TValue : IComparable<TValue>
-    {
-
-        public TValue Min { get; protected set; }
-        public TValue Max { get; protected set; }
-        private TValue _value;
-
-        public override TValue value
+        protected TValue _value;
+        public TValue value
         {
             get => _value; set
             {
@@ -120,13 +108,6 @@ namespace Reactics.Editor
                             evt.target = this;
                             SetValueWithoutNotify(value);
                             SendEvent(evt);
-                            using (ChangeEvent evt2 = ChangeEvent.GetPooled(_value, value))
-                            {
-
-                                evt2.target = this;
-                                SendEvent(evt2);
-
-                            }
                         }
                     }
                     else
@@ -136,48 +117,73 @@ namespace Reactics.Editor
                 }
             }
         }
+        public abstract void SetValueWithoutNotify(TValue newValue);
+        public abstract void Initialize(string label, TValue initialValue, Attribute[] attributes = null);
 
-        public TextField textField { get; protected set; }
-
-
-
-        protected BaseNumberGraphField(TValue min, TValue max)
+        public override void Initialize(string label, object initialValue, Attribute[] attributes = null) => Initialize(label, (TValue)initialValue, attributes);
+        public override void TrySetValue(object value)
         {
-            Min = min;
-            Max = max;
+
+            if (value is TValue typed)
+                this.value = typed;
         }
-        public override void Initialize(string label = null, TValue initial = default)
+        public override void TrySetValueWithoutNotify(object value)
+        {
+
+            if (value is TValue typed)
+                SetValueWithoutNotify(typed);
+
+        }
+        public override object GetUntypedValue()
+        {
+            return value;
+        }
+    }
+
+    public abstract class BaseTextValueGraphField<TValue> : GraphField<TValue> where TValue : IComparable<TValue>
+    {
+        public delegate bool Converter<T>(string value, out T result);
+
+        public BaseTextValueGraphField(Converter<TValue> converter)
+        {
+            this.converter = converter;
+        }
+        private Converter<TValue> converter;
+        public TextField textField { get; protected set; }
+        public virtual bool ToValue(string value, out TValue result) => converter(value, out result);
+        public virtual string FromValue(TValue value) => value.ToString();
+        public override void Initialize(string label = null, TValue initial = default, Attribute[] attributes = null)
         {
             textField = new TextField()
             {
                 value = initial.ToString(),
-
             };
             textField.label = label;
-            textField.labelElement.style.flexDirection = FlexDirection.RowReverse;
+            //textField.labelElement.style.flexDirection = FlexDirection.RowReverse;
             textField.labelElement.style.unityTextAlign = TextAnchor.UpperRight;
             textField.labelElement.style.minWidth = 0;
             textField.labelElement.style.marginLeft = 4;
             textField.labelElement.style.marginRight = 4;
             textField.style.textOverflow = TextOverflow.Clip;
-            var textInput = textField.Q<VisualElement>("unity-text-input");
-            textInput.style.maxWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 2) * 11;
-            textInput.style.minWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 2) * 11;
+            //var textInput = textField.Q<VisualElement>("unity-text-input");
+            //textInput.style.maxWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 2) * 11;
+            //textInput.style.minWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 2) * 11;
 
             textField.style.flexDirection = FlexDirection.RowReverse;
-
-            textField.RegisterValueChangedCallback((evt) =>
-            {
-                if (ToValue(evt.newValue, out TValue value))
-                {
-                    if (value.CompareTo(Min) >= 0 && value.CompareTo(Max) <= 0)
-                        this.value = value;
-                }
-            });
+            textField.RegisterValueChangedCallback(OnValueChangedEvent);
             Add(textField);
         }
-        public abstract bool ToValue(string value, out TValue result);
-        public virtual string FromValue(TValue value) => value.ToString();
+
+        protected virtual void OnValueChangedEvent(ChangeEvent<string> evt)
+        {
+
+            if (converter(evt.newValue, out TValue value))
+            {
+                if (IsValueValid(value))
+                    this.value = value;
+            }
+        }
+        protected virtual bool IsValueValid(TValue value) => true;
         public override void SetValueWithoutNotify(TValue newValue)
         {
             _value = newValue;
@@ -185,21 +191,71 @@ namespace Reactics.Editor
         }
 
     }
-
-
-    public abstract class DelegateNumberGraphField<TValue> : BaseNumberGraphField<TValue> where TValue : IComparable<TValue>
+    public abstract class NumericTextValueGraphField<TValue> : BaseTextValueGraphField<TValue> where TValue : IComparable<TValue>
     {
-        public delegate bool Converter<T>(string value, out T result);
+        public static readonly System.Globalization.NumberStyles FloatingPointStyle = System.Globalization.NumberStyles.AllowLeadingWhite | System.Globalization.NumberStyles.AllowTrailingWhite | System.Globalization.NumberStyles.AllowLeadingSign | System.Globalization.NumberStyles.AllowThousands | System.Globalization.NumberStyles.AllowDecimalPoint | System.Globalization.NumberStyles.AllowExponent;
+        public static readonly System.Globalization.NumberStyles IntegerPointStyle = System.Globalization.NumberStyles.AllowLeadingWhite | System.Globalization.NumberStyles.AllowTrailingWhite | System.Globalization.NumberStyles.AllowLeadingSign | System.Globalization.NumberStyles.AllowThousands | System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowHexSpecifier;
+        public System.Globalization.NumberStyles Styles { get; protected set; }
 
-        protected Converter<TValue> converter;
-        protected DelegateNumberGraphField(TValue min, TValue max, Converter<TValue> converter) : base(min, max)
+        protected NumericTextValueGraphField(System.Globalization.NumberStyles styles, Converter<TValue> converter) : base(converter)
         {
-            this.converter = converter;
+            this.Styles = styles;
         }
-
-        public override bool ToValue(string value, out TValue result) => converter(value, out result);
+        protected NumericTextValueGraphField(Converter<TValue> converter) : this(System.Globalization.NumberStyles.None, converter)
+        {
+        }
     }
+    public abstract class RestrictedNumberGraphField<TValue> : BaseTextValueGraphField<TValue> where TValue : IComparable<TValue>
+    {
 
+        public TValue Min { get; protected set; }
+        public TValue Max { get; protected set; }
+
+        protected RestrictedNumberGraphField(TValue min, TValue max, Converter<TValue> converter) : base(converter)
+        {
+            Min = min;
+            Max = max;
+        }
+        public override void Initialize(string label = null, TValue initial = default, Attribute[] attributes = null)
+        {
+            base.Initialize(label, initial);
+            var textInput = textField.Q<VisualElement>("unity-text-input");
+            textInput.style.maxWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 1) * 11;
+            textInput.style.minWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 1) * 11;
+        }
+        /*         public override void Initialize(string label = null, TValue initial = default)
+                {
+                    textField = new TextField()
+                    {
+                        value = initial.ToString(),
+                    };
+                    textField.label = label;
+                    //textField.labelElement.style.flexDirection = FlexDirection.RowReverse;
+                    textField.labelElement.style.unityTextAlign = TextAnchor.UpperRight;
+                    textField.labelElement.style.minWidth = 0;
+                    textField.labelElement.style.marginLeft = 4;
+                    textField.labelElement.style.marginRight = 4;
+                    textField.style.textOverflow = TextOverflow.Clip;
+                    var textInput = textField.Q<VisualElement>("unity-text-input");
+                    textInput.style.maxWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 2) * 11;
+                    textInput.style.minWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 2) * 11;
+
+                    textField.style.flexDirection = FlexDirection.RowReverse;
+
+                    textField.RegisterValueChangedCallback((evt) =>
+                    {
+                        if (ToValue(evt.newValue, out TValue value))
+                        {
+                            if (value.CompareTo(Min) >= 0 && value.CompareTo(Max) <= 0)
+                                this.value = value;
+                        }
+                    });
+                    Add(textField);
+                } */
+
+
+
+    }
 
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class CustomVisualElementProvider : Attribute
@@ -208,17 +264,45 @@ namespace Reactics.Editor
         {
             Type = type;
         }
-
         public Type Type { get; private set; }
     }
-
-    public abstract class NumericGraphField<TValue, TElement, TElementValue> : GraphField<TValue> where TValue : IComparable<TValue> where TElement : VisualElement, INotifyValueChanged<TElementValue> where TElementValue : IComparable<TElementValue>
+    //Base unmanaged providers
+    [CustomVisualElementProvider(typeof(sbyte))]
+    public class SbyteGraphField : NumericTextValueGraphField<sbyte> { public SbyteGraphField() : base(IntegerPointStyle, (string value, out sbyte result) => sbyte.TryParse(value, IntegerPointStyle, System.Globalization.CultureInfo.InvariantCulture, out result)) { } }
+    [CustomVisualElementProvider(typeof(byte))]
+    public class ByteGraphField : NumericTextValueGraphField<byte> { public ByteGraphField() : base(IntegerPointStyle, (string value, out byte result) => byte.TryParse(value, IntegerPointStyle, System.Globalization.CultureInfo.InvariantCulture, out result)) { } }
+    [CustomVisualElementProvider(typeof(short))]
+    public class ShortGraphField : NumericTextValueGraphField<short> { public ShortGraphField() : base(IntegerPointStyle, (string value, out short result) => short.TryParse(value, IntegerPointStyle, System.Globalization.CultureInfo.InvariantCulture, out result)) { } }
+    [CustomVisualElementProvider(typeof(ushort))]
+    public class UshortGraphField : NumericTextValueGraphField<ushort> { public UshortGraphField() : base(IntegerPointStyle, (string value, out ushort result) => ushort.TryParse(value, IntegerPointStyle, System.Globalization.CultureInfo.InvariantCulture, out result)) { } }
+    [CustomVisualElementProvider(typeof(int))]
+    public class IntGraphField : NumericTextValueGraphField<int> { public IntGraphField() : base(IntegerPointStyle, (string value, out int result) => int.TryParse(value, IntegerPointStyle, System.Globalization.CultureInfo.InvariantCulture, out result)) { } }
+    [CustomVisualElementProvider(typeof(uint))]
+    public class UintGraphField : NumericTextValueGraphField<uint> { public UintGraphField() : base(IntegerPointStyle, (string value, out uint result) => uint.TryParse(value, IntegerPointStyle, System.Globalization.CultureInfo.InvariantCulture, out result)) { } }
+    [CustomVisualElementProvider(typeof(long))]
+    public class LongGraphField : NumericTextValueGraphField<long> { public LongGraphField() : base(IntegerPointStyle, (string value, out long result) => long.TryParse(value, IntegerPointStyle, System.Globalization.CultureInfo.InvariantCulture, out result)) { } }
+    [CustomVisualElementProvider(typeof(ulong))]
+    public class UlongGraphField : NumericTextValueGraphField<ulong> { public UlongGraphField() : base(IntegerPointStyle, (string value, out ulong result) => ulong.TryParse(value, IntegerPointStyle, System.Globalization.CultureInfo.InvariantCulture, out result)) { } }
+    [CustomVisualElementProvider(typeof(float))]
+    public class FloatGraphField : NumericTextValueGraphField<float> { public FloatGraphField() : base(FloatingPointStyle, (string value, out float result) => float.TryParse(value, FloatingPointStyle, System.Globalization.CultureInfo.InvariantCulture, out result)) { } }
+    [CustomVisualElementProvider(typeof(double))]
+    public class DoubleGraphField : NumericTextValueGraphField<double> { public DoubleGraphField() : base(FloatingPointStyle, (string value, out double result) => double.TryParse(value, FloatingPointStyle, System.Globalization.CultureInfo.InvariantCulture, out result)) { } }
+    [CustomVisualElementProvider(typeof(char))]
+    public class CharGraphField : NumericTextValueGraphField<char>
     {
-        public TValue MinValue { get; protected set; }
-        public TValue MaxValue { get; protected set; }
-
-        protected TValue _value;
-        public override TValue value
+        public CharGraphField() : base(FloatingPointStyle, (string value, out char result) => char.TryParse(value, out result)) { }
+        public override void Initialize(string label = null, char initial = default, Attribute[] attributes = null)
+        {
+            base.Initialize(label, initial);
+            textField.maxLength = 1;
+            var textInput = textField.Q<VisualElement>("unity-text-input");
+            textInput.style.minWidth = textInput.style.maxWidth = 11;
+        }
+    }
+    [CustomVisualElementProvider(typeof(bool))]
+    public class BoolGraphField : GraphField<bool>
+    {
+        public bool value
         {
             get => _value; set
             {
@@ -228,186 +312,84 @@ namespace Reactics.Editor
 
                     if (panel != null)
                     {
-
-                        using (ChangeEvent<TValue> evt = ChangeEvent<TValue>.GetPooled(_value, value))
+                        using (ChangeEvent<bool> evt = ChangeEvent<bool>.GetPooled(_value, value))
                         {
-                            using (ChangeEvent<object> evt2 = ChangeEvent<object>.GetPooled(_value, value))
-                            {
-                                evt.target = this;
-                                SetValueWithoutNotify(value);
-                                SendEvent(evt);
-                                evt2.target = this;
-                                SendEvent(evt2);
-                            }
+                            evt.target = this;
+                            SetValueWithoutNotify(value);
+                            SendEvent(evt);
                         }
-
-
-
                     }
                     else
                     {
                         SetValueWithoutNotify(value);
                     }
                 }
-
             }
         }
-
-        protected TElement element;
-
-        public NumericGraphField(TValue min, TValue max)
+        public Toggle toggle { get; protected set; }
+        public override void Initialize(string label, bool initialValue, Attribute[] attributes = null)
         {
 
-            this.MinValue = min;
-            this.MaxValue = max;
+            toggle = new Toggle(label)
+            {
+                value = initialValue
+            };
+            //textField.labelElement.style.flexDirection = FlexDirection.RowReverse;
+            toggle.labelElement.style.unityTextAlign = TextAnchor.UpperRight;
+            toggle.labelElement.style.minWidth = 0;
+            toggle.labelElement.style.marginLeft = 4;
+            toggle.labelElement.style.marginRight = 4;
+            toggle.style.textOverflow = TextOverflow.Clip;
+            //var textInput = textField.Q<VisualElement>("unity-text-input");
+            //textInput.style.maxWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 2) * 11;
+            //textInput.style.minWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 2) * 11;
+            toggle.RegisterValueChangedCallback((evt) => this.value = evt.newValue);
+            toggle.RegisterCallback<AttachToPanelEvent>((evt) =>
+            {
+                if (evt.target is VisualElement visualElement && visualElement.parent != null)
+                    visualElement.viewDataKey = visualElement.parent.viewDataKey;
+            });
+            toggle.style.flexDirection = FlexDirection.RowReverse;
+
+            Add(toggle);
         }
-        public override void SetValueWithoutNotify(TValue newValue)
+
+        public override void SetValueWithoutNotify(bool newValue)
         {
             _value = newValue;
-            SetValue(element, newValue);
+            toggle.SetValueWithoutNotify(newValue);
         }
-
-        protected abstract TElement CreateElement(string label, TValue initialValue);
-        protected abstract TValue GetValue(TElementValue elementValue);
-        protected abstract void SetValue(TElement element, TValue value);
-        public override void Initialize(string label, TValue initialValue)
-        {
-            if (element != null)
-                element.RemoveFromHierarchy();
-            element = CreateElement(label, initialValue);
-            element.RegisterCallback<ChangeFieldEvent>((evt) =>
-            {
-                Debug.Log("CHANGE FIELD SIGNALED");
-            });
-            element.RegisterValueChangedCallback((evt) =>
-            {
-
-                var convertedValue = GetValue(evt.newValue);
-                Debug.Log(convertedValue);
-                if (convertedValue.CompareTo(MinValue) < 0)
-                {
-                    value = MinValue;
-                    SetValue(element, MinValue);
-
-                }
-                else if (convertedValue.CompareTo(MaxValue) > 0)
-                {
-                    value = MaxValue;
-                    SetValue(element, MaxValue);
-                }
-                else
-                {
-                    value = convertedValue;
-                }
-            });
-            this.Add(element);
-        }
-
     }
-    //Base unmanaged providers
-    [CustomVisualElementProvider(typeof(sbyte))]
-    public class SbyteGraphField : DelegateNumberGraphField<sbyte> { public SbyteGraphField() : base(sbyte.MinValue, sbyte.MaxValue, (string value, out sbyte result) => sbyte.TryParse(value, out result)) { } }
-    [CustomVisualElementProvider(typeof(byte))]
-    public class ByteGraphField : DelegateNumberGraphField<byte> { public ByteGraphField() : base(byte.MinValue, byte.MaxValue, (string value, out byte result) => byte.TryParse(value, out result)) { } }
-    [CustomVisualElementProvider(typeof(short))]
-    public class ShortGraphField : DelegateNumberGraphField<short> { public ShortGraphField() : base(short.MinValue, short.MaxValue, (string value, out short result) => short.TryParse(value, out result)) { } }
-    [CustomVisualElementProvider(typeof(ushort))]
-    public class UshortGraphField : DelegateNumberGraphField<ushort> { public UshortGraphField() : base(ushort.MinValue, ushort.MaxValue, (string value, out ushort result) => ushort.TryParse(value, out result)) { } }
-    [CustomVisualElementProvider(typeof(int))]
-    public class IntGraphField : DelegateNumberGraphField<int> { public IntGraphField() : base(int.MinValue, int.MaxValue, (string value, out int result) => int.TryParse(value, out result)) { } }
-    [CustomVisualElementProvider(typeof(uint))]
-    public class UintGraphField : DelegateNumberGraphField<uint> { public UintGraphField() : base(uint.MinValue, uint.MaxValue, (string value, out uint result) => uint.TryParse(value, out result)) { } }
-    [CustomVisualElementProvider(typeof(long))]
-    public class LongGraphField : DelegateNumberGraphField<long> { public LongGraphField() : base(long.MinValue, long.MaxValue, (string value, out long result) => long.TryParse(value, out result)) { } }
-    [CustomVisualElementProvider(typeof(ulong))]
-    public class UlongGraphField : DelegateNumberGraphField<ulong> { public UlongGraphField() : base(ulong.MinValue, ulong.MaxValue, (string value, out ulong result) => ulong.TryParse(value, out result)) { } }
-    /* 
-        [CustomVisualElementProvider(typeof(sbyte))]
-        public class SByteGraphField : NumericGraphField<sbyte, IntegerField, int>
+    [CustomVisualElementProvider(typeof(Enum))]
+    public class EnumGraphField : GraphField<Enum>
+    {
+        public EnumField enumField { get; protected set; }
+        public override void Initialize(string label, Enum initialValue, Attribute[] attributes = null)
         {
-            public SByteGraphField() : base(sbyte.MinValue, sbyte.MaxValue) { }
-            protected override IntegerField CreateElement(string label, sbyte initialValue) => new IntegerField(label) { value = initialValue };
-            protected override sbyte GetValue(int elementValue) => Convert.ToSByte(elementValue);
+            enumField = new EnumField(label, initialValue);
 
-            protected override void SetValue(IntegerField element, sbyte value) { element.value = value; }
-        }
-        [CustomVisualElementProvider(typeof(byte))]
-        public class ByteGraphField : NumericGraphField<byte, IntegerField, int>
-        {
-            public ByteGraphField() : base(byte.MinValue, byte.MaxValue) { }
-            protected override IntegerField CreateElement(string label, byte initialValue) => new IntegerField(label) { value = initialValue };
-            protected override byte GetValue(int elementValue) => Convert.ToByte(elementValue);
 
-            protected override void SetValue(IntegerField element, byte value) { element.value = value; }
-        }
-        [CustomVisualElementProvider(typeof(short))]
-        public class ShortGraphField : NumericGraphField<short, IntegerField, int>
-        {
-            public ShortGraphField() : base(short.MinValue, short.MaxValue) { }
-            protected override IntegerField CreateElement(string label, short initialValue) => new IntegerField(label) { value = initialValue };
-            protected override short GetValue(int elementValue) => Convert.ToInt16(elementValue);
+            //textField.labelElement.style.flexDirection = FlexDirection.RowReverse;
+            enumField.labelElement.style.unityTextAlign = TextAnchor.UpperRight;
+            enumField.labelElement.style.minWidth = 0;
+            enumField.labelElement.style.marginLeft = 4;
+            enumField.labelElement.style.marginRight = 4;
+            enumField.style.textOverflow = TextOverflow.Clip;
+            //var textInput = textField.Q<VisualElement>("unity-text-input");
+            //textInput.style.maxWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 2) * 11;
+            //textInput.style.minWidth = (Math.Max(Min.ToString().Length, Max.ToString().Length) + 2) * 11;
 
-            protected override void SetValue(IntegerField element, short value) { element.value = value; }
-        }
-        [CustomVisualElementProvider(typeof(ushort))]
-        public class UShortGraphField : NumericGraphField<ushort, IntegerField, int>
-        {
-            public UShortGraphField() : base(ushort.MinValue, ushort.MaxValue) { }
-            protected override IntegerField CreateElement(string label, ushort initialValue) => new IntegerField(label) { value = initialValue };
-            protected override ushort GetValue(int elementValue) => Convert.ToUInt16(elementValue);
-
-            protected override void SetValue(IntegerField element, ushort value) { element.value = value; }
+            enumField.style.flexDirection = FlexDirection.RowReverse;
+            enumField.RegisterValueChangedCallback((evt) => this.value = evt.newValue);
+            Add(enumField);
         }
 
-
-
-        [CustomVisualElementProvider(typeof(int))]
-        public class IntGraphField : NumericGraphField<int, IntegerField, int>
+        public override void SetValueWithoutNotify(Enum newValue)
         {
-            public IntGraphField() : base(int.MinValue, int.MaxValue)
-            {
-            }
-
-            protected override IntegerField CreateElement(string label, int initialValue) => new IntegerField(label)
-            {
-                value = initialValue
-            };
-
-            protected override int GetValue(int elementValue) => elementValue;
-
-            protected override void SetValue(IntegerField element, int value) { element.value = value; }
+            _value = newValue;
+            enumField.SetValueWithoutNotify(newValue);
         }
-        [CustomVisualElementProvider(typeof(uint))]
-        public class UIntGraphField : NumericGraphField<uint, LongField, long>
-        {
-            public UIntGraphField() : base(uint.MinValue, uint.MaxValue)
-            {
-            }
+    }
 
-            protected override LongField CreateElement(string label, uint initialValue) => new LongField(label)
-            {
-                value = initialValue
-            };
 
-            protected override uint GetValue(long elementValue) => Convert.ToUInt32(elementValue);
-
-            protected override void SetValue(LongField element, uint value) { element.value = value; }
-        }
-        [CustomVisualElementProvider(typeof(long))]
-        public class LongGraphField : NumericGraphField<long, LongField, long>
-        {
-            public LongGraphField() : base(long.MinValue, long.MaxValue)
-            {
-            }
-
-            protected override LongField CreateElement(string label, long initialValue) => new LongField(label)
-            {
-                value = initialValue
-            };
-
-            protected override long GetValue(long elementValue) => elementValue;
-
-            protected override void SetValue(LongField element, long value) { element.value = value; }
-        }
-     */
 }

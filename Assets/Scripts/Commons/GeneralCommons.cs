@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace Reactics.Commons
 {
@@ -72,6 +73,13 @@ namespace Reactics.Commons
 
         }
 
+    }
+    [Serializable]
+    public class AssetReference<TAsset> : AssetReferenceT<TAsset> where TAsset : UnityEngine.Object
+    {
+        public AssetReference(string guid) : base(guid)
+        {
+        }
     }
 
 }

@@ -36,7 +36,7 @@ namespace Reactics.Battle.Map.Authoring
         }
 
         [SerializeField]
-        private Material mapMaterial;
+        private AssetReference<Material> mapMaterial;
 
         [SerializeField]
         public MapAsset map;
@@ -73,7 +73,7 @@ namespace Reactics.Battle.Map.Authoring
         }
 #endif
         //TODO: Editor Rendering not working for some reason.
-        public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
+        public async void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
 
             if (map != null)
@@ -95,6 +95,7 @@ namespace Reactics.Battle.Map.Authoring
                 }
 
                 var layers = (MapLayer[])Enum.GetValues(typeof(MapLayer));
+                var material = await mapMaterial.LoadAssetAsync<Material>().Task;
                 for (int i = 0; i < layers.Length; i++)
                 {
 #if UNITY_EDITOR
@@ -105,7 +106,7 @@ namespace Reactics.Battle.Map.Authoring
                     dstManager.SetSharedComponentData(layerEntities[i], new RenderMesh
                     {
                         mesh = mesh,
-                        material = mapMaterial,
+                        material = material,
                         subMesh = i,
                         castShadows = ShadowCastingMode.Off,
                         receiveShadows = false,

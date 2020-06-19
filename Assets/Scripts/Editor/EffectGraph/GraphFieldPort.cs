@@ -14,31 +14,9 @@ namespace Reactics.Editor
 
         private NodeIndex _value;
         public EffectGraphPort Port { get; protected set; }
-        public override NodeIndex value
-        {
-            get => _value; set
-            {
-                if (!value.Equals(_value))
-                {
 
-                    if (panel != null)
-                    {
-                        using (ChangeEvent<NodeIndex> evt = ChangeEvent<NodeIndex>.GetPooled(_value, value))
-                        {
-                            evt.target = this;
-                            SetValueWithoutNotify(value);
-                            SendEvent(evt);
-                        }
-                    }
-                    else
-                    {
-                        SetValueWithoutNotify(value);
-                    }
-                }
-            }
-        }
 
-        public override void Initialize(string label, NodeIndex initialValue)
+        public override void Initialize(string label, NodeIndex initialValue, Attribute[] attributes = null)
         {
             Port = new EffectGraphPort(Orientation.Horizontal, Direction.Output, Capacity.Single, EffectGraphController.GetNodeType(initialValue.type));
             if (!EffectGraphController.PortColors.TryGetValue(Port.portType, out Color portColor))
@@ -71,7 +49,6 @@ namespace Reactics.Editor
 
                                 Port.DisconnectAllWithoutNotify();
                                 graphView.AddElement(Port.ConnectToWithoutNotify(input));
-
 
                             }
                         }

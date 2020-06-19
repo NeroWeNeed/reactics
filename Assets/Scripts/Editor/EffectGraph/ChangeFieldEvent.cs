@@ -20,7 +20,7 @@ namespace Reactics.Editor
         }
         private void Initialize()
         {
-            var prop = typeof(ChangeFieldEvent).GetProperty("propagation",BindingFlags.Instance | 
+            var prop = typeof(ChangeFieldEvent).GetProperty("propagation", BindingFlags.Instance |
                             BindingFlags.NonPublic |
                             BindingFlags.Public);
             prop?.SetValue(this, 3);
@@ -32,6 +32,7 @@ namespace Reactics.Editor
             e.name = name;
             e.value = value;
             e.Initialize();
+            
             return e;
         }
     }

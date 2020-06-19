@@ -17,7 +17,7 @@ using System.Text;
 
 namespace Reactics.Editor
 {
-    public class EffectGraph : ScriptableObject, ISearchWindowProvider
+    public class EffectGraph : ScriptableObject
     {
         public static readonly Guid MasterNodeId = Guid.Parse("b3f706b2-b465-460d-bc2e-cc5b28e13803");
         public Dictionary<Guid, Entry> entries = new Dictionary<Guid, Entry>();
@@ -47,15 +47,6 @@ namespace Reactics.Editor
             return type.IsUnmanaged() && typeof(IEffect).IsAssignableFrom(type) && !typeof(IUtilityEffect).IsAssignableFrom(type);
         }
 
-        public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool OnSelectEntry(SearchTreeEntry SearchTreeEntry, SearchWindowContext context)
-        {
-            throw new NotImplementedException();
-        }
 
         public class Entry
         {
@@ -351,6 +342,7 @@ namespace Reactics.Editor
             var callback = GetRegisterCallback();
             foreach (var kv in entry.Values)
             {
+
                 var entryValueType = kv.Value.GetType();
                 var element = VisualElementProviders.Create(entryValueType, kv.Key, kv.Value);
                 element.viewDataKey = kv.Key;
@@ -373,6 +365,7 @@ namespace Reactics.Editor
         private static void UpdateEffectGraph<T>(ChangeEvent<T> evt)
         {
             var target = evt.target as VisualElement;
+            
             using (ChangeFieldEvent fieldEvt = ChangeFieldEvent.GetPooled(typeof(T), target.viewDataKey, evt.newValue))
             {
                 fieldEvt.target = evt.target;
@@ -402,51 +395,51 @@ namespace Reactics.Editor
                 effects = ids.Select((id) => effectGraph.entries[id]).ToArray()
             }).ToString(Formatting.None, new EffectGraphEntryConverter());
         }
-/* 
-        public static void RefreshValues(EffectGraph effectGraph, GraphView graphView, Action<Port, GraphView> connectToMaster)
-        {
-            Debug.Log("Refreshing...");
-            var targets = new Dictionary<Guid, Node>();
-            graphView.Query<Node>(null, EffectGraphNodeClassName).ForEach((node) =>
-            {
-                if (Guid.TryParse(node.viewDataKey, out Guid id))
-                    targets[id] = node;
-            });
-            Debug.Log(effectGraph.entries.Count);
-            foreach (var kv in effectGraph.entries)
-            {
-
-                if (targets.ContainsKey(kv.Key))
+        /* 
+                public static void RefreshValues(EffectGraph effectGraph, GraphView graphView, Action<Port, GraphView> connectToMaster)
                 {
-                    Debug.Log("HERE");
-                    targets[kv.Key].Query<GraphField>(null, ConfigurableFieldClassName).ForEach((field) =>
-                                                        {
-                                                            Debug.Log(field.viewDataKey);
-                                                            if (kv.Value.Values.TryGetValue(field.viewDataKey, out object v))
-                                                            {
+                    Debug.Log("Refreshing...");
+                    var targets = new Dictionary<Guid, Node>();
+                    graphView.Query<Node>(null, EffectGraphNodeClassName).ForEach((node) =>
+                    {
+                        if (Guid.TryParse(node.viewDataKey, out Guid id))
+                            targets[id] = node;
+                    });
+                    Debug.Log(effectGraph.entries.Count);
+                    foreach (var kv in effectGraph.entries)
+                    {
 
-                                                                field.TrySetValueWithoutNotify(v);
-                                                                Debug.Log("SETTING");
-                                                            }
+                        if (targets.ContainsKey(kv.Key))
+                        {
+                            Debug.Log("HERE");
+                            targets[kv.Key].Query<GraphField>(null, ConfigurableFieldClassName).ForEach((field) =>
+                                                                {
+                                                                    Debug.Log(field.viewDataKey);
+                                                                    if (kv.Value.Values.TryGetValue(field.viewDataKey, out object v))
+                                                                    {
 
-                                                        });
+                                                                        field.TrySetValueWithoutNotify(v);
+                                                                        Debug.Log("SETTING");
+                                                                    }
 
-                    targets.Remove(kv.Key);
+                                                                });
+
+                            targets.Remove(kv.Key);
+                        }
+                        else
+                        {
+                            CreateNode(graphView, effectGraph, kv.Value, new Rect(100, 100, 100, 100));
+                        }
+                    }
+                    foreach (var key in targets.Keys)
+                    {
+                        targets[key].RemoveFromHierarchy();
+
+                    }
+
+
                 }
-                else
-                {
-                    CreateNode(graphView, effectGraph, kv.Value, new Rect(100, 100, 100, 100));
-                }
-            }
-            foreach (var key in targets.Keys)
-            {
-                targets[key].RemoveFromHierarchy();
-
-            }
-
-            
-        }
-         */
+                 */
         public static void FromJson(string json, out EffectGraph.Entry[] newEntries, out Guid[] oldIds) => FromJson(JObject.Parse(json), out newEntries, out oldIds);
 
         public static void CopyEntries(EffectGraph.Entry[] jsonEntries, out EffectGraph.Entry[] newEntries, out Guid[] oldIds)

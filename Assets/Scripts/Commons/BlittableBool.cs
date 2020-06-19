@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 namespace Reactics.Commons
 {
@@ -7,7 +8,8 @@ namespace Reactics.Commons
     [StructLayout(LayoutKind.Sequential)]
     public struct BlittableBool : IEquatable<BlittableBool>
     {
-        public byte boolValue;
+        [SerializeField]
+        private byte boolValue;
         public BlittableBool(bool value)
         {
             boolValue = (byte)(value ? 1 : 0);
