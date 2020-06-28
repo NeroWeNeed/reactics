@@ -15,16 +15,17 @@ namespace Reactics.Editor
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
+            
         }
         private void OnEnable()
         {
             if (effectTypes == null)
             {
-                
+
                 effectTypes = new List<Type>();
                 CollectEffectTypes(effectTypes);
             }
-            
+
         }
         protected void CollectEffectTypes(List<Type> types)
         {

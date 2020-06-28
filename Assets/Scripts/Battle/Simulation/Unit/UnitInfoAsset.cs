@@ -3,7 +3,7 @@ namespace Reactics.Battle
 {
 
 
-    [CreateAssetMenu(fileName = "UnitInfoAsset", menuName = "Reactics/UnitInfoAsset", order = 0)]
+
     public class UnitInfoAsset : ScriptableObject
     {
         [SerializeField]

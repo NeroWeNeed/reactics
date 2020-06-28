@@ -7,11 +7,14 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using Unity.Mathematics;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.SceneManagement;
 
 namespace Reactics.Commons
 {
 
-    public sealed class AssetType : Attribute {
+    public sealed class AssetType : Attribute
+    {
 
         public readonly Type type;
 
@@ -160,6 +163,10 @@ namespace Reactics.Commons
             }
             return false;
         }
+
+        public AsyncOperationHandle<TObject> LoadAssetAsync<TObject>() => Addressables.LoadAssetAsync<TObject>(RuntimeKey);
+        public AsyncOperationHandle<SceneInstance> LoadSceneAsync(LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true, int priority = 100) => Addressables.LoadSceneAsync(RuntimeKey, loadMode, activateOnLoad, priority);
+
 
         public static implicit operator Guid(BlittableAssetReference value)
         {

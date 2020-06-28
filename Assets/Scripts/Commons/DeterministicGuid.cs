@@ -33,6 +33,15 @@ namespace Reactics.Commons
         /// <remarks>See <a href="http://code.logos.com/blog/2011/04/generating_a_deterministic_guid.html">Generating a deterministic GUID</a>.</remarks>
         public static Guid Create(Guid namespaceId, string name, int version)
         {
+            return new Guid(GuidBytes(namespaceId, name, version));
+        }
+        public static BlittableGuid CreateBlittable(Guid namespaceId, string name, int version)
+        {
+            return new BlittableGuid(GuidBytes(namespaceId, name, version));
+            
+        }
+        private static byte[] GuidBytes(Guid namespaceId, string name, int version)
+        {
             if (name == null)
                 throw new ArgumentNullException("name");
             if (version != 3 && version != 5)
@@ -67,7 +76,7 @@ namespace Reactics.Commons
 
             // convert the resulting UUID to local byte order (step 13)
             SwapByteOrder(newGuid);
-            return new Guid(newGuid);
+            return newGuid;
         }
 
         /// <summary>
@@ -85,7 +94,7 @@ namespace Reactics.Commons
         /// </summary>
         public static readonly Guid IsoOidNamespace = new Guid("6ba7b812-9dad-11d1-80b4-00c04fd430c8");
 
-        
+
 
         // Converts a GUID (expressed as a byte array) to/from network order (MSB-first).
         internal static void SwapByteOrder(byte[] guid)

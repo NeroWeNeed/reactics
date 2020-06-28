@@ -13,6 +13,7 @@ namespace Reactics.Commons
 {
     public static class GeneralCommons
     {
+        
         public static Color ParseColor(string hex, float alpha = 1)
         {
             var hexValue = hex.StartsWith("#") ? hex.Substring(1) : hex;

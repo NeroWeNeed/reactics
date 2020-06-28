@@ -18,6 +18,16 @@ namespace Reactics.Commons
                 UnsafeUtility.MemCpy(dstPtr, srcPtr, UnsafeUtility.SizeOf<byte>() * 16);
             }
         }
+        public BlittableGuid(byte[] bytes)
+        {
+            if (bytes.Length != 16)
+                throw new ArgumentException("Invalid Guid");
+
+            fixed (byte* dstPtr = value, srcPtr = bytes)
+            {
+                UnsafeUtility.MemCpy(dstPtr, srcPtr, UnsafeUtility.SizeOf<byte>() * 16);
+            }
+        }
 
         public override bool Equals(object obj)
         {

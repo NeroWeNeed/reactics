@@ -1,0 +1,16 @@
+
+#search-field-results .search-result .asset-reference-label-icon {
+    align-self: center;
+    align-items: center;
+    -unity-text-align: middle-center;
+        width: 14px;
+    height: 14px;
+}
+#search-field-results .search-result .asset-reference-label-text {
+    padding-left: 4px;
+    align-items: center;
+    align-self: center;
+}
+#search-field-results .asset-reference-label {
+    flex-direction: row;
+}

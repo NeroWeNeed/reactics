@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Reactics.Battle.Unit;
+using Reactics.Commons;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-
+using UnityEngine.Localization;
 
 namespace Reactics.Battle
 {
@@ -14,8 +15,11 @@ namespace Reactics.Battle
     {
 
         [SerializeField]
-        private string identifier;
-        public string Identifier => identifier;
+        [LocalizationTableName("UnitInfo")]
+        private EmbeddedLocalizedAsset<UnitInfoAsset> info;
+
+        public EmbeddedLocalizedAsset<UnitInfoAsset> Info { get => info; }
+
         [SerializeField]
         private ushort healthPoints;
         public ushort HealthPoints => healthPoints;
@@ -40,16 +44,17 @@ namespace Reactics.Battle
         [SerializeField]
         private ushort movement;
         public ushort Movement => movement;
-
         [SerializeField]
         private Proficiency[] proficiencies;
-
         public Proficiency[] Proficiencies { get => proficiencies; }
 
+        public AssetReference test;
+
         [SerializeField]
-        public AssetReferenceAction[] personalActions;
+        public AssetReference<ActionAsset>[] personalActions;
         public async void Convert(Entity entity, EntityManager dstManager)
         {
+
             dstManager.AddComponentData(entity, new HealthPointData(this));
             dstManager.AddComponentData(entity, new MagicPointData(this));
             dstManager.AddComponentData(entity, new UnitStatData(this));
@@ -58,7 +63,7 @@ namespace Reactics.Battle
             var tasks = new Task<ActionAsset>[personalActions.Length];
             for (int i = 0; i < personalActions.Length; i++)
                 tasks[i] = personalActions[i].LoadAssetAsync().Task;
-                
+
             dstManager.AddSharedComponentData(entity, new ActionList { value = new List<ActionAsset>(await Task.WhenAll(tasks)) });
         }
     }

@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 795ca3071d4c44b4790b5704961c9ee8, type: 3}
   m_Name: SampleUnit
   m_EditorClassIdentifier: 
-  identifier: 
+  info:
+    m_TableReference:
+      m_TableCollectionName: UnitInfo
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: 
   healthPoints: 0
   magicPoints: 0
   defense: 0
@@ -22,11 +27,5 @@ MonoBehaviour:
   speed: 0
   movement: 0
   personalActions:
-  - m_AssetGUID: 
-    m_SubObjectName: 
-  - m_AssetGUID: 
-    m_SubObjectName: 
-  - m_AssetGUID: 
-    m_SubObjectName: 
   - m_AssetGUID: 
     m_SubObjectName: 

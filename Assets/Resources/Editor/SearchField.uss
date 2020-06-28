@@ -1,0 +1,25 @@
+#search-field-container > #unity-search {
+flex-grow: 0px;
+flex-shrink: 0px;
+}
+#search-field-container > #unity-cancel {
+flex-grow: 0px;
+flex-shrink: 0px;
+}
+#search-field-container > TextField {
+flex-grow: 1;
+flex-shrink: 1;
+margin: 0px 3px 0px 2px;
+padding: 0px 14px 0px 0px;
+text-overflow: ellipsis;
+-unity-text-overflow-position: end;
+overflow: hidden;
+white-space: nowrap; 
+}
+#search-field-container > TextField > #unity-text-input {
+    border-width: 0;
+}
+#search-field {
+    flex-direction: row;
+    align-items: center;
+}
