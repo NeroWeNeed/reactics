@@ -6,6 +6,8 @@ namespace Reactics.Editor
     {
         [SerializeField]
         public Rect[] positions;
-        
+
+
+
     }
 }

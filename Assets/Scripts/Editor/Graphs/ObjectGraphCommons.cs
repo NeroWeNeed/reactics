@@ -7,6 +7,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using Reactics.Commons;
 
 namespace Reactics.Editor.Graph
 {
@@ -172,12 +173,27 @@ namespace Reactics.Editor.Graph
 
     public static class ObjectGraphUtility
     {
-        public static void SerializeToProperty<TNode>(SerializedProperty property, ObjectGraphModel model, ObjectGraphModule<TNode> module, Node master) where TNode : ObjectGraphNode
+        public static void SerializeToProperty<TNode>(SerializedProperty property, ObjectGraphModel model, ObjectGraphModule<TNode> module, Node master, Func<object[], TNode[],>) where TNode : ObjectGraphNode
         {
             var layout = GetNodeLayoutObject(property);
-            var nodeData = new List<object>();
+
             var validNodes = module.CollectNodes(master);
             var nodes = model.entries.Keys.Where((x) => validNodes.nodes.Any((y) => y.viewDataKey == x)).ToArray();
+            var nodeData = new object[nodes.Length];
+            foreach (var node in nodes)
+            {
+                var obj = Activator.CreateInstance(model.entries[node].type);
+                foreach (var kv in model.entries[node].values)
+                {
+                    var fieldInfo = model.entries[node].type.GetField(kv.Key);
+                    var aliasHandler = fieldInfo.FieldType.GetCustomAttribute<AliasHandler>();
+                    if (aliasHandler != null)
+                        fieldInfo.SetValue(obj, AliasHandlers.ToOriginal(kv.Value, aliasHandler, nodes));
+                    else
+                        fieldInfo.SetValue(obj, kv.Value);
+                }
+                nodeData.Add(obj);
+            }
         }
         private static SerializedObject GetNodeLayoutObject(SerializedProperty property)
         {
