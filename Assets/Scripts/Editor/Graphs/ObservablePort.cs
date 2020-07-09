@@ -5,11 +5,11 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor
+namespace Reactics.Editor.Graph
 {
-    public class EffectGraphPort : Port
+    public class ObservablePort : Port
     {
-        public EffectGraphPort(Orientation portOrientation, Direction portDirection, Capacity portCapacity, Type type) : base(portOrientation, portDirection, portCapacity, type)
+        public ObservablePort(Orientation portOrientation, Direction portDirection, Capacity portCapacity, Type type) : base(portOrientation, portDirection, portCapacity, type)
         {
             var connectorListener = new DefaultExposedEdgeConnectorListener();
             m_EdgeConnector = new EdgeConnector<Edge>(connectorListener);
@@ -77,7 +77,7 @@ namespace Reactics.Editor
             edge.input = direction == Direction.Input ? this : other;
 
 
-            if (other is EffectGraphPort effectGraphPort)
+            if (other is ObservablePort effectGraphPort)
                 effectGraphPort.ConnectWithoutNotify(edge);
             else
                 other.Connect(edge);
@@ -111,11 +111,11 @@ namespace Reactics.Editor
             // be called. Of course, that code (in DeleteElements) also
             // sends a GraphViewChange.
             m_EdgesToDelete.Clear();
-            if (edge.input.capacity == Port.Capacity.Single)
+            if (edge != null && edge.input != null && edge.input.capacity == Port.Capacity.Single)
                 foreach (Edge edgeToDelete in edge.input.connections)
                     if (edgeToDelete != edge)
                         m_EdgesToDelete.Add(edgeToDelete);
-            if (edge.output.capacity == Port.Capacity.Single)
+            if (edge != null && edge.output != null && edge.output.capacity == Port.Capacity.Single)
                 foreach (Edge edgeToDelete in edge.output.connections)
                     if (edgeToDelete != edge)
                         m_EdgesToDelete.Add(edgeToDelete);

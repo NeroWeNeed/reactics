@@ -9,6 +9,7 @@ using UnityEngine.ResourceManagement.ResourceProviders;
 using Unity.Mathematics;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
+using System.Diagnostics.Contracts;
 
 namespace Reactics.Commons
 {
@@ -23,164 +24,137 @@ namespace Reactics.Commons
             this.type = type;
         }
     }
+
+    public interface IBlittableAssetReference : IKeyEvaluator { }
+
     /// <summary>
-    /// Asset Reference designed to be used in unmanaged contexts. Sub-Object names should be under 118 characters (index 118 is reserved for null-termination). Structured to be 256 bytes in size in memory.
+    /// Blittable Asset Reference that supports SubObjects with names less than 31 characters.
     /// </summary>
     [Serializable]
-    public unsafe struct BlittableAssetReference : IKeyEvaluator
+    public unsafe struct BlittableAssetReference64 : IBlittableAssetReference
     {
-        [SerializeField]
-        private fixed byte assetGuid[16];
-        [SerializeField]
-        private fixed char subObjectName[119];
+        public const byte SubObjectNameOffset = 32;
+        public const short SubObjectNameMaxLength = 31;
 
+        public const short ReferenceBufferSize = 63;
         [SerializeField]
         private short subObjectNameLength;
-
-        public BlittableAssetReference(Guid guid)
+        public short SubObjectNameLength { get => subObjectNameLength; private set => subObjectNameLength = value; }
+        [SerializeField]
+        private fixed char reference[ReferenceBufferSize];
+        public BlittableAssetReference64(AssetReference reference)
         {
-            var bytes = guid.ToByteArray();
-            if (guid == Guid.Empty)
+            subObjectNameLength = 0;
+            InternalSetReference(reference);
+        }
+        private void InternalSetReference(AssetReference reference)
+        {
+            if (reference == null || reference.AssetGUID == null)
             {
-                fixed (byte* dstPtr = this.assetGuid, srcPtr = bytes)
+                fixed (char* destination = this.reference)
                 {
-                    UnsafeUtility.MemCpy(dstPtr, srcPtr, UnsafeUtility.SizeOf<byte>() * 16);
+                    UnsafeUtility.MemSet(destination, 0, ReferenceBufferSize * UnsafeUtility.SizeOf<char>());
+                    subObjectNameLength = 0;
                 }
-                subObjectNameLength = 0;
             }
             else
             {
-                subObjectNameLength = 0;
-            }
-
-        }
-        public BlittableAssetReference(Guid guid, string subObjectName)
-        {
-            if (guid != Guid.Empty)
-            {
-
-
-                if (subObjectName.Length >= 119)
-                    throw new ArgumentException("Sub-Object Name exceeds 119 characters. Consider renaming.");
-
-                var guidBytes = guid.ToByteArray();
-                if (subObjectName.Length == 0)
+                var assetGuidCharArray = reference.AssetGUID.ToCharArray();
+                if (string.IsNullOrEmpty(reference.SubObjectName))
                 {
-                    fixed (byte* guidDstPtr = this.assetGuid, guidSrcPtr = guidBytes)
+                    fixed (char* destination = this.reference, assetGuid = &assetGuidCharArray[0])
                     {
-                        UnsafeUtility.MemCpy(guidDstPtr, guidSrcPtr, UnsafeUtility.SizeOf<byte>() * 16);
+                        UnsafeUtility.MemCpy(destination, assetGuid, 32 * UnsafeUtility.SizeOf<char>());
+                        subObjectNameLength = 0;
+                    }
+                }
+                else if (reference.SubObjectName.Length <= SubObjectNameMaxLength)
+                {
+                    var assetSubObjectNameCharArray = reference.SubObjectName.ToCharArray();
+                    fixed (char* destination = this.reference, assetGuid = &assetSubObjectNameCharArray[0], assetSubObjectName = &assetSubObjectNameCharArray[0])
+                    {
+                        UnsafeUtility.MemCpy(destination, assetGuid, 32 * UnsafeUtility.SizeOf<char>());
+                        subObjectNameLength = (short)reference.SubObjectName.Length;
+                        UnsafeUtility.MemCpy(destination + (SubObjectNameOffset * UnsafeUtility.SizeOf<char>()), assetSubObjectName, subObjectNameLength * UnsafeUtility.SizeOf<char>());
                     }
                 }
                 else
                 {
-                    var subObjectNameBytes = subObjectName.ToCharArray();
-                    fixed (byte* guidDstPtr = this.assetGuid, guidSrcPtr = guidBytes)
-                    {
-                        UnsafeUtility.MemCpy(guidDstPtr, guidSrcPtr, UnsafeUtility.SizeOf<byte>() * 16);
-                        fixed (char* subObjectNameDstPtr = this.subObjectName, subObjectNameSrcPtr = subObjectNameBytes)
-                        {
-                            UnsafeUtility.MemCpy(subObjectNameDstPtr, subObjectNameSrcPtr, UnsafeUtility.SizeOf<byte>() * subObjectName.Length);
-                            UnsafeUtility.WriteArrayElement(subObjectNameDstPtr, subObjectName.Length, 0);
-                        }
-                    }
-
+                    throw new ArgumentException($"Asset Reference to SubObject must have a name less than or equal to {SubObjectNameMaxLength} characters.");
                 }
-                subObjectNameLength = (short)subObjectName.Length;
             }
-            else
-            {
-                subObjectNameLength = 0;
-            }
-        }
 
+        }
         public object RuntimeKey
         {
             get
             {
-                var sb = new StringBuilder();
-                for (byte i = 0; i < 16; i++)
-                {
-                    sb.Append(ToHex((byte)(assetGuid[i] / 16)));
-                    sb.Append(ToHex((byte)(assetGuid[i] % 16)));
-                }
                 if (subObjectNameLength > 0)
                 {
-                    fixed (char* subObjectPtr = subObjectName)
+                    var chars = new char[32 + subObjectNameLength + 2];
+                    fixed (char* reference = this.reference, dst = &chars[0])
                     {
-                        sb.Append(subObjectPtr, subObjectNameLength);
+                        UnsafeUtility.MemCpy(dst, reference, 32 * UnsafeUtility.SizeOf<char>());
+                        chars[32] = '[';
+                        UnsafeUtility.MemCpy(dst + 33 * UnsafeUtility.SizeOf<char>(), reference, subObjectNameLength * UnsafeUtility.SizeOf<char>());
+                        chars[subObjectNameLength + 33] = ']';
+
+                    }
+                    return new string(chars);
+                }
+                else
+                {
+                    fixed (char* reference = this.reference)
+                    {
+                        return new string(reference, 0, 32);
                     }
                 }
-                return sb.ToString();
             }
         }
-        private char ToHex(byte value)
+
+        public bool RuntimeKeyIsValid()
         {
-            if (value < 10)
-                return (char)(48 + value);
-            else
-                return (char)(97 + value - 10);
+            return true;
         }
 
+        public static explicit operator BlittableAssetReference64(AssetReference value) => new BlittableAssetReference64(value);
+
+        public AsyncOperationHandle<TObject> LoadAssetAsync<TObject>() => Addressables.LoadAssetAsync<TObject>(RuntimeKey);
+        public AsyncOperationHandle<SceneInstance> LoadSceneAsync(LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true, int priority = 100) => Addressables.LoadSceneAsync(RuntimeKey, loadMode, activateOnLoad, priority);
         public override bool Equals(object obj)
         {
-            if (obj is BlittableAssetReference guid)
+            if (obj is BlittableAssetReference64 blittableAssetReference64)
             {
-                return Equals(guid);
+                return Equals(blittableAssetReference64);
             }
             else
                 return false;
 
         }
 
-        public bool Equals(BlittableAssetReference other)
+        public bool Equals(BlittableAssetReference64 other)
         {
-            fixed (byte* thisPtr = assetGuid)
+
+            fixed (char* reference = this.reference)
             {
-                return UnsafeUtility.MemCmp(thisPtr, other.assetGuid, UnsafeUtility.SizeOf<byte>() * 16) == 0;
+                return UnsafeUtility.MemCmp(reference, other.reference, UnsafeUtility.SizeOf<char>() * ReferenceBufferSize) == 0;
             }
         }
 
         public override int GetHashCode()
         {
 
-            fixed (byte* thisPtr = assetGuid)
+            fixed (char* reference = this.reference)
             {
                 int r = -1584136870;
-                for (byte i = 0; i < 16; i++)
+                for (byte i = 0; i < ReferenceBufferSize; i++)
                 {
-                    r += assetGuid[i];
+                    r += reference[i];
                 }
                 return r;
             }
         }
 
-        public bool RuntimeKeyIsValid()
-        {
-            for (byte i = 0; i < 16; i++)
-            {
-                if (assetGuid[i] != 0)
-                    return true;
-            }
-            return false;
-        }
 
-        public AsyncOperationHandle<TObject> LoadAssetAsync<TObject>() => Addressables.LoadAssetAsync<TObject>(RuntimeKey);
-        public AsyncOperationHandle<SceneInstance> LoadSceneAsync(LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true, int priority = 100) => Addressables.LoadSceneAsync(RuntimeKey, loadMode, activateOnLoad, priority);
-
-
-        public static implicit operator Guid(BlittableAssetReference value)
-        {
-            var bytes = new byte[16];
-            fixed (byte* bytePtr = bytes)
-            {
-                UnsafeUtility.MemCpy(bytePtr, value.assetGuid, UnsafeUtility.SizeOf<byte>() * 16);
-            }
-            return new Guid(bytes);
-        }
-
-        public static implicit operator BlittableAssetReference(Guid value)
-        {
-            return new BlittableAssetReference(value);
-        }
     }
 }

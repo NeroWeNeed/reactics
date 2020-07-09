@@ -3,7 +3,7 @@ using System.Reflection;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor
+namespace Reactics.Editor.Graph
 {
     public class PortChangedEvent : EventBase<PortChangedEvent>
     {

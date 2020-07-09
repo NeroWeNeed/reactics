@@ -112,6 +112,7 @@ namespace Reactics.Editor
         }
         private void Init(string label)
         {
+            //this.style.flexDirection = FlexDirection.Row;
             var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(AssetDatabase.GUIDToAssetPath(USS_GUID));
             this.styleSheets.Add(styleSheet);
             container = new VisualElement();
@@ -120,6 +121,10 @@ namespace Reactics.Editor
                 name = "search-label"
             };
             this.label = label;
+            //labelElement.AddToClassList("unity-base-field__label");
+            labelElement.AddToClassList("unity-base-text-field__label");
+            labelElement.AddToClassList("unity-text-field__label");
+
             searchButton = new Button
             {
                 name = "unity-search"
@@ -149,7 +154,7 @@ namespace Reactics.Editor
             textInputBase.AddToClassList("unity-text-field__input");
             searchFieldResults = new SearchFieldResults(this);
             this.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-
+            this.AddToClassList("unity-base-field");
             this.Add(labelElement);
             this.Add(container);
             this.container.Add(searchButton);
@@ -225,6 +230,8 @@ namespace Reactics.Editor
                     searchFieldResults.style.position = Position.Absolute;
                     searchFieldResults.BringToFront();
                 }
+                Debug.Log(this.worldBound);
+                searchFieldResults.UpdateLayout(this.worldBound);
                 var newQuery = string.Copy(evt.newValue);
                 var oldQuery = string.Copy(evt.previousValue);
 
@@ -321,7 +328,9 @@ namespace Reactics.Editor
             }
             public void UpdateLayout(Rect searchFieldRect)
             {
+                this.transform.position = new Vector3(searchFieldRect.xMin, searchFieldRect.yMax - 2, 0);
                 this.style.width = searchFieldRect.width;
+
                 scrollView.contentViewport.style.width = searchFieldRect.width;
                 scrollView.contentContainer.style.width = searchFieldRect.width;
             }

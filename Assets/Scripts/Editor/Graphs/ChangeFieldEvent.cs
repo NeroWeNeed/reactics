@@ -3,7 +3,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor
+namespace Reactics.Editor.Graph
 {
     public class ChangeFieldEvent : EventBase<ChangeFieldEvent>
     {
@@ -32,7 +32,7 @@ namespace Reactics.Editor
             e.name = name;
             e.value = value;
             e.Initialize();
-            
+
             return e;
         }
     }

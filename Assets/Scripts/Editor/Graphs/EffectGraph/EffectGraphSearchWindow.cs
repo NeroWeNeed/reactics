@@ -5,11 +5,11 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor
+namespace Reactics.Editor.Graph
 {
     public class EffectGraphSearchWindow : ScriptableObject, ISearchWindowProvider
     {
-        public EffectGraph effectGraph;
+        public EffectGraphModule effectGraph;
 
         public GraphView graphView;
 
@@ -23,11 +23,11 @@ namespace Reactics.Editor
 
             };
             var typeGroups = new Dictionary<Type, List<Type>>();
-            foreach (var type in EffectGraphController.SupportedPortTypes)
+            foreach (var type in EffectGraphModule.Types)
             {
                 typeGroups[typeof(IEffect<>).MakeGenericType(type)] = new List<Type>();
             }
-            foreach (var type in effectGraph.EffectTypes)
+            foreach (var type in effectGraph.ValidTypes)
             {
                 foreach (var key in typeGroups.Keys)
                 {
@@ -56,8 +56,8 @@ namespace Reactics.Editor
 
         public bool OnSelectEntry(SearchTreeEntry searchTreeEntry, SearchWindowContext context)
         {
-
-            EffectGraphController.CreateNode(graphView, effectGraph, (Type)searchTreeEntry.userData, new Rect(graphView.contentViewContainer.WorldToLocal(graphView.panel.visualTree.ChangeCoordinatesTo(graphView.panel.visualTree, screenToWorldConverter(context.screenMousePosition))), new Vector2(100, 100)));
+            var node = effectGraph.CreateNode((Type)searchTreeEntry.userData, new Rect(graphView.contentViewContainer.WorldToLocal(graphView.panel.visualTree.ChangeCoordinatesTo(graphView.panel.visualTree, screenToWorldConverter(context.screenMousePosition))), new Vector2(100, 100)));
+            graphView.AddElement(node);
             return true;
         }
     }

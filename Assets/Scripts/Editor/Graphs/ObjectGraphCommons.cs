@@ -5,16 +5,21 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEditor;
+using System.Linq;
 
-namespace Reactics.Editor
+namespace Reactics.Editor.Graph
 {
-    public class EffectGraphEntryConverter : JsonConverter<EffectGraph.Entry>
+
+    /* 
+    public class EffectGraphEntryConverter : JsonConverter<ObjectGraphNode>
     {
-        public override EffectGraph.Entry ReadJson(JsonReader reader, Type objectType, EffectGraph.Entry existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override ObjectGraphNode ReadJson(JsonReader reader, Type objectType, ObjectGraphNode existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             Dictionary<string, object> values;
             if (hasExistingValue)
             {
+                existingValue.Value
                 existingValue.Values.Clear();
                 values = existingValue.Values;
             }
@@ -75,7 +80,7 @@ namespace Reactics.Editor
             writer.WriteEndObject();
         }
     }
-
+ */
     public class RectConverter : JsonConverter<Rect>
     {
         public override Rect ReadJson(JsonReader reader, Type objectType, Rect existingValue, bool hasExistingValue, JsonSerializer serializer)
@@ -164,4 +169,33 @@ namespace Reactics.Editor
     }
 
     public sealed class OutputContainerElement : Attribute { }
+
+    public static class ObjectGraphUtility
+    {
+        public static void SerializeToProperty<TNode>(SerializedProperty property, ObjectGraphModel model, ObjectGraphModule<TNode> module, Node master) where TNode : ObjectGraphNode
+        {
+            var layout = GetNodeLayoutObject(property);
+            var nodeData = new List<object>();
+            var validNodes = module.CollectNodes(master);
+            var nodes = model.entries.Keys.Where((x) => validNodes.nodes.Any((y) => y.viewDataKey == x)).ToArray();
+        }
+        private static SerializedObject GetNodeLayoutObject(SerializedProperty property)
+        {
+            var mainAssetPath = AssetDatabase.GetAssetPath(property.serializedObject.targetObject);
+
+            var assets = AssetDatabase.LoadAllAssetRepresentationsAtPath(mainAssetPath);
+
+            foreach (var item in assets)
+            {
+                if (item.name == $"{property.name}_node_layout")
+                {
+                    return new SerializedObject(item);
+                }
+            }
+            UnityEngine.Object layout = ScriptableObject.CreateInstance<ObjectGraphNodeLayout>();
+            layout.name = $"{property.name}_node_layout";
+            AssetDatabase.AddObjectToAsset(layout, mainAssetPath);
+            return new SerializedObject(layout);
+        }
+    }
 }

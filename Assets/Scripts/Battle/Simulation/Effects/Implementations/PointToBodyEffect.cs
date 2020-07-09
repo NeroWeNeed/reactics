@@ -2,6 +2,7 @@ using System;
 using Reactics.Battle.Map;
 using Reactics.Commons;
 using Unity.Entities;
+using UnityEngine;
 
 namespace Reactics.Battle
 {
@@ -9,13 +10,14 @@ namespace Reactics.Battle
     public struct PointToBodyEffect : IEffect<Point>
     {
         [SerializeNodeIndex(typeof(MapBodyTarget))]
-        public int onBody;
+        [SerializeField]
+        public IndexReference onBody;
         public void Invoke(Entity cursorEntity, Entity effectDataEntity, Entity sourceEntity, MapBody source, Entity mapEntity, MapData map, Point target, EntityCommandBuffer entityCommandBuffer)
         {
-            if (onBody != -1)
+            if (onBody.index != -1)
             {
                 var entity = entityCommandBuffer.CreateEntity();
-                entityCommandBuffer.AddComponent(entity, new EffectIndexData(effectDataEntity, onBody));
+                entityCommandBuffer.AddComponent(entity, new EffectIndexData(effectDataEntity, onBody.index));
                 entityCommandBuffer.AddComponent(entity, new PointToMapBody
                 {
                     point = target,
