@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <uie:Toolbar style="flex-grow: 1; flex-direction: row; flex-shrink: 0; max-height: 21px;">
+        <uie:ToolbarButton text="Save" name="save" class="require-validation" style="flex-shrink: 0;" />
+        <uie:ToolbarButton text="Save As" name="save-as" class="require-validation" />
+        <uie:ToolbarButton text="Show In Project" name="show-in-project" style="flex-shrink: 0; flex-direction: row;" />
+    </uie:Toolbar>
+</ui:UXML>

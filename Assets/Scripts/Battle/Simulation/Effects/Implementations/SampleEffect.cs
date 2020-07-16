@@ -1,12 +1,11 @@
 using Reactics.Battle.Map;
 using Reactics.Commons;
 using Unity.Entities;
+using Unity.Jobs;
 using UnityEngine;
 
-namespace Reactics.Battle
-{
-    public struct SampleEffect : IEffect<Point>
-    {
+namespace Reactics.Battle {
+    public struct SampleEffect : IEffect<Point>, IEffectBehaviour<Point> {
         public MapLayer layer;
 
         public float value;
@@ -15,9 +14,13 @@ namespace Reactics.Battle
         [SerializeField]
         public BlittableAssetReference64 item;
 
-        public void Invoke(Entity cursorEntity, Entity effectDataEntity, Entity sourceEntity, MapBody source, Entity mapEntity, MapData map, Point target, EntityCommandBuffer entityCommandBuffer)
-        {
 
+        public void Invoke(Entity sourceEntity, MapBody source, Entity mapEntity, MapData map, Point target, EntityCommandBuffer entityCommandBuffer) {
+            throw new System.NotImplementedException();
+        }
+
+        public JobHandle ScheduleJob(JobHandle handle, EffectAsset effectAsset, int effectIndex, Entity sourceEntity, MapBody source, Entity mapEntity, MapData map, Point target, EntityCommandBuffer entityCommandBuffer) {
+            throw new System.NotImplementedException();
         }
     }
 }

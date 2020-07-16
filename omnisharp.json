@@ -37,20 +37,21 @@
         "LabelPositioning": "oneLess",
         "WrappingPreserveSingleLine": true,
         "WrappingKeepStatementsOnSingleLine": true,
-        "NewLinesForBracesInTypes": true,
-        "NewLinesForBracesInMethods": true,
+        "NewLinesForBracesInTypes": false,
+        "NewLinesForBracesInMethods": false,
         "NewLinesForBracesInProperties": true,
         "NewLinesForBracesInAccessors": true,
         "NewLinesForBracesInAnonymousMethods": true,
-        "NewLinesForBracesInControlBlocks": true,
+        "NewLinesForBracesInControlBlocks": false,
         "NewLinesForBracesInAnonymousTypes": true,
         "NewLinesForBracesInObjectCollectionArrayInitializers": true,
         "NewLinesForBracesInLambdaExpressionBody": true,
         "NewLineForElse": true,
         "NewLineForCatch": true,
         "NewLineForFinally": true,
-        "NewLineForMembersInObjectInit": true,
+        "NewLineForMembersInObjectInit": false,
         "NewLineForMembersInAnonymousTypes": true,
-        "NewLineForClausesInQuery": true
+        "NewLineForClausesInQuery": true,
+        "OrganizeImports": true
     }
 }

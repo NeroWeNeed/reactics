@@ -7,9 +7,9 @@ namespace Reactics.Battle
 {
     public interface ITargetFilter
     {
-       
+
     }
-    public interface ITargetFilter<TTarget> : ITargetFilter where TTarget : unmanaged
+    public interface ITargetFilter<TTarget> : ITargetFilter where TTarget : struct
     {
         void Filter(Entity entitySourceBody, MapBody sourceBody, Entity entityMap, MapData map, NativeList<TTarget> targets);
     }

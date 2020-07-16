@@ -23,6 +23,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}
     m_TargetAsset: {fileID: 0}
+  - m_GUID: 35e9ffe34f97c8a46952c35e8b4692a9
+    m_Address: ActionInfo Shared Data
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
   - m_GUID: 8db0dc56779ce0a409198955676c6d19
     m_Address: info Shared Data
     m_ReadOnly: 0

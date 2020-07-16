@@ -6,11 +6,9 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor
-{
+namespace Reactics.Editor {
 
-    public abstract class SearchField<TObject> : BindableElement, INotifyValueChanged<TObject>
-    {
+    public abstract class SearchField<TObject> : BindableElement, INotifyValueChanged<TObject> {
 
         private const string USS_GUID = "f0274f1bbd6a3fe4a9756c4a1335c8c9";
 
@@ -28,19 +26,15 @@ namespace Reactics.Editor
         {
             get => _value; set
             {
-                if (!EqualityComparer<TObject>.Default.Equals(value, _value))
-                {
-                    if (panel != null)
-                    {
-                        using (ChangeEvent<TObject> evt = ChangeEvent<TObject>.GetPooled(_value, value))
-                        {
+                if (!EqualityComparer<TObject>.Default.Equals(value, _value)) {
+                    if (panel != null) {
+                        using (ChangeEvent<TObject> evt = ChangeEvent<TObject>.GetPooled(_value, value)) {
                             evt.target = this;
                             SetValueWithoutNotify(value);
                             SendEvent(evt);
                         }
                     }
-                    else
-                    {
+                    else {
                         SetValueWithoutNotify(value);
                     }
                 }
@@ -51,16 +45,13 @@ namespace Reactics.Editor
             get => labelElement.text;
             set
             {
-                if (labelElement.text != value)
-                {
+                if (labelElement.text != value) {
                     labelElement.text = value;
-                    if (string.IsNullOrEmpty(value))
-                    {
+                    if (string.IsNullOrEmpty(value)) {
                         labelElement.visible = false;
                         labelElement.style.display = DisplayStyle.None;
                     }
-                    else
-                    {
+                    else {
                         labelElement.visible = true;
                         labelElement.style.display = DisplayStyle.Flex;
                     }
@@ -75,43 +66,34 @@ namespace Reactics.Editor
         {
             get => _selectedResult; set
             {
-                if (!EqualityComparer<ISearchResult<TObject>>.Default.Equals(value, _selectedResult))
-                {
+                if (!EqualityComparer<ISearchResult<TObject>>.Default.Equals(value, _selectedResult)) {
                     _selectedResult = value;
-                    if (EqualityComparer<ISearchResult<TObject>>.Default.Equals(_selectedResult, default))
-                    {
+                    if (EqualityComparer<ISearchResult<TObject>>.Default.Equals(_selectedResult, default)) {
                         this.value = default;
                     }
-                    else
-                    {
+                    else {
                         this.value = _selectedResult.LoadValue();
                     }
 
                 }
             }
         }
-        private void SetDisplayText()
-        {
-            if (selectedResult == null)
-            {
+        private void SetDisplayText() {
+            if (selectedResult == null) {
                 textField.SetValueWithoutNotify(NoValueDisplayText);
             }
-            else
-            {
+            else {
                 textField.SetValueWithoutNotify(selectedResult.DisplayText);
             }
         }
-        public SearchField() : base()
-        {
+        public SearchField() : base() {
             Init(null);
         }
 
-        public SearchField(string label) : base()
-        {
+        public SearchField(string label) : base() {
             Init(label);
         }
-        private void Init(string label)
-        {
+        private void Init(string label) {
             //this.style.flexDirection = FlexDirection.Row;
             var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(AssetDatabase.GUIDToAssetPath(USS_GUID));
             this.styleSheets.Add(styleSheet);
@@ -167,64 +149,50 @@ namespace Reactics.Editor
             this.name = "search-field";
 
         }
-        private void OnGeometryChanged(GeometryChangedEvent evt)
-        {
-            if (searchFieldResults != null)
-            {
+        private void OnGeometryChanged(GeometryChangedEvent evt) {
+            if (searchFieldResults != null) {
                 searchFieldResults.transform.position = new Vector3(this.worldBound.xMin, this.worldBound.yMax - 2, 0);
                 searchFieldResults.UpdateLayout(evt.newRect);
             }
         }
-        private void OnFocusGained(FocusInEvent evt)
-        {
+        private void OnFocusGained(FocusInEvent evt) {
             searchFieldResults.visible = true;
-            if (!EqualityComparer<ISearchResult<TObject>>.Default.Equals(selectedResult, default))
-            {
+            if (!EqualityComparer<ISearchResult<TObject>>.Default.Equals(selectedResult, default)) {
                 UpdateSearchResults(selectedResult.DisplayText, string.Empty);
             }
-            else
-            {
+            else {
                 UpdateSearchResults(null, string.Empty);
                 textField.value = string.Empty;
             }
         }
-        private void OnFocusLost(FocusOutEvent evt)
-        {
+        private void OnFocusLost(FocusOutEvent evt) {
             searchFieldResults.visible = false;
             searchFieldResults.ClearSearchResults();
             SetDisplayText();
 
         }
-        private void UpdateCancelButton()
-        {
-            if (EqualityComparer<TObject>.Default.Equals(value, default))
-            {
+        private void UpdateCancelButton() {
+            if (EqualityComparer<TObject>.Default.Equals(value, default)) {
                 if (!cancelButton.ClassListContains("unity-search-field-base__cancel-button--off"))
                     cancelButton.AddToClassList("unity-search-field-base__cancel-button--off");
             }
-            else
-            {
+            else {
                 if (cancelButton.ClassListContains("unity-search-field-base__cancel-button--off"))
                     cancelButton.RemoveFromClassList("unity-search-field-base__cancel-button--off");
             }
         }
-        private async void OnTextChanged(ChangeEvent<string> evt)
-        {
+        private async void OnTextChanged(ChangeEvent<string> evt) {
 
-            if (string.IsNullOrEmpty(evt.newValue))
-            {
+            if (string.IsNullOrEmpty(evt.newValue)) {
 
-                if (searchFieldResults.panel != null)
-                {
+                if (searchFieldResults.panel != null) {
                     searchFieldResults.RemoveFromHierarchy();
                     //this.panel.visualTree.Remove(searchFieldResults);
                 }
             }
-            else
-            {
+            else {
 
-                if (searchFieldResults.panel == null)
-                {
+                if (searchFieldResults.panel == null) {
 
                     this.panel.visualTree.Add(searchFieldResults);
                     searchFieldResults.style.position = Position.Absolute;
@@ -239,24 +207,20 @@ namespace Reactics.Editor
 
             }
         }
-        private async void UpdateSearchResults(string newQuery, string oldQuery)
-        {
+        private async void UpdateSearchResults(string newQuery, string oldQuery) {
             var context = TaskScheduler.FromCurrentSynchronizationContext();
             var tokenSource = new CancellationTokenSource();
 
-            if (searchTaskTokenSource != null)
-            {
+            if (searchTaskTokenSource != null) {
 
                 searchTaskTokenSource.Cancel();
             }
             searchTaskTokenSource = tokenSource;
-            try
-            {
+            try {
                 await Task.Run(() => CollectSearch(newQuery, oldQuery), tokenSource.Token).ContinueWith((results) =>
                  {
                      this.searchFieldResults.ClearSearchResults();
-                     foreach (var result in results.Result)
-                     {
+                     foreach (var result in results.Result) {
                          searchFieldResults.AddSearchResult(result);
                      }
 
@@ -264,39 +228,32 @@ namespace Reactics.Editor
 
 
             }
-            catch (TaskCanceledException e)
-            {
+            catch (TaskCanceledException e) {
 
             }
-            finally
-            {
-                if (searchTaskTokenSource == tokenSource)
-                {
+            finally {
+                if (searchTaskTokenSource == tokenSource) {
                     searchTaskTokenSource = null;
                 }
                 tokenSource.Dispose();
             }
         }
-        private IEnumerable<ISearchResult<TObject>> CollectSearch(string newQuery, string oldQuery)
-        {
+        private IEnumerable<ISearchResult<TObject>> CollectSearch(string newQuery, string oldQuery) {
             List<ISearchResult<TObject>> results = new List<ISearchResult<TObject>>();
 
-            foreach (var item in OnSearch(newQuery, oldQuery, 100))
-            {
+            foreach (var item in OnSearch(newQuery, oldQuery, 100)) {
                 results.Add(item);
             }
             return results;
         }
-        private void OnCancelButton()
-        {
+        private void OnCancelButton() {
             selectedResult = null;
 
             UpdateCancelButton();
 
         }
 
-        public void SetValueWithoutNotify(TObject newValue)
-        {
+        public void SetValueWithoutNotify(TObject newValue) {
             _value = newValue;
             _selectedResult = CreateFromObject(newValue);
             SetDisplayText();
@@ -310,32 +267,28 @@ namespace Reactics.Editor
         protected abstract ISearchResult<TObject> CreateFromObject(TObject obj);
 
 
-        protected class SearchFieldResults : VisualElement
-        {
+        protected class SearchFieldResults : VisualElement {
             protected ScrollView scrollView;
             private SearchField<TObject> searchField;
             private const string USS_GUID = "faa35cf9bb7d7fd4ea68fcb946b7c4b5";
 
             private const float HEIGHT = 200;
 
-            public SearchFieldResults(SearchField<TObject> searchField)
-            {
+            public SearchFieldResults(SearchField<TObject> searchField) {
                 this.searchField = searchField;
                 this.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(AssetDatabase.GUIDToAssetPath(USS_GUID)));
 
 
                 Init();
             }
-            public void UpdateLayout(Rect searchFieldRect)
-            {
+            public void UpdateLayout(Rect searchFieldRect) {
                 this.transform.position = new Vector3(searchFieldRect.xMin, searchFieldRect.yMax - 2, 0);
                 this.style.width = searchFieldRect.width;
 
                 scrollView.contentViewport.style.width = searchFieldRect.width;
                 scrollView.contentContainer.style.width = searchFieldRect.width;
             }
-            private void Init()
-            {
+            private void Init() {
                 this.name = "search-field-results";
                 scrollView = new ScrollView();
                 this.Add(scrollView);
@@ -352,12 +305,10 @@ namespace Reactics.Editor
                 scrollView.showVertical = false;
 
             }
-            public void ClearSearchResults()
-            {
+            public void ClearSearchResults() {
                 this.scrollView.contentContainer.Clear();
             }
-            public void AddSearchResult(ISearchResult<TObject> searchResult)
-            {
+            public void AddSearchResult(ISearchResult<TObject> searchResult) {
                 var element = searchResult.CreateElement();
                 element.AddToClassList("search-result");
                 element.style.textOverflow = TextOverflow.Ellipsis;
@@ -368,11 +319,9 @@ namespace Reactics.Editor
                 this.scrollView.contentContainer.Add(element);
                 element.RegisterCallback<MouseDownEvent>(OnSearchResultSelect);
             }
-            private void OnSearchResultSelect(MouseDownEvent evt)
-            {
+            private void OnSearchResultSelect(MouseDownEvent evt) {
 
-                if (evt.target is VisualElement visualElement && visualElement.FindAncestorUserData() is ISearchResult<TObject> searchResult)
-                {
+                if (evt.target is VisualElement visualElement && visualElement.FindAncestorUserData() is ISearchResult<TObject> searchResult) {
                     searchField.selectedResult = searchResult;
 
                 }
@@ -380,8 +329,7 @@ namespace Reactics.Editor
         }
     }
 
-    public interface ISearchResult<TObject>
-    {
+    public interface ISearchResult<TObject> {
         VisualElement CreateElement();
         TObject LoadValue();
         string DisplayText { get; }

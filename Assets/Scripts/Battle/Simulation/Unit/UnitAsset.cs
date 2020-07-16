@@ -4,16 +4,14 @@ using Reactics.Battle.Unit;
 using Reactics.Commons;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Localization;
 
-namespace Reactics.Battle
-{
+namespace Reactics.Battle {
     [CreateAssetMenu(fileName = "UnitAsset", menuName = "Reactics/Unit", order = 0)]
-    public class UnitAsset : ScriptableObject, IUnit
-    {
-
+    public class UnitAsset : ScriptableObject, IUnit {
         [SerializeField]
         [LocalizationTableName("UnitInfo")]
         private EmbeddedLocalizedAsset<UnitInfoAsset> info;
@@ -52,8 +50,7 @@ namespace Reactics.Battle
 
         [SerializeField]
         public AssetReference<ActionAsset>[] personalActions;
-        public async void Convert(Entity entity, EntityManager dstManager)
-        {
+        public async void Convert(Entity entity, EntityManager dstManager) {
 
             dstManager.AddComponentData(entity, new HealthPointData(this));
             dstManager.AddComponentData(entity, new MagicPointData(this));

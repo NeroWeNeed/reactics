@@ -1,12 +1,4 @@
-.config-field {
-    padding-left: 4px;
-    padding-right: 4px;
-    padding-top: 1px;
-    padding-bottom: 1px;
-}
 .node #config {
-    border-color: #232323;
-    border-top-width: 1px;
     background-color: rgba(56,56,56,0.8);
 }
 .config-field Label {

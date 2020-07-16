@@ -23,12 +23,6 @@ MonoBehaviour:
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}
     m_TargetAsset: {fileID: 0}
-  - m_GUID: 913a4d6d449b73d42bf32c2736f107a0
-    m_Address: Assets/ResourceData/Effects/EffectAsset.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    m_MainAsset: {fileID: 11400000, guid: 913a4d6d449b73d42bf32c2736f107a0, type: 2}
-    m_TargetAsset: {fileID: 11400000, guid: 913a4d6d449b73d42bf32c2736f107a0, type: 2}
   - m_GUID: febf1b09b380b7d46ab5ebfccfca54d2
     m_Address: Assets/ResourceData/OutlineMaterial.mat
     m_ReadOnly: 0

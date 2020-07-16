@@ -16,7 +16,7 @@ MonoBehaviour:
     m_TableReference:
       m_TableCollectionName: UnitInfo
     m_TableEntryReference:
-      m_KeyId: 0
+      m_KeyId: 1
       m_Key: 
   healthPoints: 0
   magicPoints: 0
@@ -26,6 +26,9 @@ MonoBehaviour:
   magic: 0
   speed: 0
   movement: 0
+  test:
+    m_AssetGUID: 
+    m_SubObjectName: 
   personalActions:
   - m_AssetGUID: 
     m_SubObjectName: 

@@ -12,7 +12,7 @@ namespace Reactics.Battle
     {
         public static TargetType GetType(Type type)
         {
-            if (type == null) 
+            if (type == null)
             {
 
                 return TargetType.Unknown;
