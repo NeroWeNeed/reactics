@@ -10,3 +10,7 @@
     flex-grow: 1;
     flex-shrink: 0;
 }
+.inspector {
+    min-width: 300px;
+    min-height: 300px;
+}

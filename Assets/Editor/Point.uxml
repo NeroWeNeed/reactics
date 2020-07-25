@@ -1,7 +1,0 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
-    <ui:VisualElement name="root" style="flex-direction: row; align-items: center; margin-left: 3px; margin-right: 3px; margin-top: 1px; margin-bottom: 1px;" class="targetEditorSubSectionMember">
-        <uie:IntegerField label="X" name="x" value="0" style="align-items: stretch;" />
-        <uie:IntegerField label="Y" name="y" value="0" />
-        <ui:Button text="◯" name="select" style="display: flex; visibility: visible;" />
-    </ui:VisualElement>
-</ui:UXML>

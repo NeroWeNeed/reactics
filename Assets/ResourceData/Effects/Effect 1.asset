@@ -12,40 +12,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4953b718d6df89047a177da4037ff15c, type: 3}
   m_Name: Effect 1
   m_EditorClassIdentifier: 
-  type: 0
+  type: 2
   effect:
   - id: 0
   - id: 1
   - id: 2
   - id: 3
-  - id: 4
-  roots: 02000000
+  roots: 01000000
   variables: []
   references:
     version: 1
     00000000:
-      type: {class: PointToBodyEffect, ns: Reactics.Battle, asm: SimulationAssembly}
+      type: {class: LinearEffect, ns: Reactics.Battle, asm: SimulationAssembly}
       data:
-        onBody:
-          index: 1
+        effect: 2
+        next: -2
     00000001:
       type: {class: LinearEffect, ns: Reactics.Battle, asm: SimulationAssembly}
       data:
         effect: 3
-        next: 2
+        next: 0
     00000002:
-      type: {class: LinearEffect, ns: Reactics.Battle, asm: SimulationAssembly}
-      data:
-        effect: 4
-        next: -2
-    00000003:
-      type: {class: DamageEffect, ns: Reactics.Battle, asm: SimulationAssembly}
-      data:
-        damage: 15
-    00000004:
       type: {class: DamageEffect, ns: Reactics.Battle, asm: SimulationAssembly}
       data:
         damage: 45
+    00000003:
+      type: {class: DamageEffect, ns: Reactics.Battle, asm: SimulationAssembly}
+      data:
+        damage: 18
 --- !u!114 &2995332536580678245
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -60,17 +54,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   layout:
   - serializedVersion: 2
-    x: -904
-    y: -222
-    width: 153
+    x: -365
+    y: -45
+    width: 135
     height: 101
   - serializedVersion: 2
     x: -566
     y: -145
-    width: 135
-    height: 101
-  - serializedVersion: 2
-    x: -365
-    y: -45
     width: 135
     height: 101
