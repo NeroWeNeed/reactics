@@ -20,7 +20,7 @@ public class EffectSystemTestFixture : ECSTestFixture {
     public const string MAP_PATH = "Assets/ResourceData/Maps/DebugMap.asset";
     [Test]
     public void SampleTest() {
-        var resourceSystem = this.World.GetResourceManagementSystem();
+        var resourceSystem = this.World.GetResourceSystem();
         var effectResource = resourceSystem.Load<EffectAsset>(EFFECT_PATH, 10000);
         var targetEntity = EntityManager.CreateEntity();
         var mapResource = AssetDatabase.LoadAssetAtPath<MapAsset>(MAP_PATH);

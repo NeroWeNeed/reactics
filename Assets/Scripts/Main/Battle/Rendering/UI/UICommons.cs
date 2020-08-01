@@ -1,7 +1,10 @@
 using System;
 using Reactics.Commons;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine.TextCore;
 
 namespace Reactics.Core.UI {
     public struct ValueInfo {
@@ -19,8 +22,12 @@ namespace Reactics.Core.UI {
     }
 
     public interface IValueProperties {
-        float ContainerLength { get; }
+
+        float CalculatePercentage(float percent, UILength.Hints hints);
+
         float FontSize { get; }
+        float RootFontSize { get; }
+
     }
     public struct UILength : IEquatable<UILength> {
         public const float PixelsPerInch = 96;
@@ -40,48 +47,50 @@ namespace Reactics.Core.UI {
         public bool Equals<TProperties>(UILength other, TProperties properties) where TProperties : struct, IValueProperties {
             return unit.IsAbsolute() && other.unit.IsAbsolute() ? RealValue(properties).Equals(other.RealValue(properties)) : (value == other.value && unit == other.unit);
         }
-        public static float RealValue<TProperties>(float value, byte unit, TProperties properties = default) where TProperties : struct, IValueProperties {
+        public static float RealValue<TProperties>(float value, byte unit, TProperties properties = default, Hints hints = 0) where TProperties : struct, IValueProperties {
             switch (unit) {
                 case 0:
                     return value;
                 case 1:
-                    return value * (4f / 3);
+                    return value * 1.3333f;
                 case 2:
-                    return value * (4f / 3) * 12f;
+                    return value * 16f;
                 case 3:
-                    return value * PixelsPerInch;
+                    return value * UIScreenInfoSystem.ScreenDpi.Data;
                 case 4:
-                    return value * PixelsPerInch * 2.54f;
+                    return value * UIScreenInfoSystem.ScreenDpi.Data * 2.54f;
                 case 5:
-                    return value * PixelsPerInch * 2.54f / 10f;
-                //TODO
+                    return value * UIScreenInfoSystem.ScreenDpi.Data * 0.254f;
                 case 6:
-                    return properties.FontSize * value;
+                    return value * UIScreenInfoSystem.ScreenDpi.Data * 0.0635f;
                 case 7:
-                    break;
+                    return properties.FontSize * value;
                 case 8:
-                    break;
+                    return properties.RootFontSize * value;
                 case 9:
-                    break;
+                    return value * UIScreenInfoSystem.ScreenWidth.Data * 0.01f;
                 case 10:
-                    break;
+                    return value * UIScreenInfoSystem.ScreenHeight.Data * 0.01f;
                 case 11:
-                    break;
+                    return value * math.min(UIScreenInfoSystem.ScreenHeight.Data, UIScreenInfoSystem.ScreenWidth.Data) * 0.01f;
                 case 12:
-                    break;
+                    return value * math.max(UIScreenInfoSystem.ScreenHeight.Data, UIScreenInfoSystem.ScreenWidth.Data) * 0.01f;
                 case 13:
-                    break;
+                    return properties.CalculatePercentage(value, hints);
                 case 14:
-                    return properties.ContainerLength * value;
-                case 15:
                     break;
             }
             return 0f;
         }
-        public float RealValue<TProperties>(TProperties properties = default) where TProperties : struct, IValueProperties => RealValue(value, (byte)unit, properties);
+        public float RealValue<TProperties>(TProperties properties = default, Hints hints = 0) where TProperties : struct, IValueProperties => RealValue(value, (byte)unit, properties, hints);
 
         public bool Equals(UILength other) {
             return value == other.value && unit == other.unit;
+        }
+        public static implicit operator UILength(float value) => new UILength(value, UILengthUnit.Px);
+        [Flags]
+        public enum Hints {
+            None = 0, Horizontal = 1, Vertical = 2
         }
     }
 
@@ -92,50 +101,21 @@ namespace Reactics.Core.UI {
         In = 3,
         Cm = 4,
         Mm = 5,
-        Em = 6,
-        Ex = 7,
-        Ch = 8,
-        Rem = 9,
-        Vw = 10,
-        Vh = 11,
-        Vmin = 12,
-        Vmax = 13,
-        Perc = 14,
-        Inherit = 15,
-        Auto = 16
+        Q = 6,
+        Em = 7,
+        Rem = 8,
+        Vw = 9,
+        Vh = 10,
+        Vmin = 11,
+        Vmax = 12,
+        Perc = 13,
+        Auto = 14
 
 
     }
     public static class UILengthUnitUtils {
-        public static bool IsAbsolute(this UILengthUnit unit) => ((byte)unit) < 6;
-        public static bool IsRelative(this UILengthUnit unit) => ((byte)unit) >= 6;
-    }
-    public struct UILength2 {
-        public UILength x, y;
-
-        public UILength2(UILength x, UILength y) {
-            this.x = x;
-            this.y = y;
-        }
-    }
-    public struct UILength3 {
-        public UILength x, y, z;
-
-        public UILength3(UILength x, UILength y, UILength z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-    }
-    public struct UILength4 {
-        public UILength x, y, z, w;
-
-        public UILength4(UILength x, UILength y, UILength z, UILength w) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-            this.w = w;
-        }
+        public static bool IsAbsolute(this UILengthUnit unit) => ((byte)unit) <= 6;
+        public static bool IsRelative(this UILengthUnit unit) => ((byte)unit) > 6;
     }
     public interface IBox {
         UILength Top { get; }
@@ -148,28 +128,62 @@ namespace Reactics.Core.UI {
         UILength Max { get; }
 
     }
-    public struct UISize {
-        public UIWidth width;
-        public UIHeight height;
-        public float4 RealValue<TProperties>(TProperties properties) where TProperties : struct, IValueProperties {
-            return new float4(width.Min.RealValue(properties), height.Min.RealValue(properties), width.Max.RealValue(properties), height.Max.RealValue(properties));
-        }
-        public float2 RealWidthValue<TProperties>(TProperties properties) where TProperties : struct, IValueProperties {
-            return new float2(width.Min.RealValue(properties), width.Max.RealValue(properties));
-        }
-        public float2 RealHeightValue<TProperties>(TProperties properties) where TProperties : struct, IValueProperties {
-            return new float2(height.Min.RealValue(properties), height.Max.RealValue(properties));
+    public interface ISpan {
+        float Length { get; }
+    }
+    public static class ISpanExtensions {
+        public static NativeArray<float> GetSpacing<TItem>(this Spacing spacing, float totalSpace, INativeList<TItem> items, Allocator allocator = Allocator.Temp) where TItem : struct, ISpan {
+            var output = new NativeArray<float>(items.Length + 1, allocator);
+            if (items.Length == 0)
+                return output;
+            switch (spacing) {
+                case Spacing.Start:
+                    break;
+
+                case Spacing.End:
+                    float endUsedSpace = 0;
+                    for (int i = 0; i < items.Length; i++) {
+                        endUsedSpace += items[i].Length;
+                    }
+                    output[0] = math.max(0, totalSpace - endUsedSpace);
+                    break;
+                case Spacing.Center:
+                    float centerUsedSpace = 0;
+                    for (int i = 0; i < items.Length; i++) {
+                        centerUsedSpace += items[i].Length;
+                    }
+                    var centerAvailableSpace = math.max(0, totalSpace - centerUsedSpace);
+                    output[0] = centerAvailableSpace / 2f;
+                    output[output.Length - 1] = totalSpace - centerUsedSpace;
+                    break;
+                case Spacing.SpaceBetween:
+                    if (items.Length == 1)
+                        return output;
+                    float spaceBetweenUsedSpace = 0;
+                    for (int i = 0; i < items.Length; i++) {
+                        spaceBetweenUsedSpace += items[i].Length;
+                    }
+                    var gap = math.max(0, totalSpace - spaceBetweenUsedSpace) / (items.Length - 1);
+                    for (int i = 0; i < output.Length - 2; i++) {
+                        output[i + 1] = gap;
+                    }
+                    break;
+            }
+            return output;
         }
     }
     public static class IBoxExtensions {
         public static float2 GetSize<TBox, TProperties>(this TBox box, TProperties properties) where TBox : struct, IBox where TProperties : struct, IValueProperties {
-            return new float2(box.Top.RealValue(properties) + box.Bottom.RealValue(properties), box.Left.RealValue(properties) + box.Right.RealValue(properties));
+            return new float2(box.Left.RealValue(properties, UILength.Hints.Horizontal) + box.Right.RealValue(properties, UILength.Hints.Horizontal), box.Top.RealValue(properties, UILength.Hints.Vertical) + box.Bottom.RealValue(properties, UILength.Hints.Vertical));
         }
         public static float GetWidth<TBox, TProperties>(this TBox box, TProperties properties) where TBox : struct, IBox where TProperties : struct, IValueProperties {
             return box.Left.RealValue(properties) + box.Right.RealValue(properties);
         }
         public static float GetHeight<TBox, TProperties>(this TBox box, TProperties properties) where TBox : struct, IBox where TProperties : struct, IValueProperties {
             return box.Top.RealValue(properties) + box.Bottom.RealValue(properties);
+        }
+        public static float4 GetRealValues<TBox, TProperties>(this TBox box, TProperties properties) where TBox : struct, IBox where TProperties : struct, IValueProperties {
+            return new float4(box.Top.RealValue(properties, UILength.Hints.Vertical), box.Right.RealValue(properties, UILength.Hints.Horizontal), box.Bottom.RealValue(properties, UILength.Hints.Vertical), box.Left.RealValue(properties, UILength.Hints.Horizontal));
         }
     }
     public static class IConstrainableExtensions {
@@ -193,6 +207,33 @@ namespace Reactics.Core.UI {
         public static bool IsDefinite(this float self) {
             return !float.IsInfinity(self) && !float.IsNaN(self);
         }
+        public static bool IsFixed<TConstrainable>(this TConstrainable self) where TConstrainable : struct, IConstrainable => self.Min.Equals(self.Max);
+    }
+    public static class AlignmentExtensions {
+        public static float GetOffset(this Alignment alignment, float targetSpan, float containerSpan) {
+            switch (alignment) {
+                case Alignment.Start:
+                    return 0;
+                case Alignment.End:
+                    return containerSpan - targetSpan;
+                case Alignment.Center:
+                    return (containerSpan / 2f) - (targetSpan / 2f);
+                case Alignment.Baseline:
+                    return 0;
+                default:
+                    return 0;
+            }
+        }
+    }
+    public enum Alignment {
+        Start, End, Center, Baseline
+    };
+    public enum Spacing {
+        Start, End, Center, SpaceBetween
+    }
+
+    public enum Layout {
+        Horizontal, Vertical
     }
 
 }

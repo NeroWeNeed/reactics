@@ -13,11 +13,11 @@ namespace Reactics.Battle {
     public abstract class BaseEffectProcessingSystem<TTargetType> : SystemBase where TTargetType : struct {
         public abstract TargetType TargetType { get; }
         private EntityCommandBufferSystem entityCommandBufferSystem;
-        public ResourceManagementSystem effectResourceSystem;
+        public ResourceManager effectResourceSystem;
         protected EntityQuery query;
         protected override void OnCreate() {
             entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
-            effectResourceSystem = World.GetResourceManagementSystem();
+            effectResourceSystem = World.GetResourceSystem();
             query = GetEntityQuery(ComponentType.ReadOnly<Effect>(), ComponentType.ReadOnly<EffectSource>(), ComponentType.ReadOnly<MapElement>(), ComponentType.ReadOnly<EffectTarget<TTargetType>>());
             RequireForUpdate(query);
         }

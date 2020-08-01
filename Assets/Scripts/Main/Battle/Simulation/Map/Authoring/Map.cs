@@ -62,7 +62,7 @@ namespace Reactics.Battle.Map.Authoring {
                 dstManager.AddComponentData(entity, new MapHighlightState { dirty = 0, states = new Unity.Collections.LowLevel.Unsafe.UnsafeMultiHashMap<ushort, Point>(16, Allocator.Persistent) });
                 dstManager.AddComponentData(entity, new MapCollisionState { value = new Unity.Collections.LowLevel.Unsafe.UnsafeHashMap<Point, Entity>(16, Allocator.Persistent) });
                 dstManager.AddComponentData(entity, new MapRenderInfo { baseIndexCount = mesh.GetIndexCount(0), tileSize = 1f, elevationStep = 0.25f });
-                var layerEntities = new NativeArray<Entity>(MapLayers.Count, Allocator.Temp);
+                var layerEntities = new NativeArray<Entity>(MapLayers.Count, Allocator.TempJob);
 
                 for (int i = 0; i < MapLayers.Count; i++) {
                     layerEntities[i] = conversionSystem.CreateAdditionalEntity(this);
@@ -70,9 +70,12 @@ namespace Reactics.Battle.Map.Authoring {
                 }
 
                 var layers = (MapLayer[])Enum.GetValues(typeof(MapLayer));
-                var material = await mapMaterial.LoadAssetAsync<Material>().Task;
-
-
+                Material material;
+#if UNITY_EDITOR
+                material = mapMaterial.editorAsset;
+#else
+                material = await mapMaterial.LoadAssetAsync<Material>().Task;
+#endif
                 for (int i = 0; i < layers.Length; i++) {
 #if UNITY_EDITOR
                     dstManager.SetName(layerEntities[i], $"{this.name} ({layers[i]} Layer)");
@@ -109,6 +112,7 @@ namespace Reactics.Battle.Map.Authoring {
                 children.AddRange(layerEntities.Reinterpret<Child>());
                 conversionSystem.DeclareLinkedEntityGroup(this.gameObject);
                 conversionSystem.ConfigureEditorRenderData(entity, this.gameObject, true);
+                layerEntities.Dispose();
             }
 
         }
