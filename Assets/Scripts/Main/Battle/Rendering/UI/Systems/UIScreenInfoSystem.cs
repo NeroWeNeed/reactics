@@ -1,3 +1,4 @@
+using System;
 using Reactics.Commons;
 using Unity.Burst;
 using Unity.Entities;
@@ -31,9 +32,12 @@ namespace Reactics.Core.UI {
         public static SharedStatic<int> ScreenResolutionHeight => StateContext.ScreenResolutionHeight;
         public static readonly int UI_LAYER = LayerMask.NameToLayer("UI");
         public static readonly string UI_CAMERA_TAG = "UICamera";
+
+        public Camera MainCamera { get; private set; }
+        public Camera UICamera { get; private set; }
         public bool Dirty { get; set; }
+        private bool initialized = false;
         protected override void OnCreate() {
-            Debug.Log(Screen.width);
             ScreenWidth.Data = Screen.width;
             ScreenHeight.Data = Screen.height;
             ScreenResolutionWidth.Data = Screen.currentResolution.width;
@@ -43,6 +47,28 @@ namespace Reactics.Core.UI {
             Dirty = true;
             RequireSingletonForUpdate<ScreenInfo>();
 
+        }
+        public void InitCameras(Camera mainCamera) {
+            if (initialized)
+                return;
+            MainCamera = mainCamera ?? throw new ArgumentException("Camera must not be null", nameof(mainCamera));
+            for (int i = 0; i < mainCamera.transform.childCount; i++) {
+                var child = mainCamera.transform.GetChild(i);
+                if (child.tag == UI_CAMERA_TAG) {
+                    var camera = child.GetComponent<Camera>();
+                    if (camera == null)
+                        continue;
+                    UICamera = camera;
+                    break;
+                }
+            }
+            if (UICamera == null)
+                throw new ArgumentException($"UI Camera not found in hierarchy");
+            initialized = true;
+        }
+        protected override void OnStartRunning() {
+            if (!initialized)
+                throw new Exception($"Cameras for {nameof(UIScreenInfoSystem)} are not initialized.");
         }
         protected override void OnUpdate() {
             var newScreenWidth = Screen.width;

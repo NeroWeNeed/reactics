@@ -11,8 +11,9 @@ namespace Reactics.Core.UI.Author {
         private void OnValidate() {
             EnsureUICameraExists();
         }
+
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {
-            dstManager.AddComponent<ScreenInfo>(entity);
+            dstManager.World.GetOrCreateSystem<UIScreenInfoSystem>().InitCameras(GetComponent<Camera>());
         }
         private void EnsureUICameraExists() {
             foreach (var camera in GetComponentsInChildren<Camera>(true)) {
@@ -23,10 +24,10 @@ namespace Reactics.Core.UI.Author {
             CreateUICamera();
         }
         private GameObject CreateUICamera() {
-            var uiCameraLayerGO = new GameObject("UI Camera")
-            {
-                hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild
-            };
+            var uiCameraLayerGO = new GameObject("UI Camera");
+            /*             {
+                            hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild
+                        }; */
             var uiCameraLayer = uiCameraLayerGO.AddComponent<Camera>();
             var mainCamera = this.GetComponent<Camera>();
             uiCameraLayer.tag = "UICamera";

@@ -19,26 +19,26 @@ namespace Reactics.Core.UI {
     //TODO: Line wrapping, font scaling.
     public class UITextSizeProvider : SystemBase {
         protected override void OnUpdate() {
-            /*             Entities
-                        .WithChangeFilter<UIFont>()
-                        .WithChangeFilter<UIFontSettings>()
-                        .WithChangeFilter<UIText>()
-                        .ForEach((ref UISize size, in UIFont font, in UIFontSettings fontSettings, in UIText text) =>
-                        {
-                            var width = 0f;
-                            var height = 0f;
-                            var faceInfo = font.value.faceInfo;
-                            for (int i = 0; i < text.text.Length; i++) {
-                                var character = font.value.characterLookupTable[text.text[i]];
-                                width += character.glyph.metrics.horizontalBearingX + character.glyph.metrics.width;
-                                height = math.max(height, character.glyph.metrics.height);
-                                if (i + 1 < text.text.Length) {
-                                    width += character.glyph.metrics.horizontalAdvance;
-                                }
-                            }
-                            size.Width = width;
-                            size.Height = height;
-                        }).WithoutBurst().Run(); */
+            Entities
+            .WithChangeFilter<UIFont>()
+            .WithChangeFilter<UIText>()
+            .ForEach((ref UISize size, in UIFont font, in UIText text) =>
+            {
+                var width = 0f;
+                var height = 0f;
+                var faceInfo = font.value.faceInfo;
+                for (int i = 0; i < text.text.Length; i++) {
+                    var character = font.value.characterLookupTable[text.text[i]];
+                    var ratio = (character.glyph.metrics.width / character.glyph.metrics.height) * font.size;
+                    width += (character.glyph.metrics.horizontalBearingX + character.glyph.metrics.width) * ratio;
+                    height = math.max(height, (character.glyph.metrics.horizontalBearingY + character.glyph.metrics.height) * ratio);
+                    if (i + 1 < text.text.Length) {
+                        width += character.glyph.metrics.horizontalAdvance * ratio;
+                    }
+                }
+                size.Width = width;
+                size.Height = height;
+            }).WithoutBurst().Run();
 
         }
     }

@@ -14,6 +14,9 @@ namespace Reactics.Core.UI.Author {
                     value = conversionSystem.GetPrimaryEntity(component)
                 });
             }
+            dstManager.AddComponentData(entity, new Reactics.Core.UI.UIElement());
+            dstManager.AddComponent<UIResolvedBox>(entity);
+
             var children = new NativeList<UIChild>(Allocator.Temp);
             foreach (Transform child in transform) {
                 if (child.TryGetComponent(out component)) {

@@ -1,46 +1,85 @@
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
 namespace Reactics.Core.UI {
-    [UpdateInGroup(typeof(UISystemGroup))]
+    [UpdateInGroup(typeof(UILayoutSystemGroup))]
+
     public class SimpleLayoutSystem : SystemBase {
         private EntityQuery query;
+        private EntityCommandBufferSystem entityCommandBufferSystem;
         protected override void OnCreate() {
             query = GetEntityQuery(ComponentType.ReadWrite<UIElement>(), ComponentType.Exclude<UIParent>());
             query.SetChangedVersionFilter(typeof(UIElement));
+            entityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
             RequireForUpdate(query);
         }
         protected override void OnUpdate() {
-            new LayoutJob
+
+            var entityTypeHandle = GetEntityTypeHandle();
+            var childData = GetBufferFromEntity<UIChild>(true);
+            var resolvedBox = GetComponentDataFromEntity<UIResolvedBox>(true);
+            var sizeData = GetComponentDataFromEntity<UISize>(true);
+            var layoutData = GetComponentDataFromEntity<UILayout>(true);
+            var paddingData = GetComponentDataFromEntity<UIPadding>(true);
+            var marginData = GetComponentDataFromEntity<UIMargin>(true);
+            var borderWidthData = GetComponentDataFromEntity<UIBorderWidth>(true);
+            var spacingData = GetComponentDataFromEntity<UISpacing>(true);
+            var wrapData = GetComponentDataFromEntity<UIWrap>(true);
+            var alignChildrenData = GetComponentDataFromEntity<UIAlignChildren>(true);
+            var alignSelfData = GetComponentDataFromEntity<UIAlignSelf>(true);
+            var elementTypeHandle = GetComponentTypeHandle<UIElement>(true);
+            var entityCommandBuffer = entityCommandBufferSystem.CreateCommandBuffer().AsParallelWriter();
+            var job = new LayoutJob
             {
-                entityTypeHandle = GetEntityTypeHandle(),
-                childData = GetBufferFromEntity<UIChild>(true),
-                resolvedBox = GetComponentDataFromEntity<UIResolvedBox>(false),
-                sizeData = GetComponentDataFromEntity<UISize>(true),
-                layoutData = GetComponentDataFromEntity<UILayout>(true),
-                paddingData = GetComponentDataFromEntity<UIPadding>(true),
-                marginData = GetComponentDataFromEntity<UIMargin>(true),
-                borderWidthData = GetComponentDataFromEntity<UIBorderWidth>(true),
-                spacingData = GetComponentDataFromEntity<UISpacing>(true),
-                wrapData = GetComponentDataFromEntity<UIWrap>(true),
-                alignChildrenData = GetComponentDataFromEntity<UIAlignChildren>(true),
-                alignSelfData = GetComponentDataFromEntity<UIAlignSelf>(true)
-            }.ScheduleParallel(query);
+                entityTypeHandle = entityTypeHandle,
+                childData = childData,
+                resolvedBox = resolvedBox,
+                sizeData = sizeData,
+                layoutData = layoutData,
+                paddingData = paddingData,
+                marginData = marginData,
+                borderWidthData = borderWidthData,
+                spacingData = spacingData,
+                wrapData = wrapData,
+                alignChildrenData = alignChildrenData,
+                alignSelfData = alignSelfData,
+                elementTypeHandle = elementTypeHandle,
+                entityCommandBuffer = entityCommandBuffer
+            }.Schedule(query, Dependency);
+            entityCommandBufferSystem.AddJobHandleForProducer(job);
         }
+
+        [BurstCompile]
         public struct LayoutJob : IJobChunk {
+            [ReadOnly]
             public EntityTypeHandle entityTypeHandle;
+            [ReadOnly]
             public BufferFromEntity<UIChild> childData;
+            [ReadOnly]
             public ComponentDataFromEntity<UIResolvedBox> resolvedBox;
+            [ReadOnly]
             public ComponentDataFromEntity<UISize> sizeData;
+            [ReadOnly]
             public ComponentDataFromEntity<UILayout> layoutData;
+            [ReadOnly]
             public ComponentDataFromEntity<UIPadding> paddingData;
+            [ReadOnly]
             public ComponentDataFromEntity<UIMargin> marginData;
+            [ReadOnly]
             public ComponentDataFromEntity<UIBorderWidth> borderWidthData;
+            [ReadOnly]
             public ComponentDataFromEntity<UISpacing> spacingData;
+            [ReadOnly]
             public ComponentDataFromEntity<UIWrap> wrapData;
+            [ReadOnly]
             public ComponentDataFromEntity<UIAlignChildren> alignChildrenData;
+            [ReadOnly]
             public ComponentDataFromEntity<UIAlignSelf> alignSelfData;
+            [ReadOnly]
+            public ComponentTypeHandle<UIElement> elementTypeHandle;
+            public EntityCommandBuffer.ParallelWriter entityCommandBuffer;
             public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex) {
                 var boxes = new NativeHashMap<Entity, BoxModel>(8, Allocator.Temp)
                 {
@@ -56,21 +95,28 @@ namespace Reactics.Core.UI {
                 {
                     [Entity.Null] = new float2(0, 0)
                 };
-                foreach (var root in chunk.GetNativeArray(entityTypeHandle)) {
-                    boxes[root] = Process(root, Entity.Null, UI.Layout.Horizontal, boxes, positions);
-                    ResolveBox(root, boxes, positions);
+                var entities = chunk.GetNativeArray(entityTypeHandle);
+                var elements = chunk.GetNativeArray(elementTypeHandle);
+                for (int i = 0; i < entities.Length; i++) {
+                    boxes[entities[i]] = Process(entities[i], Entity.Null, UI.Layout.Horizontal, boxes, positions);
+                    positions[entities[i]] = float2.zero;
+                    ResolveBox(chunkIndex, entities[i], boxes, positions);
+
+                    entityCommandBuffer.SetComponent(chunkIndex, entities[i], new UIElement { Version = elements[i].Version + 1 });
+
                 }
                 boxes.Dispose();
                 positions.Dispose();
             }
-            public void ResolveBox(Entity entity, NativeHashMap<Entity, BoxModel> boxes, NativeHashMap<Entity, float2> positions) {
-                resolvedBox[entity] = new UIResolvedBox
+            public void ResolveBox(int chunkIndex, Entity entity, NativeHashMap<Entity, BoxModel> boxes, NativeHashMap<Entity, float2> positions) {
+                entityCommandBuffer.SetComponent(chunkIndex, entity, new UIResolvedBox
                 {
                     value = new float4(positions[entity], positions[entity] + boxes[entity].Size)
-                };
+                });
+
                 if (childData.HasComponent(entity)) {
                     foreach (var child in childData[entity]) {
-                        ResolveBox(child, boxes, positions);
+                        ResolveBox(chunkIndex, child, boxes, positions);
                     }
                 }
             }
@@ -147,11 +193,14 @@ namespace Reactics.Core.UI {
                         lineHeight = math.max(lineHeight, containerSize.y);
                     }
                     if (i + 1 >= items.Length || (doWrap && boxes[items[i + 1]].Size.x + usedSpace > containerSize.x)) {
-                        var space = spacing.GetSpacing(containerSize.x, lineItems);
+                        var space = spacing.GetSpacing<LineItem, NativeList<LineItem>>(containerSize.x, lineItems);
+
                         var spacingOffset = space[0];
                         for (int j = 0; j < lineItems.Length; j++) {
                             var a = alignSelfData.HasComponent(lineItems[j].item) ? alignSelfData[lineItems[j].item].value : align;
+
                             positions[lineItems[j].item] = new float2(spacingOffset, a.GetOffset(lineItems[j].cross, lineOffset + lineHeight));
+                            spacingOffset += boxes[lineItems[j].item].Width + space[j + 1];
                         }
                         totalSize.x = math.max(totalSize.x, usedSpace);
                         totalSize.y += lineHeight;
@@ -211,11 +260,10 @@ namespace Reactics.Core.UI {
             }
             public float2 Size
             {
-                get => new float2(
-                    content.x + (margin.y + margin.w) + (padding.y + padding.w) + (borderWidth.y + borderWidth.w),
-                content.y + (margin.x + margin.z) + (padding.x + padding.z) + (borderWidth.x + borderWidth.z)
-                );
+                get => new float2(Width, Height);
             }
+            public float Width => content.x + (margin.y + margin.w) + (padding.y + padding.w) + (borderWidth.y + borderWidth.w);
+            public float Height => content.y + (margin.x + margin.z) + (padding.x + padding.z) + (borderWidth.x + borderWidth.z);
 
         }
 

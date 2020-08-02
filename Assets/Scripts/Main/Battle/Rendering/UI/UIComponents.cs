@@ -5,6 +5,7 @@ using TMPro;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
 
 namespace Reactics.Core.UI {
@@ -118,6 +119,8 @@ namespace Reactics.Core.UI {
         public float dpi;
         public ScreenOrientation orientation;
     }
+    [WriteGroup(typeof(LocalToWorld))]
+    public struct LocalToScreen : IComponentData { }
     public struct UISize : IComponentData {
         public static readonly UISize Unbounded = new UISize(UILength.Zero, UILength.PositiveInfinity, UILength.Zero, UILength.PositiveInfinity);
         public UILength MinWidth, MaxWidth, MinHeight, MaxHeight;
@@ -165,6 +168,7 @@ namespace Reactics.Core.UI {
 
     public struct UIFont : ISharedComponentData, IEquatable<UIFont> {
         public TMP_FontAsset value;
+        public float size;
 
         public bool Equals(UIFont other) {
             return EqualityComparer<TMP_FontAsset>.Default.Equals(value, other.value);
@@ -174,14 +178,10 @@ namespace Reactics.Core.UI {
             return -1584136870 + EqualityComparer<TMP_FontAsset>.Default.GetHashCode(value);
         }
     }
-
-    public struct UIFontSettings : IComponentData {
-        public float size;
-
-    }
     public struct UIRectangle : IComponentData {
         public UILength width, height;
     }
+
     public struct UIText : ISharedComponentData, IEquatable<UIText> {
         public string text;
         public UILength minWidth;
@@ -219,7 +219,9 @@ namespace Reactics.Core.UI {
             return hashCode;
         }
     }
-    public struct UIVertex : IBufferElementData {
-        public float3 value;
+    public struct UIMeshData : IBufferElementData {
+        public float3 vertex;
+
+
     }
 }

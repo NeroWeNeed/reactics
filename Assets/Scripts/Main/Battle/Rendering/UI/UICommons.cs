@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Reactics.Commons;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -132,7 +133,7 @@ namespace Reactics.Core.UI {
         float Length { get; }
     }
     public static class ISpanExtensions {
-        public static NativeArray<float> GetSpacing<TItem>(this Spacing spacing, float totalSpace, INativeList<TItem> items, Allocator allocator = Allocator.Temp) where TItem : struct, ISpan {
+        public static NativeArray<float> GetSpacing<TItem, TList>(this Spacing spacing, float totalSpace, TList items, Allocator allocator = Allocator.Temp) where TItem : struct, ISpan where TList : struct, INativeList<TItem> {
             var output = new NativeArray<float>(items.Length + 1, allocator);
             if (items.Length == 0)
                 return output;
@@ -235,5 +236,30 @@ namespace Reactics.Core.UI {
     public enum Layout {
         Horizontal, Vertical
     }
+    public enum UIAnchor {
+        BOTTOM_LEFT = 0b0000,
+        BOTTOM_CENTER = 0b0001,
+        BOTTOM_RIGHT = 0b0010,
+        CENTER_LEFT = 0b0100,
+        CENTER = 0b0101,
+        CENTER_RIGHT = 0b0110,
+        TOP_LEFT = 0b1000,
+        TOP_CENTER = 0b1001,
+        TOP_RIGHT = 0b1010,
+    }
+
+    public static class UIAnchorExtensions {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float X(this UIAnchor anchor, float extent) {
+
+            return ((((sbyte)anchor) & 0b0011) - 1) * extent;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Y(this UIAnchor anchor, float extent) {
+
+            return ((((sbyte)anchor) >> 2) - 1) * extent;
+        }
+    }
+
 
 }
