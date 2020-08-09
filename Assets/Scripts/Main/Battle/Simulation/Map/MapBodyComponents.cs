@@ -44,7 +44,9 @@ namespace Reactics.Battle.Map {
 
         public BlittableBool routeClosest;
 
+        public int currentlyTraveled;
 
+        public int maxTravel;
     }
     [WriteGroup(typeof(LocalToWorld))]
     public struct MapBodyPathFindingRoute : IBufferElementData {

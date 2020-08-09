@@ -90,6 +90,7 @@ namespace Reactics.Komota {
         //Then we can have one that relates to the damage calculations and such.
         //a lot of these should be effects.
         public Entity targetUnit;
+        public Point targetUnitPoint;
         public ushort currentPierce;
         public float travelTime;
         public bool delete;

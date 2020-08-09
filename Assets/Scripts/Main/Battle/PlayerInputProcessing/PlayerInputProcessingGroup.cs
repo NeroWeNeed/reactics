@@ -1,7 +1,7 @@
-using Reactics.Battle.Map;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
+using Unity.Collections;
+using Reactics.Battle.Map;
 
 namespace Reactics.Battle {
     /// <summary>
@@ -14,225 +14,222 @@ namespace Reactics.Battle {
 
     }
 
-
-
-    //Processes inputs and shoves them into systems for the game to actually do stuff.
-    //I left a lot of comments in here because I think they'll be helpful eventually maybe. just ignore most of them probably
     [UpdateInGroup(typeof(PlayerInputProcessingSystemGroup))]
-    [DisableAutoCreation]
-    public class PlayerInputProcessorSystem : SystemBase {
-        EntityCommandBufferSystem entityCommandBufferSystem;
+    [UpdateBefore(typeof(MainBattleSystemInputProcessor))]
+    public class CameraInputProcessor : SystemBase
+    {
+        protected override void OnUpdate() 
+        {
+            var inputData = GetSingleton<InputData>();
 
-        protected override void OnCreate() {
-            entityCommandBufferSystem = World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>();
-        }
-
-        protected override void OnUpdate() {
-            var mapData = GetSingleton<MapData>();
-
-            NativeArray<InputData> inputDataArray = new NativeArray<InputData>(1, Allocator.TempJob);
-            inputDataArray[0] = GetSingleton<InputData>();
-
-
-            NativeArray<UnitManagerData> unitManagerDataArray = new NativeArray<UnitManagerData>(1, Allocator.TempJob);
-            unitManagerDataArray[0] = GetSingleton<UnitManagerData>();
-
-            //Passes inputs related to camera movement.
             Entities.ForEach((ref CameraMovementData moveData, ref CameraRotationData rotData) =>
             {
                 //fiddling with the camera while it's rotating is a great way to break *literally* everything. please don't.
-                if (!rotData.rotating) {
-                    moveData.panMovementDirection = inputDataArray[0].pan;
-                    moveData.gridMovementDirection = inputDataArray[0].tileMovement;
-                    moveData.zoomDirectionAndStrength = inputDataArray[0].zoom;
-                    rotData.rotationDirection = inputDataArray[0].rotation;
+                if (!rotData.rotating)
+                {
+                    moveData.panMovementDirection = inputData.pan;
+                    moveData.gridMovementDirection = inputData.tileMovement;
+                    moveData.zoomDirectionAndStrength = inputData.zoom;
+                    rotData.rotationDirection = inputData.rotation;
                 }
             }).WithName("CameraInputsJob").Run();
-            if (inputDataArray[0].currentActionMap == ActionMaps.BattleControls) {
-                if (inputDataArray[0].select) {
-                    var cursorData = GetSingleton<CursorData>();
+        }
+    }
 
-                    //If no tiles are currently being commanded then obviously we're trying to select this one, if there's a unit there.
-                    if (!unitManagerDataArray[0].commanding) {
-                        //We are selecting a map body to begin issuing a command to. Only do so if the action meter is full.
-                        Entities.ForEach((Entity entity, ref MapBody mapBody, /*ref MoveTilesTag tag,*/ in UnitStatData unitData, in ActionMeterData actionMeter) =>
+    //Processes inputs and shoves them into systems for the game to actually do stuff.
+    [UpdateInGroup(typeof(PlayerInputProcessingSystemGroup))]
+    public class MainBattleSystemInputProcessor : SystemBase
+    {
+        protected override void OnUpdate() 
+        {
+            //woops it's singletons
+            var mapData = GetSingleton<MapData>();
+            var inputData = GetSingleton<InputData>();
+            var cursorData = GetSingleton<CursorData>();
+            var cameraMoveData = GetSingleton<CameraMovementData>();
+            
+            //I've been thinking of a way to do this as read relationships (with component tags and such) instead of the way it currently works.
+            //But I was taking way too long to test it out and try to implement it, so yeah. I'll probably look into that again at some point if it seems better.
+            //should probably split into separate system or w/e.
+            //this seems really *fucking* gross. but we'll see, I guess. now I'm starting to remember why this whole system is so goddamn ugly.
+            ComponentDataFromEntity<MapBody> mapBodyData = GetComponentDataFromEntity<MapBody>(true); //WAS FALSE. CHANGE BACK IF BREAK.
+            ComponentDataFromEntity<ActionMeterData> actionMeterData = GetComponentDataFromEntity<ActionMeterData>(true);
+            ComponentDataFromEntity<UnitStatData> unitDataData = GetComponentDataFromEntity<UnitStatData>(true);
+            Entities.ForEach((Entity entity, ref UnitManagerData unitManagerData, ref MapElement mapElement) =>
+            {
+                if (inputData.currentActionMap == ActionMaps.BattleControls)
+                {
+                if (inputData.select)
+                {
+                    if (!unitManagerData.commanding)
+                    {
+                        //Does a unit exist where we selected? If so, select it..
+                        if (GetComponent<MapCollisionState>(mapElement.value).value.TryGetValue(cursorData.currentHoverPoint, out Entity mapBodyEntity))
                         {
-                            //tag.toggle = true;
-                            if (actionMeter.Active && mapBody.point.ComparePoints(cursorData.currentHoverPoint)) {
-                                UnitManagerData unitManagerData = new UnitManagerData();
-                                unitManagerData.selectedUnit = entity;
-                                unitManagerData.commanding = true;
-                                unitManagerData.moveRange = unitData.Movement;
-                                unitManagerDataArray[0] = unitManagerData;
-                            }
-                        }).Run();
+                            UnitStatData unitData = unitDataData[mapBodyEntity];
+                            unitManagerData.selectedUnit = mapBodyEntity;
+                            unitManagerData.commanding = true;
+                            unitManagerData.moveRange = 4;//unitData.Movement;
+                        }
+                        //Not sure if map bodies can (or should) be other things, but if they can it'd be relatively easy to account for that here.
                     }
-                    else if (!unitManagerDataArray[0].moveTileSelected && !mapData.GetTile(cursorData.currentHoverPoint).Inaccessible) {
-                        //We are selecting a tile to move to. Make sure it's in range of our movement.
-                        Point currentPoint = GetComponentDataFromEntity<MapBody>(true)[unitManagerDataArray[0].selectedUnit].point;
+                    else if (!unitManagerData.moveTileSelected && !mapData.GetTile(cursorData.currentHoverPoint).Inaccessible)
+                    {
+                        //Attempt to set the move tile to the cursor position.
+                        Point currentPoint = mapBodyData[unitManagerData.selectedUnit].point;
                         Point movePoint = cursorData.currentHoverPoint;
-                        ushort moveRange = unitManagerDataArray[0].moveRange;
+                        ushort moveRange = unitManagerData.moveRange;
 
                         //Check if tile is in range, and set it if it is.
                         //we should make this a func or something.
-                        if (movePoint.Distance(currentPoint) < moveRange) {
+                        if (movePoint.Distance(currentPoint) < moveRange)
+                        {
                             //Set the move tile to this point and set moveReady to true.
-                            UnitManagerData unitManagerData = unitManagerDataArray[0];
                             unitManagerData.moveTile = movePoint;
                             unitManagerData.moveTileSelected = true;
-                            unitManagerDataArray[0] = unitManagerData;
 
-                            InputData inputData = inputDataArray[0];
+                            //InputData inputData = inputData;
                             inputData.currentActionMap = ActionMaps.CommandControls;
-                            inputDataArray[0] = inputData;
+                            //inputData = inputData;
                         }
                     }
-                    else if (!mapData.GetTile(cursorData.currentHoverPoint).Inaccessible) {
-                        Point currentPoint = GetComponentDataFromEntity<MapBody>(true)[unitManagerDataArray[0].selectedUnit].point;
-                        UnitManagerData unitManagerData = unitManagerDataArray[0];
-                        if (unitManagerDataArray[0].moveTile.InRange(cursorData.currentHoverPoint, unitManagerDataArray[0].effect.range) &&
-                            !mapData.GetTile(cursorData.currentHoverPoint).Inaccessible) {
-                            //The range is ok, so we should make sure now that the thing is targeting something it's allowed to
-                            if (unitManagerDataArray[0].moveTile.ComparePoints(cursorData.currentHoverPoint)) {
-                                //This could happen on commands that can affect self or others.
-                                if (unitManagerDataArray[0].effect.affectsSelf)
+                    else if (!mapData.GetTile(cursorData.currentHoverPoint).Inaccessible)
+                    {
+                        //Attempt to issue a command on this tile.
+                        Point currentPoint = mapBodyData[unitManagerData.selectedUnit].point;
+                        if (unitManagerData.moveTile.InRange(cursorData.currentHoverPoint, unitManagerData.effect.range) &&
+                            !mapData.GetTile(cursorData.currentHoverPoint).Inaccessible)
+                        {
+                            if (unitManagerData.moveTile.ComparePoints(cursorData.currentHoverPoint))
+                            {
+                                if (unitManagerData.effect.affectsSelf)
                                     unitManagerData.effectReady = true;
                                 else
                                     unitManagerData.effectReady = false;
                             }
-                            else if (unitManagerDataArray[0].effect.affectsTiles && unitManagerDataArray[0].effect.affectsAllies) {
-                                //Change when we can differentiate
+                            else if (unitManagerData.effect.affectsTiles && unitManagerData.effect.affectsAllies)
+                            {
+                                //Change when differentation possible
                                 unitManagerData.effectReady = true;
                             }
-                            else if (unitManagerDataArray[0].effect.affectsTiles && unitManagerDataArray[0].effect.affectsEnemies) {
-                                //Change when we can differentiate
+                            else if (unitManagerData.effect.affectsTiles && unitManagerData.effect.affectsEnemies) 
+                            {
+                                //Change when differentation possible
                                 unitManagerData.effectReady = true;
                             }
-                            else if (unitManagerDataArray[0].effect.affectsTiles && !unitManagerDataArray[0].effect.affectsAllies && !unitManagerDataArray[0].effect.affectsEnemies) {
-                                unitManagerData.effectReady = true;
-                                Entities.ForEach((Entity entity, ref MapBody mapBody, in UnitStatData unitData, /*ref MoveTilesTag tag,*/ in ActionMeterData actionMeter) =>
-                                {
+                            else //Covers only tiles, or only units
+                            {
+                                /*
+                                condensed version of below code, way less readable though so left it commented for now
+                                bool onlyAffectsTiles = true;
+                                if (!unitManagerData.effect.affectsTiles)
+                                    onlyAffectsTiles = false;
 
-                                    //TODO: Fix this so it works on current tile of selected mapbody
-                                    //In this case we're making sure there is not a mapbody here. if there is then we set it to false
-                                    if (cursorData.currentHoverPoint.ComparePoints(mapBody.point)) {
+                                if (GetComponent<MapCollisionState>(mapElement.value).value.TryGetValue(cursorData2.currentHoverPoint, out Entity mapBodyEntity))
+                                    unitManagerData.effectReady = !onlyAffectsTiles;
+                                else
+                                    unitManagerData.effectReady = onlyAffectsTiles;
+                                */
+
+                                if (GetComponent<MapCollisionState>(mapElement.value).value.TryGetValue(cursorData.currentHoverPoint, out Entity mapBodyEntity))
+                                {
+                                    //A map body is here, and that's bad, because a map body shouldn't be here if it only affects tiles.
+                                    if (unitManagerData.effect.affectsTiles && !unitManagerData.effect.affectsAllies && !unitManagerData.effect.affectsEnemies)
+                                        unitManagerData.effectReady = false;
+                                    else if (!unitManagerData.effect.affectsTiles)
+                                    {
+                                        unitManagerData.effectReady = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if (unitManagerData.effect.affectsTiles && !unitManagerData.effect.affectsAllies && !unitManagerData.effect.affectsEnemies)
+                                        unitManagerData.effectReady = true;
+                                    else if (!unitManagerData.effect.affectsTiles)
+                                    {
+                                        //enemy/ally differentiation here, probably.
                                         unitManagerData.effectReady = false;
                                     }
-                                }).Run();
-                            }
-                            else if (!unitManagerDataArray[0].effect.affectsTiles) {
-                                unitManagerData.effectReady = false;
-                                Entities.ForEach((Entity entity, ref MapBody mapBody, in UnitStatData unitData, /*ref MoveTilesTag tag,*/ in ActionMeterData actionMeter) =>
-                                {
-
-                                    if (cursorData.currentHoverPoint.ComparePoints(mapBody.point)) {
-                                        //If affects allies and this is an ally, cool.
-                                        //If affects enemies and this is an enemy, sick. (do the distinction later when we have that stuff.)
-                                        //Or maybe don't. Maybe just have an (affectsUnits) field.
-                                        if (unitManagerData.effect.affectsAllies || unitManagerData.effect.affectsEnemies) {
-                                            unitManagerData.targetedUnit = entity;
-                                            unitManagerData.effectReady = true;
-                                        }
-                                    }
-                                }).Run();
-                            }
-
-                            unitManagerDataArray[0] = unitManagerData;
-                            if (unitManagerDataArray[0].effectReady) {
-                                EntityManager.AddComponentData(unitManagerDataArray[0].selectedUnit, new FindingPathInfo
-                                {
-                                    //maxDistance = unitManagerDataArray[0].moveRange,
-                                    destination = unitManagerDataArray[0].moveTile,
-                                    speed = 5f
-                                });
-                                //this is where we'd want to get an effect somehow and like. put it there.
-                                EntityManager.AddComponentData(unitManagerDataArray[0].selectedUnit, new Reactics.Komota.Projectile
-                                {
-                                    effect = unitManagerDataArray[0].effect,
-                                    targetUnit = unitManagerDataArray[0].targetedUnit,
-                                });
-                                //This is temporary. normally we'd want to keep it as we'd be writing to the server here.
-                                //The server would then take the unit manager data, and if the checks went through, write these components to the entity.
-                                unitManagerDataArray[0] = new UnitManagerData();
+                                }
                             }
                         }
                     }
+                    if (unitManagerData.effectReady)
+                    {
+                        EntityManager.AddComponentData<FindingPathInfo>(unitManagerData.selectedUnit, new FindingPathInfo {
+                            destination = unitManagerData.moveTile,
+                            speed = 5f,
+                            maxElevationDifference = 1,
+                            currentlyTraveled = 1,
+                            maxTravel = unitManagerData.moveRange
+                        });
+                        //this is where we'd want to get an effect somehow and like. put it there.
+                        EntityManager.AddComponentData(unitManagerData.selectedUnit, new Reactics.Komota.Projectile {
+                            effect = unitManagerData.effect,
+                            targetUnit = unitManagerData.targetedUnit,
+                        });
+                        //This is temporary. normally we'd want to keep it as we'd be writing to the server here.
+                        //The server would then take the unit manager data, and if the checks went through, write these components to the entity.
+                        unitManagerData = new UnitManagerData();
+                    }
                 }
-            }
-            else if (inputDataArray[0].currentActionMap == ActionMaps.CommandControls) {
-                //Check if we got some movement input
-                //There's no menu entity atm so we're just doing it on the input manager itself... bleh.
-
-                //Absolutely a better way to do this (maybe just make a quick enum)
-                //Right now 1 = Move input, 2 = Command input
-                //NativeArray<int> selectedCommandType = new NativeArray<int>(1, Allocator.TempJob);
-                /*Entities.ForEach((ref CameraMovementData moveData) => 
+                else if (inputData.cancel) //Cancel input in Battle Controls
                 {
-                    moveData.CLAPTeleportPoint.x = moveData.cameraLookAtPoint.x;
-                    moveData.CLAPTeleportPoint.y = moveData.cameraLookAtPoint.z;
-                }).Schedule(inputDeps).Complete();*/
+                    //Case A: Pressed Cancel while choosing a tile to move to. In this case, we no longer want to command the unit.
+                    if (!unitManagerData.effectSelected)
+                    {
+                        unitManagerData = new UnitManagerData();
+                    }
+                    //Case B: Pressed cancel while choosing a tile to use the effect on.
+                    //In this case, move the camera back to the move tile, and "bring the menu back up."
+                    else
+                    {
+                        unitManagerData.effectSelected = false;
 
-                //The only time we could ever press select on the menu is if we're selecting a command or if we're selecting a thing to stop moving.
-                //So that's pretty nice.
+                        inputData.currentActionMap = ActionMaps.CommandControls;
 
-                //Currently this runs without burst because of the ECB being used.
-                //I read somewhere that they're trying to fix that so I'm leaving it for now.
-                //Also I think this code is temporary, and it's written this way because I predicted that it might have to be a job based on teh UI.
-                //If I was wrong then it's easy enough to un-job and just add the component normally.
-                //Or if they never get to bursting the ecb then I can just set a flag, pass in a native array, and get the result like that, then add the component.
-                //var ecb = entityCommandBufferSystem.CreateCommandBuffer().ToConcurrent();
-                //ComponentDataFromEntity<MoveTilesTag> tag = GetComponentDataFromEntity<MoveTilesTag>(false);
-                Entities.ForEach((ref InputData inputDataData) =>
+                        //This signals to the camera to return back to the move tile we selected.
+                        cameraMoveData.returnPoint = unitManagerData.moveTile;
+                        cameraMoveData.returnToPoint = true;
+                    }
+                }
+                }
+                else if (inputData.currentActionMap == ActionMaps.CommandControls)
                 {
-                    InputData inputData = inputDataArray[0];
+                    /*
+                    Most of this is fake menu stuff. so I don't care if it disappears, really. Coincidentally this is the sort of stuff you'll be fiddling with, I assume.
+                    */
                     if (inputData.menuMovementDirection.y > 0)
                         inputData.menuOption += 1;
                     else if (inputData.menuMovementDirection.y < 0)
                         inputData.menuOption -= 1;
 
-                    UnitManagerData unitManagerData = unitManagerDataArray[0];
-
-                    /*if (tag.Exists(unitManagerData.selectedUnit))
+                    //if (tag.Exists(unitManagerData.selectedUnit))
+                    //(code block)
+                    if (inputData.select)
                     {
-                        //this is a neat feature but delete it...
-                        //actually what if this is perfect and makes it so moving other blocks works... hmm....
-                        //keep it for now.
-                        MoveTilesTag thing = new MoveTilesTag{toggle = true};
-                        tag[unitManagerData.selectedUnit] = thing;
-                    }*/
-                    if (inputData.select) {
-                        if (inputData.CurrentMenuOption() == 0) {
-                            /*
-                            Soon the server should be handling this isntead.
-                            The way I see it that goes like this:
-                            here we write the server component, and keep commanding set to true, and return to battle controls...
-                            The server checks on stuff, and if it's all good, it sets commanding to false, and executes the action (by adding the mbt and command components.)
-                            Now that that's all said and done, we return to neutral. 
-                            If it fails, then it just *doesn't* add those components and does nothing, so here it's as if we never pressed the button. Seems simple enough..?
+                        if (inputData.CurrentMenuOption() == 0)
+                        {
+                                //Soon the server should be handling this isntead.
+                                EntityManager.AddComponentData(unitManagerData.selectedUnit, new FindingPathInfo {
+                                    destination = unitManagerData.moveTile,
+                                    speed = 5f,
+                                    maxElevationDifference = 1,
+                                    currentlyTraveled = 1,
+                                    maxTravel = unitManagerData.moveRange
+                                });
 
-                            Or maybe it's more like...
-                            We add all three components HERE
-                            And if the server decides that we shouldn't have added those two components it removes them and then rolls back to when we never did that as if it iddn't occur.
-                            Probably more likely but we'll have to read about rollback some more...
-                            */
-                            EntityManager.AddComponentData(unitManagerDataArray[0].selectedUnit, new FindingPathInfo
-                            {
-                                //maxDistance = unitManagerDataArray[0].moveRange,
-                                destination = unitManagerDataArray[0].moveTile,
-                                speed = 5f
-                            });
+                                inputData.currentActionMap = ActionMaps.BattleControls;
 
-                            inputData.currentActionMap = ActionMaps.BattleControls;
-
-                            //This is incredibly temporary, this guy right here. He won't be here.
-                            unitManagerData = new UnitManagerData();
+                                //remove when server maybe? maybe not.
+                                unitManagerData = new UnitManagerData();
                         }
-                        else {
+                        else
+                        {
                             //For now this means we're selecting an action.
                             //Normally we would like. do something here regarding getting the action from wherever it's stored.
                             unitManagerData.effectSelected = true;
-                            unitManagerData.effect = new Reactics.Komota.Effect
-                            {
+                            unitManagerData.effect = new Reactics.Komota.Effect {
                                 physicalDmg = 105,
                                 magicDmg = 15,
                                 trueDOT = 1,
@@ -255,51 +252,27 @@ namespace Reactics.Battle {
                                 movementModifier = -4
                             };
                             inputData.currentActionMap = ActionMaps.BattleControls;
-                            //selectedCommandType[0] = 2;
                         }
                     }
-                    unitManagerDataArray[0] = unitManagerData;
-                    inputDataArray[0] = inputData;
-                }).WithStructuralChanges().Run();
-            }
-
-            if (inputDataArray[0].cancel && unitManagerDataArray[0].commanding) {
-                UnitManagerData unitManagerData = unitManagerDataArray[0];
-                InputData inputData = inputDataArray[0];
-
-                if (inputData.currentActionMap == ActionMaps.CommandControls) {
-                    inputData.currentActionMap = ActionMaps.BattleControls;
-                    if (!unitManagerData.moveTileSelected) {
-                        unitManagerData.commanding = false;
-                    }
-                    else {
-                        unitManagerData.moveTileSelected = false;
-                    }
-                }
-                else //We were in battle controls
-                {
-                    if (!unitManagerData.effectSelected) {
-                        unitManagerData = new UnitManagerData();
-                    }
-                    else {
-                        unitManagerData.effectSelected = false;
-                        inputData.currentActionMap = ActionMaps.CommandControls;
-                        Entities.ForEach((ref CameraMovementData moveData) =>
+                    else if (inputData.cancel) //Cancel Input for Command Controls
+                    {
+                        inputData.currentActionMap = ActionMaps.BattleControls;
+                        //Case A: No longer relevant, actually, I think. Leaving it in for now just in case, but... yeah.
+                        if (!unitManagerData.moveTileSelected)
                         {
-                            if (unitManagerDataArray[0].moveTileSelected)
-                                moveData.returnPoint = unitManagerDataArray[0].moveTile;
-                            moveData.returnToPoint = true;
-                        }).Run();
+                            unitManagerData.commanding = false;
+                        }
+                        //Case B: Was selecting an effect to use. In this case, go back to selecting a tile to move to.
+                        else
+                        {
+                            unitManagerData.moveTileSelected = false;
+                        }
                     }
                 }
+            }).WithStructuralChanges().Run();
 
-                inputDataArray[0] = inputData;
-                unitManagerDataArray[0] = unitManagerData;
-            }
-            SetSingleton<InputData>(inputDataArray[0]);
-            SetSingleton<UnitManagerData>(unitManagerDataArray[0]);
-            inputDataArray.Dispose();
-            unitManagerDataArray.Dispose();
+            SetSingleton<InputData>(inputData);
+            SetSingleton<CameraMovementData>(cameraMoveData);
         }
     }
 }

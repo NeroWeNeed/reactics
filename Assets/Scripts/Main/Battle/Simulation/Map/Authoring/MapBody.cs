@@ -20,8 +20,8 @@ namespace Reactics.Battle.Map.Authoring {
 
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {
             if (dstManager.TryGetComponent<Parent>(entity, out Parent parent) && dstManager.HasComponent<MapData>(parent.Value)) {
-                EntityQuery unitManagerQuery = dstManager.CreateEntityQuery(typeof(UnitManagerData));
-                var unitManagerArray = unitManagerQuery.ToEntityArray(Allocator.TempJob); //there should only be one... maybe two actually. for right now this is fine.
+                //EntityQuery unitManagerQuery = dstManager.CreateEntityQuery(typeof(UnitManagerData));
+                //var unitManagerArray = unitManagerQuery.ToEntityArray(Allocator.TempJob); //there should only be one... maybe two actually. for right now this is fine.
                 dstManager.AddComponentData(entity, new Reactics.Battle.Map.MapBody
                 {
                     point = position,
@@ -31,26 +31,24 @@ namespace Reactics.Battle.Map.Authoring {
                 dstManager.AddComponentData(entity, new MapElement { value = parent.Value });
                 //dstManager.RemoveComponent<Translation>(entity);
                 conversionSystem.ConfigureEditorRenderData(entity, gameObject, false);
-                dstManager.AddComponentData(entity, new FindingPathInfo
+                /*dstManager.AddComponentData(entity, new FindingPathInfo
                 {
                     destination = new Point(10, 4),
                     speed = 8,
                     maxElevationDifference = 1
+                });*/
+                dstManager.AddComponentData(entity, new ActionMeterData{
+                    /*rechargeRate = 10f,
+                    chargeable = true,
+                    charge = 100f*/
                 });
-                /*                 dstManager.AddComponentData(entity, new ActionMeter{
-                                    rechargeRate = 10f,
-                                    chargeable = true,
-                                    charge = 100f
-                                });
-                                dstManager.AddComponentData(entity, new UnitCommand{
-                                    unitManagerEntity = unitManagerArray[0]
-                                });
-                                dstManager.AddComponentData(entity, unit.CreateComponent()); */
+                dstManager.AddComponentData(entity, new UnitStatData {
+                    
+                });
+                //dstManager.AddComponentData(entity, unit.CreateComponent()); 
                 //dstManager.AddComponentData(entity, new MoveTilesTag());
                 dstManager.AddBuffer<HighlightTile>(entity);
                 dstManager.AddBuffer<Reactics.Komota.EffectBuffer>(entity);
-
-                unitManagerArray.Dispose();
             }
         }
     }

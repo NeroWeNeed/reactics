@@ -10,7 +10,7 @@ public class ConvertCameraSystem : MonoBehaviour, IConvertGameObjectToEntity {
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {
         /*EntityQuery query = EntityManager.CreateEntityQuery(typeof(CameraMovementData));
             NativeArray<Entity> entities = query.ToEntityArray(Allocator.TempJob);*/
-        /*         EntityQuery query = dstManager.CreateEntityQuery(typeof(MapData));
+                 EntityQuery query = dstManager.CreateEntityQuery(typeof(MapData));
                 var mapData = query.GetSingleton<MapData>();
 
                 float mapTileSize = 1f;
@@ -19,6 +19,7 @@ public class ConvertCameraSystem : MonoBehaviour, IConvertGameObjectToEntity {
                 float3 startingCameraPosition = startingCameraLookAtPoint + math.normalize(new float3(1,1,0)) * cameraOffsetValue; //temp values sorryyyyy
                 float2 startingCameraTeleportPoint = new float2(startingCameraLookAtPoint.x, startingCameraLookAtPoint.z);
                 //dstManager.AddComponentData(entity, new CopyTransformToGameObject());
+                dstManager.AddComponentObject(entity, transform);
                 dstManager.AddComponentData(entity, new CameraMovementData {
                         speed = 5f,
                         offsetValue = cameraOffsetValue,
@@ -42,6 +43,6 @@ public class ConvertCameraSystem : MonoBehaviour, IConvertGameObjectToEntity {
                     });
                     dstManager.AddComponentData(entity, new ControlSchemeData{
                         //currentControlScheme = ControlSchemes.Gamepad
-                    }); */
+                    }); 
     }
 }

@@ -12,5 +12,4 @@ public struct CursorData : IComponentData
     public float3 rayDirection;
     public float rayMagnitude;
     public float tileSize;
-    //public string controlScheme; //may be better as a shared component... also apparently strings aren't allowed? weird.
 }

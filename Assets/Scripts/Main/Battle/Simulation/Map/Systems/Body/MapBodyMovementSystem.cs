@@ -18,7 +18,7 @@ namespace Reactics.Battle.Map
         {
             var ecb = commandBufferSystem.CreateCommandBuffer();
             var time = Time.DeltaTime;
-            Entities.WithAll<FindingPathInfo>().ForEach((Entity entity, ref MapBody body, ref DynamicBuffer<MapBodyPathFindingRoute> route, in MapElement mapElement) =>
+            Entities.ForEach((Entity entity, ref MapBody body, ref DynamicBuffer<MapBodyPathFindingRoute> route, ref FindingPathInfo pathInfo, in MapElement mapElement) =>
             {
                 var valid = true;
                 if (route.Length > 0)
@@ -37,6 +37,7 @@ namespace Reactics.Battle.Map
                                 if (!GetComponent<MapCollisionState>(mapElement.value).value.TryGetValue(routeStep.next, out Entity collidableEntity) || collidableEntity.Equals(entity))
                                 {
                                     body.point = routeStep.next;
+                                    pathInfo.currentlyTraveled++;
                                 }
                                 else
                                 {
@@ -49,6 +50,13 @@ namespace Reactics.Battle.Map
                                 body.point = routeStep.next;
                         }
 
+                        /*if (pathInfo.currentlyTraveled >= pathInfo.maxTravel) seems dumb idk I think this is handled elsewhere
+                        {
+                            valid = false;
+                            route.Clear();
+                            break;
+                        }*/
+                        
                         if (next >= 1)
                         {
                             increment += next - 1;

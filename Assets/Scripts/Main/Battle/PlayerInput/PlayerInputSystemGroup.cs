@@ -33,10 +33,10 @@ namespace Reactics.Battle
 
             //Check action map so we know which inputs we're going to be dealing with
             InputData inputData = GetSingleton<InputData>();
+            CursorData cursorData = GetSingleton<CursorData>();
 
             Entities.ForEach((ref ControlSchemeData controlSchemeData) => //maybe this is really the way to go...
             {
-                
                 //CAN WE DO THE CHECK FOR CHANGES THING HERE?
                 controlSchemeData.currentControlScheme = controlScheme;
             });
@@ -71,6 +71,11 @@ namespace Reactics.Battle
                         cleanedHoverInput.x = 1f;
                     else if (hoverInput.x <= screenEdgeLength)
                         cleanedHoverInput.x = -1f;
+
+                    //raycast stuff. maybe this goes with the othe rthing? idk. for now just make it raycast, yaeh..?
+                    cursorData.rayOrigin = mousePositionRayCast.origin;
+                    cursorData.rayDirection = mousePositionRayCast.direction;
+                    SetSingleton<CursorData>(cursorData);
                 }
                 else if (playerInput.currentControlScheme == "Gamepad")
                 {

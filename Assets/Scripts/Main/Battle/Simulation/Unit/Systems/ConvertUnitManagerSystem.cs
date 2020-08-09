@@ -9,9 +9,14 @@ using UnityEngine;
 [RequiresEntityConversion]
 public class ConvertUnitManagerSystem : MonoBehaviour, IConvertGameObjectToEntity {
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {
+        EntityQuery mapQuery = dstManager.CreateEntityQuery(typeof(MapRenderInfo));
+        var mapEntity = mapQuery.GetSingletonEntity();
         dstManager.AddComponentData(entity, new UnitManagerData
         {
             commanding = false
+        });
+        dstManager.AddComponentData(entity, new MapElement {
+            value = mapEntity
         });
 #if UNITY_EDITOR
         dstManager.SetName(entity, "UnitManager");
