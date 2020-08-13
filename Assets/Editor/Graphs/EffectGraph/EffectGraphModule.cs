@@ -2,18 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Reactics.Battle;
-using Reactics.Battle.Map;
-using Reactics.Commons;
+using Reactics.Core.Battle;
+using Reactics.Core.Commons;
+using Reactics.Core.Effects;
+using Reactics.Core.Map;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor.Graph {
-    public class EffectGraphModule : BaseObjectGraphNodeModule<EffectGraphNode>, IObjectGraphPostDeserializerCallback, IObjectGraphPreSerializerCallback, IObjectGraphPostSerializerCallback, IObjectGraphValidator {
+namespace Reactics.Core.Editor.Graph {
+    public class EffectGraphModule : BaseObjectGraphNodeModule<EffectGraphNode>, IObjectGraphPostDeserializerCallback, IObjectGraphPreSerializerCallback, IObjectGraphPostSerializerCallback, IVariableProvider {
         public static readonly Type[] SuperTypes = { typeof(IEffect<Point>), typeof(IEffect<MapBodyDirection>), typeof(IEffect<MapBodyTarget>) };
         public const string PortClassName = "effect-graph-node-port";
+
+        public Type[] VariableTypes { get; } = new Type[] { typeof(MapBodyTarget), typeof(Point) };
         static EffectGraphModule() {
             ObjectGraphNodePort.RegisterColor(typeof(IEffect<Point>), Color.cyan);
             ObjectGraphNodePort.RegisterColor(typeof(IEffect<MapBodyDirection>), Color.yellow);

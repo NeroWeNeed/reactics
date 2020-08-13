@@ -1,12 +1,11 @@
 using System;
-using Reactics.Battle.Map;
+using Reactics.Core.Commons;
+using Reactics.Core.Map;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor
-{
-    public class PointField : BindableElement, INotifyValueChanged<Point>
-    {
+namespace Reactics.Core.Editor {
+    public class PointField : BindableElement, INotifyValueChanged<Point> {
         private Label labelElement;
 
         private VisualElement fields;
@@ -20,20 +19,16 @@ namespace Reactics.Editor
         {
             get => _value; set
             {
-                if (value.Equals(_value))
-                {
-                    if (panel != null)
-                    {
+                if (value.Equals(_value)) {
+                    if (panel != null) {
 
-                        using (ChangeEvent<Point> evt = ChangeEvent<Point>.GetPooled(_value, value))
-                        {
+                        using (ChangeEvent<Point> evt = ChangeEvent<Point>.GetPooled(_value, value)) {
                             evt.target = this;
                             SetValueWithoutNotify(value);
                             SendEvent(evt);
                         }
                     }
-                    else
-                    {
+                    else {
                         SetValueWithoutNotify(value);
                     }
                 }
@@ -41,16 +36,13 @@ namespace Reactics.Editor
             }
         }
 
-        public void SetValueWithoutNotify(Point newValue)
-        {
+        public void SetValueWithoutNotify(Point newValue) {
             _value = newValue;
         }
-        public PointField() : this("Point", Point.zero)
-        {
+        public PointField() : this("Point", Point.zero) {
 
         }
-        public PointField(string label, Point value)
-        {
+        public PointField(string label, Point value) {
             this.labelElement = new Label(label);
             this.labelElement.style.minWidth = 150;
             this.labelElement.style.paddingLeft = 1;
@@ -91,20 +83,17 @@ namespace Reactics.Editor
         }
         public PointField(string label) : this(label, Point.zero) { }
         public PointField(Point value) : this("Point", value) { }
-        private void ConfigureField(IntegerField field, Func<ushort, Point, Point> writer)
-        {
+        private void ConfigureField(IntegerField field, Func<ushort, Point, Point> writer) {
             field.style.minWidth = 0;
             field.style.flexGrow = 1;
             field.style.flexDirection = FlexDirection.Row;
             field.AddToClassList("unity-composite-field__field");
             field.RegisterValueChangedCallback((evt) =>
             {
-                if (evt.newValue >= 0 && evt.newValue <= ushort.MaxValue)
-                {
+                if (evt.newValue >= 0 && evt.newValue <= ushort.MaxValue) {
                     writer((ushort)evt.newValue, value);
                 }
-                else
-                {
+                else {
                     if (evt.newValue > ushort.MaxValue)
                         field.SetValueWithoutNotify(ushort.MaxValue);
                     else if (evt.newValue < 0)
@@ -115,13 +104,11 @@ namespace Reactics.Editor
         }
 
         public new class UxmlFactory : UxmlFactory<PointField, UxmlTraits> { }
-        public new class UxmlTraits : BindableElement.UxmlTraits
-        {
+        public new class UxmlTraits : BindableElement.UxmlTraits {
             UxmlIntAttributeDescription m_XValue = new UxmlIntAttributeDescription { name = "x" };
             UxmlIntAttributeDescription m_YValue = new UxmlIntAttributeDescription { name = "y" };
             UxmlStringAttributeDescription m_Label = new UxmlStringAttributeDescription { name = "label", defaultValue = "Point" };
-            public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc)
-            {
+            public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc) {
                 base.Init(ve, bag, cc);
                 var f = (PointField)ve;
                 var x = m_XValue.GetValueFromBag(bag, cc);

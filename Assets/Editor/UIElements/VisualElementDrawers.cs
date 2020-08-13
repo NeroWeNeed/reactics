@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using Reactics.Commons;
-using Reactics.Commons.Reflection;
-using Reactics.Editor.Graph;
+using Reactics.Core.Commons;
+using Reactics.Core.Commons.Reflection;
+using Reactics.Core.Editor.Graph;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
@@ -13,7 +13,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor {
+namespace Reactics.Core.Editor {
     public static class VisualElementDrawers {
         private static Dictionary<Type, Type> providers;
         private static bool initialized = false;

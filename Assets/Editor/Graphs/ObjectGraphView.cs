@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
     public class ObjectGraphView : GraphView {
-
         public const string USS_GUID = "256dcec08179d5a41bbf70ec00648654";
         private ObjectGraphSearchWindow searchWindow;
         private readonly Func<Vector2, Vector2> screenToWorldConverter;
@@ -29,13 +29,14 @@ namespace Reactics.Editor.Graph {
             }
         }
 
-        public ObjectGraphVariableBlackboard VariableBlackboard { get; private set; }
-        public Vector2 LastMousePosition { get; private set; }
+        public ObjectGraphInspector Inspector { get; private set; }
 
+        public Vector2 LastMousePosition { get; private set; }
         private readonly JsonObjectGraphSerializer jsonObjectGraphSerializer = new JsonObjectGraphSerializer();
 
         public ObjectGraphView(ObjectGraphModelEditor editor, Func<Vector2, Vector2> screenToWorldConverter, params IObjectGraphModule[] modules) {
             this.ModelEditor = editor;
+
             this.modules = modules;
             Modules = Array.AsReadOnly(modules);
             MasterNode = CreateMasterNode(this.modules);
@@ -57,20 +58,28 @@ namespace Reactics.Editor.Graph {
             this.RegisterCallback<MouseMoveEvent>((evt) => LastMousePosition = contentViewContainer.WorldToLocal(contentViewContainer.parent.ChangeCoordinatesTo(contentViewContainer.parent, evt.mousePosition)));
             SetupSearchWindow();
             SetupVariableBlackboard();
+
             serializeGraphElements = OnSerializeElements;
             unserializeAndPaste = OnDeserializeElements;
             //graphViewChanged = OnGraphViewChange;
             //SetupUndo();
 
+
         }
 
         public void RefreshInspector(SerializedObject obj) {
-            VariableBlackboard?.contentContainer?.Clear();
+
+            Inspector?.ClearContents();
             foreach (var module in modules.OfType<IInspectorConfigurator>()) {
                 var element = module.CreateInspectorSection(obj, this);
-                if (VariableBlackboard == null)
-                    SetupVariableBlackboard();
-                VariableBlackboard.Add(element);
+                Inspector.AddInspector(element);
+            }
+            foreach (var module in modules.OfType<IVariableProvider>()) {
+
+                foreach (var variableContainerType in module.VariableTypes) {
+                    Debug.Log(variableContainerType);
+                    Inspector.AddVariables(variableContainerType);
+                }
             }
         }
         public string OnSerializeElements(IEnumerable<GraphElement> elements) {
@@ -137,8 +146,8 @@ namespace Reactics.Editor.Graph {
             };
         }
         public void SetupVariableBlackboard() {
-            var blackboard = new ObjectGraphVariableBlackboard(this);
-            VariableBlackboard = blackboard;
+            var blackboard = new ObjectGraphInspector(this);
+            Inspector = blackboard;
             this.Add(blackboard);
         }
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter) {

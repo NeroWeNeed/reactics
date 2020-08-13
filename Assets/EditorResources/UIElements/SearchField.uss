@@ -1,0 +1,39 @@
+#search-field-container > #unity-search {
+flex-grow: 0;
+flex-shrink: 0;
+}
+#search-field-container > #unity-cancel {
+flex-grow: 0;
+flex-shrink: 0;
+}
+#search-field-container > TextField {
+flex-grow: 1;
+flex-shrink: 1;
+padding: 0px 14px 0px 0px;
+text-overflow: ellipsis;
+-unity-text-overflow-position: end;
+overflow: hidden;
+white-space: nowrap; 
+}
+#search-field-container > TextField > #unity-text-input {
+    border-width: 0;
+}
+#search-field-container {
+    flex-grow: 1;
+    flex-shrink: 0;
+    padding: 1px 2px 0px 2px;
+    margin: 0px 0px 0px 0px;
+}
+#search-field {
+        align-items: center;
+    margin: 0px 3px 0px 3px;
+}
+#search-field Label {
+    padding: 2px 2px 0px 1px;
+    margin: 0px 4px 0px 4px;
+}
+.property-field #search-label {
+    margin: 2px 4px 2px 4px;
+    padding: 1px 2px 2px 2px;
+    min-width: 150px;
+}

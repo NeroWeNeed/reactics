@@ -2,14 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Reactics.Battle;
-using Reactics.Battle.Map;
+using Reactics.Core.Battle;
+using Reactics.Core.Commons;
+using Reactics.Core.Effects;
+using Reactics.Core.Map;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
 
     public class TargetFilterGraphModule : BaseObjectGraphNodeModule<TargetFilterGraphNode>, IObjectGraphPostSerializerCallback {
 

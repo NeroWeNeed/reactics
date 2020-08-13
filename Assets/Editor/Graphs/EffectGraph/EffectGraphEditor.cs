@@ -1,7 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using Reactics.Battle;
+using Reactics.Core.Battle;
+using Reactics.Core.Effects;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.Experimental.GraphView;
@@ -9,7 +10,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
 
 
     public class EffectGraphEditor : ObjectGraphEditor<EffectAsset> {

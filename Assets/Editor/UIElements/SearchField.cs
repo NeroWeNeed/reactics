@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor {
+namespace Reactics.Core.Editor {
 
     public abstract class SearchField<TObject> : BindableElement, INotifyValueChanged<TObject> {
 

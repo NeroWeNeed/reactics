@@ -1,12 +1,12 @@
-using System.Linq;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.UIElements;
-using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor {
+namespace Reactics.Core.Editor {
     public static class UIToolkitUtility {
         public static void ConfigureToolbarButtons(this EditorWindow editorWindow, Toolbar toolbar) {
             ConfigureToolbarButtons(source: editorWindow, toolbar);

@@ -2,7 +2,7 @@ using System;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
     public struct NodeReference : IObjectGraphNodeValueCopyCallback {
 
         public string nodeId;

@@ -1,0 +1,32 @@
+{
+    "name": "Reactics.Core.Effects.Test",
+    "references": [
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:8e2f79f713f5a47dcb69903037d4bc0e",
+        "GUID:8fe01134beaec4b108c4c1a154e71dc2",
+        "GUID:38534e0960efef0429175f1ce8b67688",
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:9e24947de15b9834991c9d8411ea37cf",
+        "GUID:84651a3751eca9349aac36a66bba901b",
+        "GUID:69448af7b92c7f342b298e06a37122aa",
+        "GUID:be3d8c7a6da7d544f9397464c466d0e4",
+        "GUID:ffeac1e8c197d954591d4d6ac66fc940",
+        "GUID:c010dc3ba12f6b64481fc9a72c10c1c8"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

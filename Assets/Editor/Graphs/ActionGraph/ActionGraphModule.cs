@@ -1,5 +1,5 @@
 using System.Linq;
-using Reactics.Battle;
+using Reactics.Core.Battle;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.UIElements;
@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
     public class ActionGraphModule : IObjectGraphModule, IInspectorConfigurator {
         public const string TARGET_FILTER_ASSET_PATH = "targetFilterAsset";
 

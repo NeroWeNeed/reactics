@@ -1,6 +1,6 @@
 using System;
-using Reactics.Battle;
-using Reactics.Battle.Unit;
+using Reactics.Core.Battle;
+using Reactics.Core.Effects;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.Callbacks;
@@ -8,7 +8,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
     public class ActionGraphEditor : ObjectGraphEditor<ActionAsset> {
         [OnOpenAsset(1)]
         public static bool OnOpen(int instanceId, int line) => OnOpen<ActionGraphEditor>(instanceId, line, (asset) => $"Action Graph ({asset.name})");

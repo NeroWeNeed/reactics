@@ -4,7 +4,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
     public class ObjectGraphSearchWindow : ScriptableObject, ISearchWindowProvider {
         public ObjectGraphView graphView;
         public IObjectGraphNodeProvider[] providers;

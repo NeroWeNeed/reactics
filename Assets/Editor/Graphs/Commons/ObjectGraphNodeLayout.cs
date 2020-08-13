@@ -1,10 +1,8 @@
 using UnityEngine;
-namespace Reactics.Editor.Graph
-{
+namespace Reactics.Core.Editor.Graph {
 
 
-    public class ObjectGraphNodeLayout : ScriptableObject
-    {
+    public class ObjectGraphNodeLayout : ScriptableObject {
         public Rect[] layout;
     }
 }

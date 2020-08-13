@@ -2,10 +2,8 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor
-{
-    public class FileSelector : VisualElement, INotifyValueChanged<string>
-    {
+namespace Reactics.Core.Editor {
+    public class FileSelector : VisualElement, INotifyValueChanged<string> {
         public readonly string defaultDirectory;
         public FileSelectorMode Mode { get; set; }
         private TextField textFieldElement;
@@ -22,59 +20,50 @@ namespace Reactics.Editor
             get => _value;
             set
             {
-                if (value != _value)
-                {
-                    if (panel != null)
-                    {
+                if (value != _value) {
+                    if (panel != null) {
 
-                        using (ChangeEvent<string> evt = ChangeEvent<string>.GetPooled(_value, value))
-                        {
+                        using (ChangeEvent<string> evt = ChangeEvent<string>.GetPooled(_value, value)) {
                             evt.target = this;
                             SetValueWithoutNotify(value);
                             textFieldElement.SetValueWithoutNotify(value);
                             SendEvent(evt);
                         }
                     }
-                    else
-                    {
+                    else {
                         SetValueWithoutNotify(value);
-                        
+
                         textFieldElement.SetValueWithoutNotify(value);
                     }
                 }
             }
         }
-        public FileSelector(FileSelectorMode mode,string extension, string defaultDirectory = "Assets/Resources")
-        {
+        public FileSelector(FileSelectorMode mode, string extension, string defaultDirectory = "Assets/Resources") {
             this.Mode = mode;
             this.defaultDirectory = defaultDirectory;
             this.extension = extension;
             Initialize();
         }
 
-        private void Initialize()
-        {
+        private void Initialize() {
             buttonElement = new Button
             {
                 text = "..."
             };
             buttonElement.clicked += OnFileSelect;
             textFieldElement = new TextField();
-            
+
             this.Add(textFieldElement);
             Add(buttonElement);
             textFieldElement.style.flexGrow = 1;
             this.style.flexDirection = FlexDirection.Row;
         }
-        private void OnFileSelect()
-        {
-            switch (Mode)
-            {
+        private void OnFileSelect() {
+            switch (Mode) {
                 case FileSelectorMode.SAVE_FILE:
 
                     var result = EditorUtility.SaveFilePanel("Save As", currentDirectory, defaultName, extension);
-                    if (result.Length != 0)
-                    {
+                    if (result.Length != 0) {
                         currentDirectory = result.Substring(0, result.LastIndexOf('/'));
                         Debug.Log(result);
                         value = result;
@@ -88,13 +77,11 @@ namespace Reactics.Editor
                     break;
             }
         }
-        public enum FileSelectorMode
-        {
+        public enum FileSelectorMode {
             SAVE_FILE, LOAD_FILE, SAVE_DIRECTORY, LOAD_DIRECTORY
         }
 
-        public void SetValueWithoutNotify(string newValue)
-        {
+        public void SetValueWithoutNotify(string newValue) {
             _value = newValue;
         }
     }

@@ -3,7 +3,7 @@ using NUnit.Framework;
 using Unity.Entities;
 using UnityEngine;
 
-namespace Reactics.Tests {
+namespace Reactics.Core.Tests {
     public abstract class ECSTestFixture {
         protected World World { get; private set; }
         protected InitializationSystemGroup InitializationSystemGroup { get; private set; }

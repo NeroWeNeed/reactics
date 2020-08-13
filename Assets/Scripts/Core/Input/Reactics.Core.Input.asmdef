@@ -1,0 +1,21 @@
+{
+    "name": "Reactics.Core.Input",
+    "references": [
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:8819f35a0fc84499b990e90a4ca1911f",
+        "GUID:a2a04a26467bf1f428b7531771aa5b28",
+        "GUID:c010dc3ba12f6b64481fc9a72c10c1c8",
+        "GUID:22ff3aa772110624d87519928124fe89"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

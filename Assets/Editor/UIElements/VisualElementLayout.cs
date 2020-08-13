@@ -1,10 +1,10 @@
 using System;
-using Reactics.Editor.Graph;
+using Reactics.Core.Editor.Graph;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor {
+namespace Reactics.Core.Editor {
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public abstract class VisualElementLayout : Attribute {

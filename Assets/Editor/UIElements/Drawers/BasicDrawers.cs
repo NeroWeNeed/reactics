@@ -1,11 +1,11 @@
 using System;
-using Reactics.Commons;
+using Reactics.Core.Commons;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor {
+namespace Reactics.Core.Editor {
 
     [CustomVisualElementProvider(typeof(sbyte))]
     public class SignedByteDrawer : NumericTextValueDrawer<sbyte> { public SignedByteDrawer() : base((string value, out sbyte result) => sbyte.TryParse(value, IntegerPointStyle, System.Globalization.CultureInfo.InvariantCulture, out result)) { } }

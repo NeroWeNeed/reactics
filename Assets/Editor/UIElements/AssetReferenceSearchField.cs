@@ -12,7 +12,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.U2D;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor {
+namespace Reactics.Core.Editor {
 
     public class AssetReferenceSearchField : SearchField<AssetReference> {
         internal const string IReferenceQualfiedName = "UnityEditor.AddressableAssets.Settings.IReferenceEntryData, Unity.Addressables.Editor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";

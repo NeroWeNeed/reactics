@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Reactics.Commons;
+using Reactics.Core.Commons;
 using UnityEngine;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
     public abstract class ObjectGraphNodeValueConverter {
         public abstract object ToAliasUnTyped(object original, object data);
         public abstract object ToOriginalUnTyped(object alias, object data);

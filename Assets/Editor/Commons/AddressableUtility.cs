@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
-using Reactics.Battle;
-using Reactics.Commons;
+using Reactics.Core.Battle;
+using Reactics.Core.Commons;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
-namespace Reactics.Editor {
+namespace Reactics.Core.Editor {
 
     public static class AddressableUtility {
         public static AssetReference GetAssetReference(this SerializedProperty property) {

@@ -7,7 +7,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
     public interface IObjectGraphNodeProvider : IObjectGraphModule {
         ObjectGraphSerializer<SerializedObject> Serializer { get; }
         ObjectGraphNode Create(string id, Type type, Rect layout);
@@ -59,10 +59,11 @@ namespace Reactics.Editor.Graph {
             var node = Create(provider, id, entry.type, layout);
             node.Entry = entry;
             return node;
+
         }
         public static ObjectGraphNode Create(this IObjectGraphNodeProvider provider, ObjectGraphModel.Entry entry, Rect layout) => provider.Create(Guid.NewGuid().ToString(), entry, layout);
 
-        public static ObjectGraphNode[] CollectRoots(this IObjectGraphNodeProvider provider, ObjectGraphView graphView) => provider.CollectNodes(graphView).Where((n) => n.IsRoot).ToArray();
+        public static ObjectGraphNode[] CollectRoots(this IObjectGraphNodeProvider provider, ObjectGraphView graphView) => provider.CollectNodes(graphView).Where((n) => n?.IsRoot == true).ToArray();
 
         public static TNode[] CollectRoots<TNode>(this IObjectGraphNodeProvider<TNode> provider, ObjectGraphView graphView) where TNode : ObjectGraphNode, new() => provider.CollectNodes(graphView).OfType<TNode>().Where((n) => n.IsRoot).ToArray();
         public static bool Deserialize(this IObjectGraphNodeProvider provider, SerializedObject target, ObjectGraphView graphView) {

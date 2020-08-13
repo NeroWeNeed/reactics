@@ -1,10 +1,11 @@
 using System;
-using Reactics.Battle;
+using Reactics.Core.Battle;
+using Reactics.Core.Effects;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
 
     public class TargetFilterGraphNode : ObjectGraphNode {
         public TargetFilterGraphNode(object source, string guid) : base(source, guid) {

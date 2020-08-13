@@ -7,7 +7,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
 
 
     public abstract class BaseObjectGraphNodeModule<TNode> : IObjectGraphNodeProvider<TNode>, IMasterNodeConfigurator, IObjectGraphValidator where TNode : ObjectGraphNode, new() {

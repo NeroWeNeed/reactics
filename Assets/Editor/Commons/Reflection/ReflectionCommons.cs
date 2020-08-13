@@ -8,7 +8,7 @@ using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace Reactics.Commons.Reflection {
+namespace Reactics.Core.Commons.Reflection {
     public static class EmbeddedLocalizedReferenceExtensions {
         public static void ValidateEmbeddedLocalizedReferences(this UnityEngine.Object self, string identifier) {
             var subAssets = AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GetAssetPath(self));

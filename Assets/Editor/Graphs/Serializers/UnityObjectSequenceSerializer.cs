@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
     public class UnityObjectGraphSequenceSerializer : ObjectGraphSerializer<SerializedObject> {
 
         public string dataPropertyPath;

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Reactics.Commons;
+using Reactics.Core.Commons;
 using UnityEditor;
 using UnityEngine;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
     public abstract class ObjectGraphSerializer<TOutput> {
 
         public virtual bool CanSerialize(IObjectGraphNodeProvider provider, ObjectGraphView graphView, out string message) {

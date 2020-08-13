@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Reactics.Commons;
+using Reactics.Core.Commons;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static UnityEditor.Experimental.GraphView.Port;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
     [CustomVisualElementProvider(typeof(NodeReference))]
     [EmbeddedOutputLayout]
     //TODO: Edge not deleted when port deleted.

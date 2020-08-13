@@ -17,12 +17,6 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 10af95eeb3c36a94ebbc427f85e58226
   m_SerializeEntries:
-  - m_GUID: 121a4480892ccac4aba9c6846296bd50
-    m_Address: Assets/ResourceData/Actions/Action.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
   - m_GUID: 58a65f22bffd8794e81aa573fac1893a
     m_Address: MapMaterial
     m_ReadOnly: 0
@@ -35,15 +29,14 @@ MonoBehaviour:
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}
     m_TargetAsset: {fileID: 0}
-  - m_GUID: adb6db678538307478f69ffd52e1890c
-    m_Address: Assets/ResourceData/Effects/Effect 1.asset
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - effects
-    m_MainAsset: {fileID: 11400000, guid: adb6db678538307478f69ffd52e1890c, type: 2}
-    m_TargetAsset: {fileID: 11400000, guid: adb6db678538307478f69ffd52e1890c, type: 2}
   - m_GUID: de2653c853685954aa19545317bb167f
     m_Address: Assets/ResourceData/TargetFilters/TargetFilter.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
+  - m_GUID: e49e054ede5a6cd4bbc999cfdbdcf98e
+    m_Address: Assets/ResourceData/Effects/Effect.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}

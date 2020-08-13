@@ -4,13 +4,13 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Reactics.Commons;
-using Reactics.Commons.Reflection;
+using Reactics.Core.Commons;
+using Reactics.Core.Commons.Reflection;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
 
 
     public class ObjectGraphModel : ScriptableObject {

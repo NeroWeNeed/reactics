@@ -1,12 +1,13 @@
 using System;
 using System.Linq;
-using Reactics.Battle;
-using Reactics.Battle.Map;
+using Reactics.Core.Battle;
+using Reactics.Core.Effects;
+using Reactics.Core.Map;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Editor.Graph {
+namespace Reactics.Core.Editor.Graph {
     public class EffectGraphNode : ObjectGraphNode {
 
 
