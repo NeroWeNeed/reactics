@@ -40,6 +40,7 @@ namespace Reactics.Core.UI {
         public UnityEngine.Camera MainCamera { get => cameras["MainCamera"]; }
         public UnityEngine.Camera UICamera { get => cameras[UI_CAMERA_TAG]; }
         public bool Dirty { get; set; }
+        private EntityQuery cameraQuery;
         protected override void OnCreate() {
 
             ScreenWidth.Data = Screen.width;
@@ -49,6 +50,7 @@ namespace Reactics.Core.UI {
             ScreenDpi.Data = Screen.dpi;
             ScreenOrientation.Data = Screen.orientation;
             Dirty = true;
+            cameraQuery = GetEntityQuery(ComponentType.ReadOnly<UnityEngine.Camera>(), ComponentType.ReadOnly<CameraTag>());
         }
         protected override void OnStartRunning() {
             InitCameras();
@@ -56,13 +58,25 @@ namespace Reactics.Core.UI {
         private void InitCameras() {
 
             this.cameras.Clear();
-            var cameraData = new List<CameraData>();
-            EntityManager.GetAllUniqueSharedComponentData(cameraData);
-            foreach (var data in cameraData) {
-                if (data.camera == null)
-                    continue;
-                this.cameras[data.tag] = data.camera;
+            var chunks = cameraQuery.CreateArchetypeChunkArray(Allocator.Temp);
+            var tagHandle = GetSharedComponentTypeHandle<CameraTag>();
+            var cameraHandle = EntityManager.GetComponentTypeHandle<UnityEngine.Camera>(true);
+
+            foreach (var chunk in chunks) {
+                var cameras = chunk.GetManagedComponentAccessor(cameraHandle, EntityManager);
+                var tags = chunk.GetSharedComponentData(tagHandle, EntityManager);
+                for (int i = 0; i < cameras.Length; i++) {
+                    this.cameras[tags] = cameras[i];
+                }
             }
+
+
+            /*             EntityManager.GetAllUniqueSharedComponentData(cameraData);
+                        foreach (var data in cameraData) {
+                            if (data.camera == null)
+                                continue;
+                            this.cameras[data.tag] = data.camera;
+                        } */
 
         }
         protected override void OnUpdate() {

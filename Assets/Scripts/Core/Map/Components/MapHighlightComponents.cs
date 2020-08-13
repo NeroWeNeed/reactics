@@ -9,9 +9,11 @@ using Unity.Rendering;
 using UnityEngine;
 namespace Reactics.Core.Map {
 
+    //TODO: Store highlight/collision data in chunk.
     /// <summary>
     /// Component for tracking highlighted tiles
     /// </summary>
+    [ChunkSerializable]
     public struct MapHighlightState : IComponentData, IMapHighlightInfo {
         /// <summary>
         /// Bit flag that holds which layers are dirty.

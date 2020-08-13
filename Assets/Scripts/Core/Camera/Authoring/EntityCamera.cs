@@ -6,11 +6,8 @@ namespace Reactics.Core.Camera.Authoring {
     [RequireComponent(typeof(UnityEngine.Camera))]
     public class EntityCamera : MonoBehaviour, IConvertGameObjectToEntity {
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {
-            dstManager.AddSharedComponentData(entity, new CameraData
-            {
-                camera = GetComponent<UnityEngine.Camera>(),
-                tag = this.tag
-            });
+            dstManager.AddComponentObject(entity, GetComponent<UnityEngine.Camera>());
+            dstManager.AddSharedComponentData(entity, new CameraTag { Value = this.tag });
 
         }
     }

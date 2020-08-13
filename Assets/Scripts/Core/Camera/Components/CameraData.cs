@@ -4,27 +4,41 @@ using Unity.Entities;
 using UnityEngine;
 
 namespace Reactics.Core.Camera {
-    public struct CameraData : ISharedComponentData, IEquatable<CameraData> {
-        public UnityEngine.Camera camera;
-        public string tag;
+    /*     public struct CameraData : ISharedComponentData, IEquatable<CameraData> {
+            public UnityEngine.Camera camera;
 
+            public override bool Equals(object obj) {
+                if (obj is CameraData data) {
+                    return Equals(data);
+                }
+                return false;
+            }
+
+            public bool Equals(CameraData other) {
+                return EqualityComparer<UnityEngine.Camera>.Default.Equals(camera, other.camera);
+            }
+
+            public override int GetHashCode() {
+                return -1929491842 + EqualityComparer<UnityEngine.Camera>.Default.GetHashCode(camera);
+            }
+        } */
+
+    public struct CameraTag : ISharedComponentData, IEquatable<CameraTag> {
+        public string Value;
         public override bool Equals(object obj) {
-            if (obj is CameraData data) {
+            if (obj is CameraTag data) {
                 return Equals(data);
             }
             return false;
         }
 
-        public bool Equals(CameraData other) {
-            return EqualityComparer<UnityEngine.Camera>.Default.Equals(camera, other.camera) &&
-                   tag == other.tag;
+        public bool Equals(CameraTag other) {
+            return Value == other.Value;
         }
 
         public override int GetHashCode() {
-            int hashCode = 586511377;
-            hashCode = hashCode * -1521134295 + EqualityComparer<UnityEngine.Camera>.Default.GetHashCode(camera);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(tag);
-            return hashCode;
+            return -1573750901 + EqualityComparer<string>.Default.GetHashCode(Value);
         }
+        public static implicit operator string(CameraTag cameraTag) => cameraTag.Value;
     }
 }

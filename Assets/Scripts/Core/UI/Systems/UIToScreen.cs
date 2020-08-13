@@ -20,14 +20,16 @@ namespace Reactics.Core.UI {
             screenInfoSystem = World.GetOrCreateSystem<UIScreenInfoSystem>();
             resolvedBoxChangeQuery = GetEntityQuery(ComponentType.ReadOnly<UIResolvedBox>(), ComponentType.ReadWrite<LocalToWorld>(), ComponentType.ReadOnly<LocalToScreen>());
 
-            cameraChangeQuery = GetEntityQuery(ComponentType.ReadOnly<LocalToWorld>(), ComponentType.ReadOnly<CameraData>());
+            cameraChangeQuery = GetEntityQuery(ComponentType.ReadOnly<LocalToWorld>(), ComponentType.ReadOnly<UnityEngine.Camera>());
             cameraChangeQuery.AddChangedVersionFilter(typeof(LocalToWorld));
 
             //RequireSingletonForUpdate<CameraData>();
 
             resolvedBoxChangeQuery.SetChangedVersionFilter(ComponentType.ReadOnly<UIResolvedBox>());
+            RequireForUpdate(resolvedBoxChangeQuery);
 
         }
+
         protected override void OnUpdate() {
             new Layoutjob
             {

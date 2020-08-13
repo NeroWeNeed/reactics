@@ -4,6 +4,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 namespace Reactics.Core.Map {
     [Serializable]
+    [ChunkSerializable]
     public struct MapCollisionState : IComponentData {
         public UnsafeHashMap<Point, Entity> value;
     }
