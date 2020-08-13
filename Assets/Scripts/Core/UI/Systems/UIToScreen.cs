@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Reactics.Core.Camera;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -11,18 +12,23 @@ namespace Reactics.Core.UI {
     [UpdateAfter(typeof(UIMeshBuilderSystem))]
     public class UIToScreenSystem : SystemBase {
         private UIScreenInfoSystem screenInfoSystem;
-        private EntityQuery query;
+        private EntityQuery resolvedBoxChangeQuery;
+        private EntityQuery cameraChangeQuery;
+
         protected override void OnCreate() {
+
             screenInfoSystem = World.GetOrCreateSystem<UIScreenInfoSystem>();
-            query = GetEntityQuery(ComponentType.ReadOnly<UIResolvedBox>(), ComponentType.ReadWrite<LocalToWorld>(), ComponentType.ReadOnly<LocalToScreen>());
+            resolvedBoxChangeQuery = GetEntityQuery(ComponentType.ReadOnly<UIResolvedBox>(), ComponentType.ReadWrite<LocalToWorld>(), ComponentType.ReadOnly<LocalToScreen>());
+
+            cameraChangeQuery = GetEntityQuery(ComponentType.ReadOnly<LocalToWorld>(), ComponentType.ReadOnly<CameraData>());
+            cameraChangeQuery.AddChangedVersionFilter(typeof(LocalToWorld));
+
             //RequireSingletonForUpdate<CameraData>();
 
-            query.SetChangedVersionFilter(ComponentType.ReadOnly<UIResolvedBox>());
-            RequireForUpdate(query);
+            resolvedBoxChangeQuery.SetChangedVersionFilter(ComponentType.ReadOnly<UIResolvedBox>());
+
         }
         protected override void OnUpdate() {
-
-
             new Layoutjob
             {
                 forward = screenInfoSystem.UICamera.transform.forward,
@@ -34,7 +40,7 @@ namespace Reactics.Core.UI {
                 cameraSize = new float2(screenInfoSystem.UICamera.orthographicSize * screenInfoSystem.UICamera.aspect, screenInfoSystem.UICamera.orthographicSize),
                 localToWorldHandle = GetComponentTypeHandle<LocalToWorld>(false),
                 resolvedBoxHandle = GetComponentTypeHandle<UIResolvedBox>(true)
-            }.Schedule(query, Dependency).Complete();
+            }.Schedule(resolvedBoxChangeQuery, Dependency).Complete();
 
         }
         public struct Layoutjob : IJobChunk {
@@ -72,4 +78,7 @@ namespace Reactics.Core.UI {
         }
 
     }
+
+
+
 }

@@ -1,7 +1,8 @@
 using Reactics.Core.Camera;
 using Unity.Entities;
 using UnityEngine;
-namespace Reactics.Core.UI.Author {
+namespace Reactics.Core.Camera.Authoring {
+
     [RequireComponent(typeof(UnityEngine.Camera))]
     public class EntityCamera : MonoBehaviour, IConvertGameObjectToEntity {
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {

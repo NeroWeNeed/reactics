@@ -35,7 +35,7 @@ namespace Reactics.Core.UI {
         public static SharedStatic<int> ScreenResolutionWidth => StateContext.ScreenResolutionWidth;
         public static SharedStatic<int> ScreenResolutionHeight => StateContext.ScreenResolutionHeight;
         public static readonly int UI_LAYER = LayerMask.NameToLayer("UI");
-        public static readonly string UI_CAMERA_TAG = "UICamera";
+        public const string UI_CAMERA_TAG = "UICamera";
         private readonly Dictionary<string, UnityEngine.Camera> cameras = new Dictionary<string, UnityEngine.Camera>();
         public UnityEngine.Camera MainCamera { get => cameras["MainCamera"]; }
         public UnityEngine.Camera UICamera { get => cameras[UI_CAMERA_TAG]; }

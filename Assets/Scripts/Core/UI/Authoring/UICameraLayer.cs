@@ -1,4 +1,5 @@
 using System.Linq;
+using Reactics.Core.Camera.Authoring;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
@@ -28,7 +29,7 @@ namespace Reactics.Core.UI.Author {
             uiCameraLayerGO.AddComponent<EntityCamera>();
 
             var mainCamera = this.GetComponent<UnityEngine.Camera>();
-            uiCameraLayer.tag = "UICamera";
+            uiCameraLayer.tag = UIScreenInfoSystem.UI_CAMERA_TAG;
             uiCameraLayer.depth = 0;
             uiCameraLayer.orthographic = true;
             uiCameraLayer.orthographicSize = Screen.currentResolution.height / 2f;

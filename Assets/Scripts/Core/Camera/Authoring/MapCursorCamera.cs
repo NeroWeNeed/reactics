@@ -7,7 +7,8 @@ using UnityEngine;
 namespace Reactics.Core.Camera.Authoring {
 
     [RequiresEntityConversion]
-    public class MapCamera : MonoBehaviour, IConvertGameObjectToEntity {
+    [RequireComponent(typeof(EntityCamera))]
+    public class MapCursorCamera : MonoBehaviour, IConvertGameObjectToEntity {
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {
             /*EntityQuery query = EntityManager.CreateEntityQuery(typeof(CameraMovementData));
                 NativeArray<Entity> entities = query.ToEntityArray(Allocator.TempJob);*/
@@ -19,7 +20,7 @@ namespace Reactics.Core.Camera.Authoring {
             float3 startingCameraLookAtPoint = new float3(mapData.Length * mapTileSize * 0.5f, 0, mapData.Width * mapTileSize * 0.5f);
             float3 startingCameraPosition = startingCameraLookAtPoint + math.normalize(new float3(1, 1, 0)) * cameraOffsetValue; //temp values sorryyyyy
             float2 startingCameraTeleportPoint = new float2(startingCameraLookAtPoint.x, startingCameraLookAtPoint.z);
-            //dstManager.AddComponentData(entity, new CopyTransformToGameObject());
+            dstManager.AddComponentData(entity, new CopyTransformToGameObject());
             dstManager.AddComponentObject(entity, transform);
             dstManager.AddComponentData(entity, new CameraMovementData
             {

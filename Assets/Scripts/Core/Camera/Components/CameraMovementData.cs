@@ -18,5 +18,6 @@ namespace Reactics.Core.Camera {
         public float upperZoomLimit;
         public Point returnPoint;
         public bool returnToPoint;
+
     }
 }
