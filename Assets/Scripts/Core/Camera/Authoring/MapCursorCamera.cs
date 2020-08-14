@@ -21,6 +21,7 @@ namespace Reactics.Core.Camera.Authoring {
             float3 startingCameraPosition = startingCameraLookAtPoint + math.normalize(new float3(1, 1, 0)) * cameraOffsetValue; //temp values sorryyyyy
             float2 startingCameraTeleportPoint = new float2(startingCameraLookAtPoint.x, startingCameraLookAtPoint.z);
             dstManager.AddComponentData(entity, new CopyTransformToGameObject());
+
             dstManager.AddComponentObject(entity, transform);
             dstManager.AddComponentData(entity, new CameraMovementData
             {

@@ -8,29 +8,28 @@ using Unity.Transforms;
 using UnityEngine;
 
 namespace Reactics.Core.UI {
+
     [UpdateInGroup(typeof(UISystemGroup))]
     [UpdateAfter(typeof(UIMeshBuilderSystem))]
     public class UIToScreenSystem : SystemBase {
         private UIScreenInfoSystem screenInfoSystem;
         private EntityQuery resolvedBoxChangeQuery;
         private EntityQuery cameraChangeQuery;
+        private EntityQuery cameraQuery;
 
         protected override void OnCreate() {
-
             screenInfoSystem = World.GetOrCreateSystem<UIScreenInfoSystem>();
             resolvedBoxChangeQuery = GetEntityQuery(ComponentType.ReadOnly<UIResolvedBox>(), ComponentType.ReadWrite<LocalToWorld>(), ComponentType.ReadOnly<LocalToScreen>());
-
-            cameraChangeQuery = GetEntityQuery(ComponentType.ReadOnly<LocalToWorld>(), ComponentType.ReadOnly<UnityEngine.Camera>());
-            cameraChangeQuery.AddChangedVersionFilter(typeof(LocalToWorld));
-
-            //RequireSingletonForUpdate<CameraData>();
-
             resolvedBoxChangeQuery.SetChangedVersionFilter(ComponentType.ReadOnly<UIResolvedBox>());
-            RequireForUpdate(resolvedBoxChangeQuery);
-
+            cameraChangeQuery = GetEntityQuery(ComponentType.ReadOnly<LocalToWorld>(), ComponentType.ReadOnly<CameraReference>(), ComponentType.ReadOnly<CameraTag>());
+            cameraChangeQuery.SetChangedVersionFilter(ComponentType.ReadOnly<LocalToWorld>());
+            cameraChangeQuery.SetSharedComponentFilter(new CameraTag { Value = UIScreenInfoSystem.UI_CAMERA_TAG });
+            cameraQuery = GetEntityQuery(ComponentType.ReadOnly<CameraReference>(), ComponentType.ReadOnly<CameraTag>());
+            cameraQuery.SetSharedComponentFilter(new CameraTag { Value = UIScreenInfoSystem.UI_CAMERA_TAG });
         }
 
         protected override void OnUpdate() {
+
             new Layoutjob
             {
                 forward = screenInfoSystem.UICamera.transform.forward,
@@ -41,9 +40,9 @@ namespace Reactics.Core.UI {
                 drawDistance = screenInfoSystem.UICamera.nearClipPlane,
                 cameraSize = new float2(screenInfoSystem.UICamera.orthographicSize * screenInfoSystem.UICamera.aspect, screenInfoSystem.UICamera.orthographicSize),
                 localToWorldHandle = GetComponentTypeHandle<LocalToWorld>(false),
-                resolvedBoxHandle = GetComponentTypeHandle<UIResolvedBox>(true)
+                resolvedBoxHandle = GetComponentTypeHandle<UIResolvedBox>(true),
+                lastSystemVersion = cameraChangeQuery.CalculateChunkCount() > 0 ? 0 : LastSystemVersion
             }.Schedule(resolvedBoxChangeQuery, Dependency).Complete();
-
         }
         public struct Layoutjob : IJobChunk {
             public float3 forward;
@@ -57,7 +56,10 @@ namespace Reactics.Core.UI {
 
             [ReadOnly]
             public ComponentTypeHandle<UIResolvedBox> resolvedBoxHandle;
+            public uint lastSystemVersion;
             public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex) {
+                if (!chunk.DidChange(resolvedBoxHandle, lastSystemVersion))
+                    return;
                 var ltw = chunk.GetNativeArray(localToWorldHandle);
                 var rbh = chunk.GetNativeArray(resolvedBoxHandle);
                 for (int i = 0; i < ltw.Length; i++) {

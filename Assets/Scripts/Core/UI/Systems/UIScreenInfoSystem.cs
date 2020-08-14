@@ -41,6 +41,9 @@ namespace Reactics.Core.UI {
         public UnityEngine.Camera UICamera { get => cameras[UI_CAMERA_TAG]; }
         public bool Dirty { get; set; }
         private EntityQuery cameraQuery;
+
+        private EntityQuery uiCameraQuery;
+        //TODO: Update UI Camera if Screen Resolution changes.
         protected override void OnCreate() {
 
             ScreenWidth.Data = Screen.width;
@@ -50,7 +53,9 @@ namespace Reactics.Core.UI {
             ScreenDpi.Data = Screen.dpi;
             ScreenOrientation.Data = Screen.orientation;
             Dirty = true;
-            cameraQuery = GetEntityQuery(ComponentType.ReadOnly<UnityEngine.Camera>(), ComponentType.ReadOnly<CameraTag>());
+            cameraQuery = GetEntityQuery(ComponentType.ReadOnly<CameraReference>(), ComponentType.ReadOnly<CameraTag>());
+            uiCameraQuery = GetEntityQuery(ComponentType.ReadOnly<CameraReference>(), ComponentType.ReadOnly<CameraTag>());
+            uiCameraQuery.SetSharedComponentFilter(new CameraTag { Value = UI_CAMERA_TAG });
         }
         protected override void OnStartRunning() {
             InitCameras();
@@ -58,17 +63,16 @@ namespace Reactics.Core.UI {
         private void InitCameras() {
 
             this.cameras.Clear();
-            var chunks = cameraQuery.CreateArchetypeChunkArray(Allocator.Temp);
+            var chunks = cameraQuery.CreateArchetypeChunkArray(Allocator.TempJob);
             var tagHandle = GetSharedComponentTypeHandle<CameraTag>();
-            var cameraHandle = EntityManager.GetComponentTypeHandle<UnityEngine.Camera>(true);
+            var cameraHandle = GetSharedComponentTypeHandle<CameraReference>();
 
             foreach (var chunk in chunks) {
-                var cameras = chunk.GetManagedComponentAccessor(cameraHandle, EntityManager);
-                var tags = chunk.GetSharedComponentData(tagHandle, EntityManager);
-                for (int i = 0; i < cameras.Length; i++) {
-                    this.cameras[tags] = cameras[i];
-                }
+                var camera = chunk.GetSharedComponentData(cameraHandle, EntityManager);
+                var tag = chunk.GetSharedComponentData(tagHandle, EntityManager);
+                this.cameras[tag] = camera.Value;
             }
+            chunks.Dispose();
 
 
             /*             EntityManager.GetAllUniqueSharedComponentData(cameraData);
@@ -99,6 +103,8 @@ namespace Reactics.Core.UI {
             ScreenResolutionWidth.Data = newScreenResolutionWidth;
             ScreenResolutionHeight.Data = newScreenResolutionHeight;
             if (Dirty) {
+
+
                 Entities.ForEach((ref ScreenInfo screenInfo) =>
                 {
                     screenInfo.screen = new Unity.Mathematics.int2(newScreenWidth, newScreenHeight);

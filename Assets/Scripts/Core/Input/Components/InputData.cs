@@ -4,7 +4,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 namespace Reactics.Core.Input {
 
-
+    //Todo: Break up InputData component 
     [GenerateAuthoringComponent]
     public struct InputData : IComponentData {
         public ActionMaps currentActionMap;

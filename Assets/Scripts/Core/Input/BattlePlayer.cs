@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Users;
 namespace Reactics.Core.Input {
+    //TODO: Compact into a system. put playerinput data into a component. You can reference the camere with the CameraReference component, and the type with the CameraTag component.
+
     [RequireComponent(typeof(UnityEngine.InputSystem.PlayerInput))]
     public class BattlePlayer : MonoBehaviour {
         private static BattlePlayer _instance;
@@ -23,7 +25,9 @@ namespace Reactics.Core.Input {
             input = new Controls();
             camera = UnityEngine.Camera.main;
             playerInput = GetComponent<UnityEngine.InputSystem.PlayerInput>();
+
             input.Enable();
+
         }
 
         private void OnDestroy() {

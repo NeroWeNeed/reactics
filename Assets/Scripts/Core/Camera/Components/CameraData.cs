@@ -23,6 +23,24 @@ namespace Reactics.Core.Camera {
             }
         } */
 
+    public struct CameraReference : ISharedComponentData, IEquatable<CameraReference> {
+        public UnityEngine.Camera Value;
+        public override bool Equals(object obj) {
+            if (obj is CameraReference data) {
+                return Equals(data);
+            }
+            return false;
+        }
+
+        public bool Equals(CameraReference other) {
+            return EqualityComparer<UnityEngine.Camera>.Default.Equals(Value, other.Value);
+        }
+
+        public override int GetHashCode() {
+            return -1584136870 + EqualityComparer<UnityEngine.Camera>.Default.GetHashCode(Value);
+        }
+    }
+
     public struct CameraTag : ISharedComponentData, IEquatable<CameraTag> {
         public string Value;
         public override bool Equals(object obj) {

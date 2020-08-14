@@ -7,10 +7,14 @@ using UnityEngine.InputSystem;
 
 namespace Reactics.Core.Input {
     //Clean up inputs to a readable format for the PlayerInputProcessorSystem.
+    //TODO: Consider breaking up into system groups for each ActionMap, filter with a sharedcomponent holding current action map with SetSharedComponentFilter.
+    //Store old version of input state to compare to newer poll in systems to determine whether or not to write to input components. This way systems looking for changes on input components can be reactive.
+
     [UpdateInGroup(typeof(InputSystemGroup))]
     public class InputInterpreterSystem : ComponentSystem {
         protected override void OnUpdate() {
             InputSystem.Update();
+
             if (BattlePlayer.instance == null)
                 return;
             //TODO: Check if just setting the battleplayer.instance saves time (does calling battleplayer.instance like this result in a call every time..? probably.)
@@ -35,6 +39,7 @@ namespace Reactics.Core.Input {
                 //Player inputs
                 //input.BattleControls.Hover.actionMap.name; Here's a way to check the action map, apparently~
                 bool cancelTileInput = input.BattleControls.CancelTile.triggered;
+
                 Vector2 hoverInput = input.BattleControls.Hover.ReadValue<Vector2>();
                 Vector2 tileMovementInput = input.BattleControls.TileMovement.ReadValue<Vector2>();
                 float cameraZoomInput = input.BattleControls.CameraZoom.ReadValue<float>();
