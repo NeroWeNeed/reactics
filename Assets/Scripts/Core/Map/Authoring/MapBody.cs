@@ -23,7 +23,7 @@ namespace Reactics.Core.Map.Authoring {
                 dstManager.AddComponentData(entity, new Core.Map.MapBody
                 {
                     point = position,
-                    anchor = new Anchor3D(0, 1, 0)
+                    anchor = new Anchor(0, 1, 0)
                 });
                 dstManager.AddComponent<MapCollidableData>(entity);
                 dstManager.AddComponentData(entity, new MapElement { value = parent.Value });

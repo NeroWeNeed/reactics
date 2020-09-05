@@ -8,7 +8,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public class ActionGraphEditor : ObjectGraphEditor<ActionAsset> {
         [OnOpenAsset(1)]
         public static bool OnOpen(int instanceId, int line) => OnOpen<ActionGraphEditor>(instanceId, line, (asset) => $"Action Graph ({asset.name})");

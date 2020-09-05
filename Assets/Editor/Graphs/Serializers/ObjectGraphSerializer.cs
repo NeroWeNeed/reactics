@@ -4,10 +4,11 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Reactics.Core.Commons;
+using Reactics.Core.Effects;
 using UnityEditor;
 using UnityEngine;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public abstract class ObjectGraphSerializer<TOutput> {
 
         public virtual bool CanSerialize(IObjectGraphNodeProvider provider, ObjectGraphView graphView, out string message) {
@@ -28,25 +29,27 @@ namespace Reactics.Core.Editor.Graph {
         object[] OnPreDeserialize(SerializedObject obj, ObjectGraphView graphview, object[] data);
     }
     public interface IObjectGraphPostDeserializerCallback {
-        void OnPostDeserialize(SerializedObject obj, ObjectGraphView graphview, ref SortedDictionary<string, ObjectGraphModel.Entry> entries);
+        void OnPostDeserialize(SerializedObject obj, ObjectGraphView graphview, ref SortedDictionary<string, ObjectGraphModel.NodeEntry> entries);
     }
 
     public struct ObjectGraphSerializerPayload {
         public ObjectGraphView graphView;
         public List<Entry> entries;
+        public List<ObjectGraphVariable> variables;
+        public List<VariableOperationSequence> variableOperations;
         public struct Entry {
             public string key;
             public object data;
-            public ObjectGraphModel.Entry entry;
+            public ObjectGraphModel.NodeEntry entry;
             public ObjectGraphNode node;
 
-            public Entry(string key, object data, ObjectGraphModel.Entry entry, ObjectGraphNode node) {
+            public Entry(string key, object data, ObjectGraphModel.NodeEntry entry, ObjectGraphNode node) {
                 this.key = key;
                 this.data = data;
                 this.entry = entry;
                 this.node = node;
             }
-            public Entry(Entry old, object data, ObjectGraphModel.Entry entry, ObjectGraphNode node) {
+            public Entry(Entry old, object data, ObjectGraphModel.NodeEntry entry, ObjectGraphNode node) {
                 this.key = old.key;
                 this.data = data;
                 this.entry = entry;
@@ -57,18 +60,18 @@ namespace Reactics.Core.Editor.Graph {
 
     public class ObjectGraphSerializationPayload {
         public ObjectGraphNode[] nodes;
-        public ObjectGraphModel.Entry[] entries;
+        public ObjectGraphModel.NodeEntry[] entries;
         public string[] keys;
         public object[] data;
         public ObjectGraphSerializationPayload(int length) {
             this.nodes = new ObjectGraphNode[length];
-            this.entries = new ObjectGraphModel.Entry[length];
+            this.entries = new ObjectGraphModel.NodeEntry[length];
             this.keys = new string[length];
             this.data = new object[length];
         }
         public ObjectGraphSerializationPayload(string[] keys) {
             this.nodes = new ObjectGraphNode[keys.Length];
-            this.entries = new ObjectGraphModel.Entry[keys.Length];
+            this.entries = new ObjectGraphModel.NodeEntry[keys.Length];
             this.keys = keys;
             this.data = new object[keys.Length];
         }

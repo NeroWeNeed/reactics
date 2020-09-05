@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement>
+        <uie:PropertyField label="Asset Path" binding-path="outputPath" name="output-path" />
+        <uie:PropertyField label="Asset Name" binding-path="outputName" name="output-name" />
+        <ui:Toggle label="Generate on Reload" value="true" binding-path="generateOnReload" />
+        <ui:VisualElement style="flex-direction: row; flex-grow: 1; flex-shrink: 0;">
+            <ui:Button text="Generate" display-tooltip-when-elided="True" name="generate" style="flex-grow: 1;" />
+            <ui:Button text="Edit" display-tooltip-when-elided="True" name="edit" style="flex-grow: 1;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

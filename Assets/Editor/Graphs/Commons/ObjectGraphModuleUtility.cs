@@ -7,7 +7,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public static class ObjectGraphModuleUtility {
         public static bool TryGetTargetType(Type targetType, Type inspectionType, Type[] types, out Type result) {
             if (inspectionType == null) {

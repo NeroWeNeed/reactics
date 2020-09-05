@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public class UnityObjectGraphSequenceSerializer : ObjectGraphSerializer<SerializedObject> {
 
         public string dataPropertyPath;
@@ -57,22 +57,22 @@ namespace Reactics.Core.Editor.Graph {
             int index = 0;
             foreach (var kv in entries) {
                 nodes[index] = provider.Create(kv.Key, kv.Value, layout == null ? default : layout.GetArrayElementAtIndex(index).rectValue);
-                graphView.ModelEditor.SetEntry(nodes[index], kv.Value);
-                nodes[index].ModelEditor = graphView.ModelEditor;
+                graphView.Model.SetEntry(nodes[index].Id, kv.Value);
                 graphView.AddElement(nodes[index]);
                 index++;
             }
 
+
             foreach (var node in nodes) {
-                node.Entry = entries[node.viewDataKey];
-                node.SyncWithEntry();
+                node.Refresh();
+
             }
             graphView.Validate();
             result = target;
             return true;
 
         }
-        public static SortedDictionary<string, ObjectGraphModel.Entry> DeserializeEntries(object[] data, ObjectGraphView graphView) {
+        public static SortedDictionary<string, ObjectGraphModel.NodeEntry> DeserializeEntries(object[] data, ObjectGraphView graphView) {
             var ids = new string[data.Length];
             var entries = new ObjectGraphSerializerPayload.Entry[data.Length];
             for (int i = 0; i < data.Length; i++) {
@@ -93,11 +93,12 @@ namespace Reactics.Core.Editor.Graph {
                 entries = entries.ToList()
             };
 
-            var result = new SortedDictionary<string, ObjectGraphModel.Entry>();
+            var result = new SortedDictionary<string, ObjectGraphModel.NodeEntry>();
             for (int i = 0; i < payload.entries.Count; i++) {
-                result[payload.entries[i].key] = ObjectGraphModel.Entry.Create(payload.entries[i].data, i + 1 < payload.entries.Count ? ids[i + 1] : graphView.MasterNode.viewDataKey, payload);
+                result[payload.entries[i].key] = new ObjectGraphModel.NodeEntry(payload.entries[i].data, i + 1 < payload.entries.Count ? ids[i + 1] : graphView.MasterNode.viewDataKey, payload);
             }
             return result;
+
         }
         public static ObjectGraphNode[] CollectFromRoot(ObjectGraphNode root) {
             List<ObjectGraphNode> result = new List<ObjectGraphNode>();
@@ -105,7 +106,7 @@ namespace Reactics.Core.Editor.Graph {
 
             while (current != null) {
                 result.Add(current);
-                current = current.OutputPort.connections.FirstOrDefault()?.input?.node as ObjectGraphNode;
+                current = current.output.connections.FirstOrDefault()?.input?.node as ObjectGraphNode;
             }
             return result.ToArray();
         }

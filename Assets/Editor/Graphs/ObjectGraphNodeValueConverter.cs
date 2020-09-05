@@ -4,7 +4,7 @@ using System.Linq;
 using Reactics.Core.Commons;
 using UnityEngine;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public abstract class ObjectGraphNodeValueConverter {
         public abstract object ToAliasUnTyped(object original, object data);
         public abstract object ToOriginalUnTyped(object alias, object data);
@@ -137,6 +137,10 @@ namespace Reactics.Core.Editor.Graph {
                 else if (original.index == -2)
                     return new NodeReference(payload.graphView.MasterNode.viewDataKey);
             }
+            else if (data is ObjectGraphNode[] nodes) {
+                if (original.index >= 0 && original.index < nodes.Length)
+                    return new NodeReference(nodes[original.index].viewDataKey);
+            }
             return new NodeReference(null);
         }
 
@@ -146,6 +150,9 @@ namespace Reactics.Core.Editor.Graph {
                     return new IndexReference(-2);
                 else
                     return new IndexReference(payload.entries.FindIndex((entry) => entry.key == alias.nodeId));
+            }
+            else if (data is ObjectGraphNode[] nodes) {
+                return new IndexReference(Array.FindIndex(nodes, (node) => node.viewDataKey == alias.nodeId));
             }
             else {
                 return new IndexReference(-1);

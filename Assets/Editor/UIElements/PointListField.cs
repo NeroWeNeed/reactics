@@ -4,7 +4,7 @@ using Reactics.Core.Commons;
 using Reactics.Core.Map;
 using UnityEngine;
 using UnityEngine.UIElements;
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     public class PointList : BindableElement, INotifyValueChanged<Point[]> {
         private VisualElement container;
         private Point[] _value;

@@ -7,7 +7,7 @@ using Reactics.Core.Commons;
 using UnityEditor;
 using UnityEngine;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
 
     public class JsonObjectGraphSerializer : ObjectGraphSerializer<JsonObjectGraphCollection> {
         private static readonly JsonSerializerSettings Settings;
@@ -23,7 +23,7 @@ namespace Reactics.Core.Editor.Graph {
             var jsonSet = new ObjectGraphNodeJsonSet(graphView.MasterNode.viewDataKey, JsonConvert.DeserializeObject<ObjectGraphNodeJsonSet>(target.json, Settings));
             var nodes = new Dictionary<ObjectGraphNode, ObjectGraphNodeJsonSet.Entry>();
             bool initiated = false;
-            Vector2 topLeft = Vector2.zero; ;
+            Vector2 topLeft = Vector2.zero;
             foreach (var jsonEntry in jsonSet.entries) {
                 foreach (var m in graphView.Modules.OfType<IObjectGraphNodeProvider>()) {
                     var node = m.Create(jsonEntry);
@@ -37,16 +37,15 @@ namespace Reactics.Core.Editor.Graph {
                             initiated = true;
                         }
                         nodes[node] = jsonEntry;
-                        graphView.ModelEditor.SetEntry(node, jsonEntry.entry);
+                        graphView.Model.SetEntry(node.Id, jsonEntry.entry);
                         graphView.AddElement(node);
-
                         break;
                     }
                 }
             }
 
             foreach (var kv in nodes) {
-                kv.Key.SyncWithEntry();
+                kv.Key.Refresh();
                 kv.Key.SetPosition(kv.Value.layout.Offset(graphView.LastMousePosition - topLeft));
             }
             graphView.Validate();
@@ -63,9 +62,10 @@ namespace Reactics.Core.Editor.Graph {
                 result = new JsonObjectGraphCollection
                 {
                     nodes = target.nodes,
-                    json = JsonConvert.SerializeObject(new ObjectGraphNodeJsonSet(graphView.MasterNode.viewDataKey, target.nodes), Settings)
+                    json = JsonConvert.SerializeObject(new ObjectGraphNodeJsonSet(graphView.MasterNode.viewDataKey, target.nodes.Select((t) => Tuple.Create(t, graphView.Model.entries[t.Id])).ToArray()), Settings)
                 };
                 return true;
+
             }
             else {
                 result = target;
@@ -82,11 +82,11 @@ namespace Reactics.Core.Editor.Graph {
 
         public Entry[] entries;
 
-        public ObjectGraphNodeJsonSet(string master, params ObjectGraphNode[] nodes) {
+        public ObjectGraphNodeJsonSet(string master, params Tuple<ObjectGraphNode, ObjectGraphModel.NodeEntry>[] nodes) {
             var entries = new Entry[nodes.Length];
             string[] newIds = new string[nodes.Length];
             for (int i = 0; i < nodes.Length; i++) {
-                entries[i] = new Entry(nodes[i]);
+                entries[i] = new Entry(nodes[i].Item1, nodes[i].Item2);
                 newIds[i] = Guid.NewGuid().ToString();
             }
             ConfigureEntries(entries, newIds, master);
@@ -113,8 +113,10 @@ namespace Reactics.Core.Editor.Graph {
                 }
                 var keys = entries[i].entry.values.Keys.ToArray();
                 foreach (var key in keys) {
-                    if (entries[i].entry.values[key] is IObjectGraphNodeValueCopyCallback callback) {
-                        entries[i].entry.values[key] = callback.OnCopy(entries, newIds, master);
+                    var entryValue = entries[i].entry.values[key];
+                    if (entryValue.value is IObjectGraphNodeValueCopyCallback callback) {
+                        entryValue.value = callback.OnCopy(entries, newIds, master);
+                        entries[i].entry.values[key] = entryValue;
                     }
                 }
 
@@ -126,21 +128,21 @@ namespace Reactics.Core.Editor.Graph {
         public struct Entry {
 
             public Type nodeType;
-            public ObjectGraphModel.Entry entry;
+            public ObjectGraphModel.NodeEntry entry;
 
             public string id;
 
             public Rect layout;
 
-            public Entry(ObjectGraphNode node) {
+            public Entry(ObjectGraphNode node, ObjectGraphModel.NodeEntry entry) {
 
-                entry = new ObjectGraphModel.Entry(node.Entry);
+                this.entry = entry;
                 id = node.viewDataKey;
                 layout = node.GetPosition();
                 nodeType = node.GetType();
             }
             public Entry(Entry original) {
-                this.entry = new ObjectGraphModel.Entry(original.entry);
+                this.entry = new ObjectGraphModel.NodeEntry(original.entry);
                 id = original.id;
                 layout = original.layout;
                 nodeType = original.nodeType;
@@ -149,8 +151,8 @@ namespace Reactics.Core.Editor.Graph {
         }
     }
 
-    public class ObjectGraphModelEntryJsonConverter : JsonConverter<ObjectGraphModel.Entry> {
-        public override ObjectGraphModel.Entry ReadJson(JsonReader reader, Type objectType, ObjectGraphModel.Entry existingValue, bool hasExistingValue, JsonSerializer serializer) {
+    public class ObjectGraphModelEntryJsonConverter : JsonConverter<ObjectGraphModel.NodeEntry> {
+        public override ObjectGraphModel.NodeEntry ReadJson(JsonReader reader, Type objectType, ObjectGraphModel.NodeEntry existingValue, bool hasExistingValue, JsonSerializer serializer) {
             Dictionary<string, object> values = new Dictionary<string, object>();
             if (reader.TokenType == JsonToken.StartObject) {
                 var model = JObject.Load(reader);
@@ -159,14 +161,14 @@ namespace Reactics.Core.Editor.Graph {
                     var value = serializer.Deserialize(item["value"].CreateReader(), Type.GetType((string)item["type"]));
                     values.Add(key, value);
                 }
-                return new ObjectGraphModel.Entry(Type.GetType((string)model["type"]), (string)model["next"], values);
+                return new ObjectGraphModel.NodeEntry(Type.GetType((string)model["type"]), (string)model["next"], values);
             }
             else {
                 return default;
             }
         }
 
-        public override void WriteJson(JsonWriter writer, ObjectGraphModel.Entry value, JsonSerializer serializer) {
+        public override void WriteJson(JsonWriter writer, ObjectGraphModel.NodeEntry value, JsonSerializer serializer) {
             writer.WriteStartObject();
             writer.WritePropertyName("type");
             serializer.Serialize(writer, value.type);

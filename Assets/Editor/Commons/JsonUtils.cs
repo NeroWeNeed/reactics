@@ -8,7 +8,7 @@ using Newtonsoft.Json.UnityConverters.Helpers;
 using UnityEditor;
 using UnityEngine;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     public static class UnityConverterInitializer {
 
         [InitializeOnLoadMethod]

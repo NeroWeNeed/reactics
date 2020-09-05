@@ -6,7 +6,7 @@ using Reactics.Core.Map;
 using UnityEditor;
 using UnityEngine;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     [CustomPropertyDrawer(typeof(EnumDictionary<,>))]
     public class EnumDictionaryPropertyDrawer : PropertyDrawer {
         private bool showingContent = true;

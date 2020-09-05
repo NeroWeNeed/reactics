@@ -2,7 +2,7 @@ using Reactics.Core.Commons;
 using Reactics.Core.Map;
 using UnityEditor;
 using UnityEngine;
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
 
 
     [CustomPropertyDrawer(typeof(Point))]

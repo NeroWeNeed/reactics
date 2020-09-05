@@ -7,7 +7,7 @@ using Reactics.Core.Map;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     public class SelectionContext<T> {
         private readonly List<T> selected = new List<T>();
         public readonly ReadOnlyCollection<T> Selected;

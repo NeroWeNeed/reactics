@@ -2,7 +2,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     public class ChangeEvent : EventBase<ChangeEvent> {
         public object newValue;
 

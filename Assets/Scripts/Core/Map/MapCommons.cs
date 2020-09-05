@@ -159,13 +159,7 @@ namespace Reactics.Core.Map {
         }
     }
 
-    [Serializable]
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MapBodyTarget {
-        public Entity entity;
 
-        public MapBody mapBody;
-    }
 
     [Flags]
     public enum MapLayer {

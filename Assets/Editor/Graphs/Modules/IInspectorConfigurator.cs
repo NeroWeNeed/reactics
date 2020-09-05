@@ -7,8 +7,8 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public interface IInspectorConfigurator : IObjectGraphModule {
-        VisualElement CreateInspectorSection(SerializedObject obj, ObjectGraphView graphView);
+        VisualElement CreateInspectorSection(ObjectGraphView graphView);
     }
 }

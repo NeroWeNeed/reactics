@@ -5,7 +5,7 @@ using System.Numerics;
 using System.Reflection;
 using Reactics.Core.Commons;
 using Reactics.Core.Commons.Reflection;
-using Reactics.Core.Editor.Graph;
+using Reactics.Editor.Graph;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
@@ -13,7 +13,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     public static class VisualElementDrawers {
         private static Dictionary<Type, Type> providers;
         private static bool initialized = false;
@@ -54,6 +54,7 @@ namespace Reactics.Core.Editor {
                 throw new ArgumentException("Invalid Type");
             var result = Activator.CreateInstance(providers[t]) as VisualElementDrawer;
             result.Initialize(label, initialValue, attributes);
+
             return result;
         }
         public static VisualElement CreateInspector(SerializedObject obj, string label) {

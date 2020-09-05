@@ -10,13 +10,14 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
 
 
-    public class EffectGraphEditor : ObjectGraphEditor<EffectAsset> {
+    public class EffectGraphEditor : ObjectGraphEditor<EffectGraphAsset> {
+        public static string CreateTitle(EffectGraphAsset asset) => $"Effect Graph ({asset.name})";
 
         [OnOpenAsset(1)]
-        public static bool OnOpen(int instanceId, int line) => OnOpen<EffectGraphEditor>(instanceId, line, (asset) => $"Effect Graph ({asset.name})");
+        public static bool OnOpen(int instanceId, int line) => OnOpen<EffectGraphEditor>(instanceId, line, CreateTitle);
         protected override string SaveFileInPanelTitle => "Save Effect As...";
 
         protected override string SaveFileInPanelDefaultName => "EffectAsset";

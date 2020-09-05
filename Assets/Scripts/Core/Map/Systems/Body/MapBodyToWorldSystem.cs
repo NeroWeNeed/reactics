@@ -17,7 +17,7 @@ namespace Reactics.Core.Map {
                 float3 location = new float3(body.point.x * info.tileSize + info.tileSize / 2f,
                 map.Elevation * info.elevationStep + map.GetTile(body.point).Elevation * info.elevationStep,
                 body.point.y * info.tileSize + info.tileSize / 2f);
-                location += body.anchor.XYZ(bounds.Value.Extents);
+                location += body.anchor.XYZOffset(bounds.Value.Extents);
                 if (HasComponent<Translation>(entity))
                     location += GetComponent<Translation>(entity).Value;
                 quaternion rotation;

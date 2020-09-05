@@ -4,7 +4,7 @@ using Reactics.Core.Map;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     public class PointField : BindableElement, INotifyValueChanged<Point> {
         private Label labelElement;
 

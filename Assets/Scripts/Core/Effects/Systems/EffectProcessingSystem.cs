@@ -67,42 +67,42 @@ namespace Reactics.Core.Effects {
             out JobHandle jobHandle) {
             EffectAsset effectAsset = effectResourceSystem[reference.value] as EffectAsset;
 
-            if (effectAsset?.type == TargetType) {
+            /*             if (effectAsset?.Type == TargetType) {
 
-                var payload = new EffectPayload<TTargetType>
-                {
-                    sourceEntity = source.value,
-                    source = mapBodyData[source.value],
-                    mapEntity = mapElement.value,
-                    map = mapData[mapElement.value],
-                    target = target.value
-                };
-                if (indexData.HasComponent(entity)) {
-                    var index = indexData[entity].value;
-                    if (index >= 0 && index < effectAsset.EffectCount) {
-                        var t = (IEffect<TTargetType>)effectAsset.effect[index];
-                        var job = t.ScheduleJob(this.Dependency, EntityManager, effectAsset, reference.value, index, payload, ecb);
-                        if (!job.Equals(this.Dependency)) {
-                            jobHandle = job;
-                            return true;
-                        }
-                    }
-                }
-                else {
-                    NativeList<JobHandle> jobs = new NativeList<JobHandle>(effectAsset.RootCount, Allocator.Temp);
-                    for (int r = 0; r < effectAsset.RootCount; r++) {
-                        var rootIndex = effectAsset.roots[r];
-                        var effect = (IEffect<TTargetType>)effectAsset.effect[rootIndex];
-                        var job = effect.ScheduleJob(this.Dependency, EntityManager, effectAsset, reference.value, rootIndex, payload, ecb);
-                        if (!job.Equals(this.Dependency))
-                            jobs.Add(job);
-                    }
-                    if (jobs.Length > 0) {
-                        jobHandle = JobHandle.CombineDependencies(jobs);
-                        return true;
-                    }
-                }
-            }
+                            var payload = new EffectPayload<TTargetType>
+                            {
+                                sourceEntity = source.value,
+                                source = mapBodyData[source.value],
+                                mapEntity = mapElement.value,
+                                map = mapData[mapElement.value],
+                                target = target.value
+                            };
+                            if (indexData.HasComponent(entity)) {
+                                var index = indexData[entity].value;
+                                if (index >= 0 && index < effectAsset.EffectCount) {
+                                    var t = (IEffect<TTargetType>)effectAsset.components[index];
+                                    var job = t.ScheduleJob(this.Dependency, EntityManager, effectAsset, reference.value, index, payload, ecb);
+                                    if (!job.Equals(this.Dependency)) {
+                                        jobHandle = job;
+                                        return true;
+                                    }
+                                }
+                            }
+                            else {
+                                NativeList<JobHandle> jobs = new NativeList<JobHandle>(effectAsset.RootCount, Allocator.Temp);
+                                for (int r = 0; r < effectAsset.RootCount; r++) {
+                                    var rootIndex = effectAsset.roots[r];
+                                    var effect = (IEffect<TTargetType>)effectAsset.components[rootIndex];
+                                    var job = effect.ScheduleJob(this.Dependency, EntityManager, effectAsset, reference.value, rootIndex, payload, ecb);
+                                    if (!job.Equals(this.Dependency))
+                                        jobs.Add(job);
+                                }
+                                if (jobs.Length > 0) {
+                                    jobHandle = JobHandle.CombineDependencies(jobs);
+                                    return true;
+                                }
+                            }
+                        } */
             jobHandle = default;
             return false;
         }

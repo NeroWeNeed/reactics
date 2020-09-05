@@ -5,10 +5,11 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public class ObjectGraphView : GraphView {
         public const string USS_GUID = "256dcec08179d5a41bbf70ec00648654";
         private ObjectGraphSearchWindow searchWindow;
@@ -17,26 +18,15 @@ namespace Reactics.Core.Editor.Graph {
         public Node MasterNode { get; }
         private readonly IObjectGraphModule[] modules;
         public readonly ReadOnlyCollection<IObjectGraphModule> Modules;
-
-        public ObjectGraphModelEditor ModelEditor { get; set; }
-
-        public ObjectGraphModel Model
-        {
-            get => ModelEditor?.Model; set
-            {
-                if (ModelEditor != null)
-                    ModelEditor.Model = value;
-            }
-        }
+        public ObjectGraphModel Model { get; private set; }
 
         public ObjectGraphInspector Inspector { get; private set; }
 
         public Vector2 LastMousePosition { get; private set; }
         private readonly JsonObjectGraphSerializer jsonObjectGraphSerializer = new JsonObjectGraphSerializer();
 
-        public ObjectGraphView(ObjectGraphModelEditor editor, Func<Vector2, Vector2> screenToWorldConverter, params IObjectGraphModule[] modules) {
-            this.ModelEditor = editor;
-
+        public ObjectGraphView(ObjectGraphModel model, Func<Vector2, Vector2> screenToWorldConverter, params IObjectGraphModule[] modules) {
+            this.Model = model;
             this.modules = modules;
             Modules = Array.AsReadOnly(modules);
             MasterNode = CreateMasterNode(this.modules);
@@ -57,30 +47,43 @@ namespace Reactics.Core.Editor.Graph {
             });
             this.RegisterCallback<MouseMoveEvent>((evt) => LastMousePosition = contentViewContainer.WorldToLocal(contentViewContainer.parent.ChangeCoordinatesTo(contentViewContainer.parent, evt.mousePosition)));
             SetupSearchWindow();
-            SetupVariableBlackboard();
+            SetupInspector();
 
             serializeGraphElements = OnSerializeElements;
             unserializeAndPaste = OnDeserializeElements;
-            //graphViewChanged = OnGraphViewChange;
+            this.RegisterCallback<DragUpdatedEvent>((evt) =>
+            {
+                var z = DragAndDrop.GetGenericData("DragSelection");
+                if (z is List<ISelectable>) {
+                    DragAndDrop.visualMode = DragAndDropVisualMode.Generic;
+                }
+            });
+            this.RegisterCallback<DragPerformEvent>((evt) =>
+            {
+                if (DragAndDrop.GetGenericData("DragSelection") is List<ISelectable> selectables) {
+                    Vector2 offset = new Vector2(0, 0);
+                    foreach (var selectable in selectables) {
+                        if (selectable is BlackboardField blackboardField && blackboardField.userData is ObjectGraphVariable variableData) {
+                            var variable = new ObjectGraphVariableNode(variableData);
+                            variable.tooltip = $"{variable.Data.type.GetRealName()}";
+                            Model.CreateVariableEntry(variable.Data, variable.viewDataKey);
+                            variable.SetPosition(new Rect(contentViewContainer.WorldToLocal(contentViewContainer.parent.ChangeCoordinatesTo(contentViewContainer.parent, evt.mousePosition)) + offset, default));
+                            this.AddElement(variable);
+                            offset.y += blackboardField.worldBound.height + 2;
+                        }
+                    }
+
+                }
+            });
+            graphViewChanged = OnGraphViewChange;
             //SetupUndo();
 
 
         }
 
         public void RefreshInspector(SerializedObject obj) {
-
-            Inspector?.ClearContents();
-            foreach (var module in modules.OfType<IInspectorConfigurator>()) {
-                var element = module.CreateInspectorSection(obj, this);
-                Inspector.AddInspector(element);
-            }
-            foreach (var module in modules.OfType<IVariableProvider>()) {
-
-                foreach (var variableContainerType in module.VariableTypes) {
-                    Debug.Log(variableContainerType);
-                    Inspector.AddVariables(variableContainerType);
-                }
-            }
+            Inspector?.settingsView?.Bind(obj);
+            ValidateVariables();
         }
         public string OnSerializeElements(IEnumerable<GraphElement> elements) {
             if (jsonObjectGraphSerializer.Serialize(new JsonObjectGraphCollection
@@ -92,6 +95,33 @@ namespace Reactics.Core.Editor.Graph {
             else {
                 return null;
             }
+        }
+        public GraphViewChange OnGraphViewChange(GraphViewChange change) {
+            ValidateVariables();
+            Debug.Log("Change Detected");
+            if (change.elementsToRemove != null) {
+                foreach (var vNode in change.elementsToRemove.OfType<ObjectGraphVariableNode>()) {
+                    Model.RemoveVariableEntry(vNode.viewDataKey);
+                }
+                foreach (var edge in change.elementsToRemove.OfType<Edge>()) {
+                    Debug.Log("Removing " + edge);
+                }
+            }
+
+            return change;
+        }
+        private void ValidateVariables() {
+            foreach (var provider in Model.variables.Select((variable) => variable.provider).Distinct()) {
+
+                provider.OnValidateVariables(this, Model.variables.Where((variable) => variable.provider == provider).ToArray());
+            }
+            Inspector.variableView.Query<VisualElement>(null, ObjectGraphVariableProvider.OBJECT_VARIABLE_FIELD_CLASS_NAME).ForEach((field) =>
+            {
+                if (field.userData is ObjectGraphVariable variable) {
+                    field.style.display = variable.valid ? DisplayStyle.Flex : DisplayStyle.None;
+                }
+            });
+
         }
         /*         public GraphViewChange OnGraphViewChange(GraphViewChange change) {
                     foreach (var item in change.elementsToRemove.OfType<ObjectGraphNode>()) {
@@ -145,14 +175,25 @@ namespace Reactics.Core.Editor.Graph {
                 SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), searchWindow);
             };
         }
-        public void SetupVariableBlackboard() {
-            var blackboard = new ObjectGraphInspector(this);
-            Inspector = blackboard;
-            this.Add(blackboard);
+        public void SetupInspector() {
+            var inspector = new ObjectGraphInspector(this);
+            Inspector = inspector;
+            this.Add(inspector);
+            foreach (var module in modules.OfType<IInspectorConfigurator>()) {
+                var element = module.CreateInspectorSection(this);
+                if (element != null)
+                    Inspector.AddInspector(element);
+            }
+            Inspector.AddVariables(modules.OfType<IVariableProvider>().SelectMany((provider) => provider.VariableTypes).ToArray(), Model);
+            ValidateVariables();
         }
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter) {
             return ports.ToList().Where((port) =>
             {
+                if (startPort.ClassListContains(ObjectGraphValuePort.DirectPortClassName)) {
+                    return port.ClassListContains(ObjectGraphValuePort.DirectPortClassName) && port.node == startPort.node && port.viewDataKey == startPort.viewDataKey;
+                }
+
                 foreach (var module in modules) {
                     if (module is IObjectGraphNodeProvider provider && provider.GetCompatiblePorts(startPort, nodeAdapter, port)) {
                         return true;
@@ -161,12 +202,13 @@ namespace Reactics.Core.Editor.Graph {
                 return false;
             }).ToList();
         }
-        public List<ObjectGraphNode> GetRoots() {
-            return nodes.ToList().OfType<ObjectGraphNode>().Where((node) => !node.InputPort.connected && node.IsConnected()).ToList();
+        public List<ObjectGraphNode> GetRoots(string className) {
+            return nodes.ToList().OfType<ObjectGraphNode>().Where((node) => !node.input.connected && node.IsConnected() && node.ClassListContains(className)).ToList();
         }
         public List<TNode> GetRoots<TNode>() where TNode : ObjectGraphNode {
-            return nodes.ToList().OfType<TNode>().Where((node) => !node.InputPort.connected && node.IsConnected()).ToList();
+            return nodes.ToList().OfType<TNode>().Where((node) => !node.input.connected && node.IsConnected()).ToList();
         }
+
         public bool Validate() {
             var result = true;
             foreach (var module in modules.OfType<IObjectGraphValidator>()) {
@@ -175,6 +217,17 @@ namespace Reactics.Core.Editor.Graph {
                     break;
                 }
             }
+            ValidateVariables();
+            this.Query<ObjectGraphVariableNode>(null, ObjectGraphVariableNode.OBJECT_GRAPH_VARIABLE_CLASS_NAME).ForEach((node) =>
+            {
+                if (!node.Data.valid) {
+                    node.output.ErrorNotification("Invalid Variable Node");
+                    result = false;
+                }
+                else {
+                    node.output.ClearNotifications();
+                }
+            });
             using (ObjectGraphValidateEvent evt = ObjectGraphValidateEvent.GetPooled(result)) {
                 evt.target = this;
                 this.SendEvent(evt);
@@ -191,5 +244,9 @@ namespace Reactics.Core.Editor.Graph {
                         }); */
         }
 
+    }
+
+    public interface IObjectGraphViewListener {
+        void OnGraphViewChange(ObjectGraphView graphView);
     }
 }

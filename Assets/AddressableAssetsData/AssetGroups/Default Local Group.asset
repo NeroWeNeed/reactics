@@ -29,14 +29,8 @@ MonoBehaviour:
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}
     m_TargetAsset: {fileID: 0}
-  - m_GUID: de2653c853685954aa19545317bb167f
-    m_Address: Assets/ResourceData/TargetFilters/TargetFilter.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
-  - m_GUID: e49e054ede5a6cd4bbc999cfdbdcf98e
-    m_Address: Assets/ResourceData/Effects/Effect.asset
+  - m_GUID: f7f20524c873f0e478f595ab058e75a3
+    m_Address: Assets/ResourceData/Effects/EffectGraphAsset.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}

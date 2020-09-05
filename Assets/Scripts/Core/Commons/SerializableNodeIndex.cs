@@ -20,10 +20,5 @@ namespace Reactics.Core.Commons {
         }
     }
 
-    public struct GraphPayload {
-        public string[] keys;
-
-        public string master;
-    }
 
 }

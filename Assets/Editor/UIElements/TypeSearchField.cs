@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     public class TypeSearchField : SearchField<Type> {
 
         private readonly HashSet<Func<Type, bool>> typeFilters = new HashSet<Func<Type, bool>>();

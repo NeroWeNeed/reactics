@@ -1,4 +1,4 @@
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public interface IObjectGraphModule {
 
 

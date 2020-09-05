@@ -7,7 +7,7 @@ using Reactics.Core.Commons;
 using UnityEditor;
 using UnityEngine;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
 
     public class UnityObjectGraphSerializer : ObjectGraphSerializer<SerializedObject> {
 
@@ -58,22 +58,21 @@ namespace Reactics.Core.Editor.Graph {
             int index = 0;
             foreach (var kv in entries) {
                 nodes[index] = provider.Create(kv.Key, kv.Value, layout == null ? default : layout.GetArrayElementAtIndex(index).rectValue);
-                graphView.ModelEditor.SetEntry(nodes[index], kv.Value);
-                nodes[index].ModelEditor = graphView.ModelEditor;
+                graphView.Model.SetEntry(nodes[index].Id, kv.Value);
                 graphView.AddElement(nodes[index]);
                 index++;
             }
 
+
             foreach (var node in nodes) {
-                node.Entry = entries[node.viewDataKey];
-                node.SyncWithEntry();
+                node.Refresh();
             }
             graphView.Validate();
             result = target;
             return true;
 
         }
-        public static SortedDictionary<string, ObjectGraphModel.Entry> DeserializeEntries(object[] data, ObjectGraphView graphView) {
+        public static SortedDictionary<string, ObjectGraphModel.NodeEntry> DeserializeEntries(object[] data, ObjectGraphView graphView) {
             var ids = new string[data.Length];
             var entries = new ObjectGraphSerializerPayload.Entry[data.Length];
             for (int i = 0; i < data.Length; i++) {
@@ -94,9 +93,9 @@ namespace Reactics.Core.Editor.Graph {
                 entries = entries.ToList()
             };
 
-            var result = new SortedDictionary<string, ObjectGraphModel.Entry>();
+            var result = new SortedDictionary<string, ObjectGraphModel.NodeEntry>();
             for (int i = 0; i < payload.entries.Count; i++) {
-                result[payload.entries[i].key] = ObjectGraphModel.Entry.Create(payload.entries[i].data, null, payload);
+                result[payload.entries[i].key] = new ObjectGraphModel.NodeEntry(payload.entries[i].data, null, payload);
             }
             return result;
         }
@@ -135,7 +134,6 @@ namespace Reactics.Core.Editor.Graph {
             }
             target.ApplyModifiedProperties();
             layout.ApplyModifiedProperties();
-
             result = target;
             return true;
 
@@ -155,7 +153,7 @@ namespace Reactics.Core.Editor.Graph {
                 var obj = Activator.CreateInstance(graphView.Model.entries[payload.entries[i].key].type);
                 foreach (var kv in graphView.Model.entries[payload.entries[i].key].values) {
                     var fieldInfo = graphView.Model.entries[payload.entries[i].key].type.GetField(kv.Key);
-                    var fieldValue = kv.Value;
+                    var fieldValue = kv.Value.value;
                     ObjectGraphNodeValueConverters.TryToConvertToOriginal(kv.Value, payload, out fieldValue);
                     fieldInfo.SetValue(obj, fieldValue);
                 }

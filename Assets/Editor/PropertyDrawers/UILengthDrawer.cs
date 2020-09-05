@@ -2,7 +2,7 @@ using System;
 using Reactics.Core.UI;
 using UnityEditor;
 using UnityEngine;
-namespace Reactics.Core.Editor.Drawers {
+namespace Reactics.Editor.Drawers {
 
 
     //TODO: UI Toolkit Drawer Implementation (Low Priority)

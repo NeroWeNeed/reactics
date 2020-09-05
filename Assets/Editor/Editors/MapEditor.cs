@@ -13,7 +13,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     public class MapEditor : EditorWindow {
         private const string MAIN_VISUAL_TREE = "Assets/EditorResources/UIElements/MapEditor.uxml";
         private const string TILE_EDITOR_VISUAL_TREE = "Assets/EditorResources/UIElements/MapTileEditor.uxml";

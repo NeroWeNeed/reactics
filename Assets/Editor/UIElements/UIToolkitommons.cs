@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     public static class UIToolkitUtility {
         public static void ConfigureToolbarButtons(this EditorWindow editorWindow, Toolbar toolbar) {
             ConfigureToolbarButtons(source: editorWindow, toolbar);

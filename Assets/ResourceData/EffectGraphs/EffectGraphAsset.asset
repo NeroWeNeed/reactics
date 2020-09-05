@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 931eab635f502eb4b9ed936e10e2ae0c, type: 3}
+  m_Name: EffectGraphAsset
+  m_EditorClassIdentifier: 
+  hash: 821341498
+  version: 3
+  outputPath: Assets/ResourceData/Effects/
+  outputName: Effect
+  generateOnReload: 1
+  generateOnPlay: 0
+  nodes:
+  - layout:
+      serializedVersion: 2
+      x: -312
+      y: -206
+      width: 135
+      height: 101
+    id: 8c0dc617-1965-4c05-8a99-9df6a170a980
+    index: 0
+    next: -2
+  - layout:
+      serializedVersion: 2
+      x: -704
+      y: -222
+      width: 135
+      height: 101
+    id: 25c7555e-0fb6-4aeb-900d-d970007577cd
+    index: 1
+    next: 0
+  variables:
+  - layout:
+      serializedVersion: 2
+      x: -905
+      y: 78
+      width: 176
+      height: 26
+    id: 61abcb7c-e9a2-4566-a22b-cfe10fb228f6
+    type: Reactics.Core.Map.MapBody, Reactics.Core.Map, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    address: anchor.value
+    connections:
+    - index: 0
+      field: damage
+  objects:
+  - id: 0
+  - id: 1
+  references:
+    version: 1
+    00000000:
+      type: {class: DamageEffect, ns: Reactics.Core.Effects, asm: Reactics.Core.Effects}
+      data:
+        damage: 0
+    00000001:
+      type: {class: DamageEffect, ns: Reactics.Core.Effects, asm: Reactics.Core.Effects}
+      data:
+        damage: 14

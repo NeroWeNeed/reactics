@@ -17,7 +17,7 @@ namespace Reactics.Core.Map {
                     float3 location = new float3(step.previous.x * info.tileSize + info.tileSize / 2f,
                     map.Elevation * info.elevationStep + map.GetTile(step.previous).Elevation * info.elevationStep,
                     step.previous.y * info.tileSize + info.tileSize / 2f);
-                    location += body.anchor.XYZ(bounds.Value.Extents);
+                    location += body.anchor.XYZOffset(bounds.Value.Extents);
                     location += new float3((step.next.x - step.previous.x) * info.tileSize, (map.GetTile(step.next).Elevation - map.GetTile(step.previous).Elevation) * info.elevationStep, (step.next.y - step.previous.y) * info.tileSize) * step.completion;
                     if (HasComponent<Translation>(entity))
                         location += GetComponent<Translation>(entity).Value;

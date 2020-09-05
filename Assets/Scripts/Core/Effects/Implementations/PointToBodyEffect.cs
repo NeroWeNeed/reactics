@@ -8,12 +8,12 @@ using UnityEngine;
 
 namespace Reactics.Core.Effects {
     [Serializable]
-    public struct PointToBodyEffect : IEffect<Point> {
+    public struct PointToBodyEffect : IEffect<PointTarget> {
         [SerializeNodeIndex(typeof(IEffect<MapBodyTarget>))]
         [SerializeField]
         public IndexReference onBody;
 
-        public JobHandle ScheduleJob(JobHandle handle, EntityManager entityManager, EffectAsset effectAsset, Resource effectResource, int effectIndex, EffectPayload<Point> payload, EntityCommandBuffer entityCommandBuffer) {
+        public JobHandle ScheduleJob(JobHandle handle, EntityManager entityManager, EffectAsset effectAsset, Resource effectResource, int effectIndex, EffectPayload<PointTarget> payload, EntityCommandBuffer entityCommandBuffer) {
             var query = entityManager.CreateEntityQuery(typeof(MapBody), typeof(MapElement));
             var chunks = query.CreateArchetypeChunkArrayAsync(Allocator.TempJob, out JobHandle archetypeHandle);
             var job = new PointToBodyEffectJob
@@ -35,7 +35,7 @@ namespace Reactics.Core.Effects {
             public ComponentTypeHandle<MapElement> mapElementType;
             public EntityTypeHandle entityType;
             public Resource resource;
-            public EffectPayload<Point> payload;
+            public EffectPayload<PointTarget> payload;
             public EntityCommandBuffer entityCommandBuffer;
             public int onBodyIndex;
 
@@ -46,7 +46,7 @@ namespace Reactics.Core.Effects {
                 var entities = chunk.GetNativeArray(entityType);
 
                 for (int i = 0; i < entities.Length; i++) {
-                    if (elements[i].value == payload.mapEntity && bodies[i].point == payload.target) {
+                    if (elements[i].value == payload.mapEntity && bodies[i].point == payload.target.value) {
                         var entity = entityCommandBuffer.CreateEntity();
 
                     }

@@ -1,10 +1,10 @@
 using System;
-using Reactics.Core.Editor.Graph;
+using Reactics.Editor.Graph;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public abstract class VisualElementLayout : Attribute {
@@ -35,9 +35,10 @@ namespace Reactics.Core.Editor {
         public abstract Direction PortDirection { get; }
         public override void Layout(VisualElement element, VisualElement target) {
             if (target is Node node) {
-                ValuePortElement valuePort;
+
+                VisualElement valuePort;
                 if (element is VisualElementDrawer drawer) {
-                    valuePort = ValuePortElement.Create(drawer, node, PortDirection);
+                    valuePort = new ObjectGraphValuePort(drawer, PortDirection);
                 }
                 else {
                     valuePort = ValuePortElement.Create(element, node, PortDirection);

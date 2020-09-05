@@ -17,6 +17,8 @@ MonoBehaviour:
   m_BundleLocalCatalog: 0
   m_DisableCatalogUpdateOnStart: 0
   m_UniqueBundleIds: 0
+  m_maxConcurrentWebRequests: 500
+  m_ContiguousBundles: 0
   m_RemoteCatalogBuildPath:
     m_Id: 
   m_RemoteCatalogLoadPath:
@@ -30,6 +32,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fb406eeb7f4d83c498963f3d36167373, type: 2}
   - {fileID: 11400000, guid: 8f79420fe80ace0499c309c32140c5ee, type: 2}
   - {fileID: 11400000, guid: 929efd3fa0b7a02449358d6113aed802, type: 2}
+  - {fileID: 11400000, guid: adf0f2badc795d54a98b3930a4771eb0, type: 2}
   m_BuildSettings:
     m_CompileScriptsInVirtualMode: 0
     m_CleanupStreamingAssetsAfterBuilds: 1

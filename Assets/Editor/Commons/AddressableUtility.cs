@@ -7,7 +7,7 @@ using UnityEditor.AddressableAssets;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
 
     public static class AddressableUtility {
         public static AssetReference GetAssetReference(this SerializedProperty property) {

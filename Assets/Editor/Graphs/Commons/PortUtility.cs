@@ -6,7 +6,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public static class PortUtility {
         public const string NotificationClassName = "notification";
         public static void MakeObservable(this Port port) {
@@ -33,14 +33,21 @@ namespace Reactics.Core.Editor.Graph {
             port.RegisterCallback<DetachFromPanelEvent>((evt) => ClearEdges(evt.target as Port));
 
         }
-        private static void ClearEdges(this Port port) {
-            foreach (var con in port?.connections) {
-                var input = con.input;
-                var output = con.output;
-                con.RemoveFromHierarchy();
-                input?.node?.RefreshPorts();
-                output?.node?.RefreshPorts();
+        public static void ClearEdges(this Port port) {
+            foreach (var connection in port.connections.ToArray()) {
+                connection.input.Disconnect(connection);
+                connection.output.Disconnect(connection);
+                connection.RemoveFromHierarchy();
+                connection.input.node?.RefreshPorts();
+                connection.output.node?.RefreshPorts();
             }
+            /*             foreach (var con in port?.connections) {
+                            var input = con.input;
+                            var output = con.output;
+                            con.GetFirstAncestorOfType<GraphView>()?.RemoveElement(con);
+                            input.GetFirstAncestorOfType<Node>()?.RefreshPorts();
+                            output.GetFirstAncestorOfType<Node>()?.RefreshPorts();
+                        } */
         }
         private static void ConnectAction(Port port) {
             using (PortChangedEvent evt = PortChangedEvent.GetPooled(port.connections)) {
@@ -60,7 +67,7 @@ namespace Reactics.Core.Editor.Graph {
                 var badge = IconBadge.CreateError(message);
                 badge.AddToClassList(NotificationClassName);
                 port.node.Add(badge);
-                badge.AttachTo(port, SpriteAlignment.LeftCenter);
+                badge.AttachTo(port, port.direction == Direction.Input ? SpriteAlignment.LeftCenter : SpriteAlignment.RightCenter);
             }
 
         }
@@ -70,7 +77,7 @@ namespace Reactics.Core.Editor.Graph {
                 var badge = IconBadge.CreateComment(message);
                 badge.AddToClassList(NotificationClassName);
                 port.node.Add(badge);
-                badge.AttachTo(port, SpriteAlignment.LeftCenter);
+                badge.AttachTo(port, port.direction == Direction.Input ? SpriteAlignment.LeftCenter : SpriteAlignment.RightCenter);
             }
         }
         public static void ClearNotifications(this Port port) {

@@ -11,17 +11,14 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
 
-    public class TargetFilterGraphModule : BaseObjectGraphNodeModule<TargetFilterGraphNode>, IObjectGraphPostSerializerCallback {
-
-        static TargetFilterGraphModule() {
-            ObjectGraphNodePort.RegisterColor(typeof(ITargetFilter<Point>), Color.blue);
-            ObjectGraphNodePort.RegisterColor(typeof(ITargetFilter<MapBodyDirection>), Color.green);
-            ObjectGraphNodePort.RegisterColor(typeof(ITargetFilter<MapBodyTarget>), Color.red);
-        }
+    public class TargetFilterGraphModule : BaseObjectGraphNodeModule, IObjectGraphPostSerializerCallback {
         public static readonly Type[] SuperTypes = { typeof(ITargetFilter<MapBodyTarget>), typeof(ITargetFilter<MapBodyDirection>), typeof(ITargetFilter<MapBodyTarget>) };
         public const string PortClassName = "target-filter-graph-node-port";
+
+        public override string NodeClassName { get; } = "target-filter";
+
         public TargetFilterGraphModule() : this(new Settings
         {
             portName = "Target Filter",
@@ -37,10 +34,9 @@ namespace Reactics.Core.Editor.Graph {
             }
         }) { }
         public TargetFilterGraphModule(Settings settings) : base(settings) { }
-
         public void OnPostSerialize(SerializedObject obj, ref ObjectGraphSerializerPayload payload) {
             var property = obj.FindProperty("type");
-            var targetType = payload.graphView.GetRoots<TargetFilterGraphNode>()?.FirstOrDefault()?.SuperTargetType;
+            var targetType = payload.graphView.GetRoots<ObjectGraphNode>()?.FirstOrDefault()?.Type;
             if (typeof(ITargetFilter<>).IsAssignableFrom(targetType)) {
                 property.enumValueIndex = (int)TargetTypeUtility.GetType(targetType.GenericTypeArguments[0]);
             }

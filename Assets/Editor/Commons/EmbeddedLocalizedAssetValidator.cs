@@ -11,7 +11,7 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     public static class EmbeddedLocalizedAssetValidator {
         public const string LOCALE_ASSET_PATH = "Assets/ResourceData/Locale/Assets";
         public const string LOCALE_PATH = "Assets/ResourceData/Locale";
@@ -71,7 +71,7 @@ namespace Reactics.Core.Editor {
         }
         private static string GetAssetPath(string sourceGuid, string tableName, string localeCode) => $"{LOCALE_ASSET_PATH}/{tableName}/{sourceGuid}_{localeCode}.asset";
         private static string GetAssetName(string sourceGuid, string localeCode) => $"{sourceGuid}_{localeCode}.asset";
-        private static void UpdateEmbeddedAsset(SerializedProperty property, AssetTable table, string sourceGuid, uint key, string localeCode) {
+        private static void UpdateEmbeddedAsset(SerializedProperty property, AssetTable table, string sourceGuid, long key, string localeCode) {
             var type = property.GetFieldType().GenericTypeArguments[0];
             var name = GetAssetName(sourceGuid, localeCode);
             var path = GetAssetPath(sourceGuid, table.TableCollectionName, localeCode);
@@ -83,7 +83,7 @@ namespace Reactics.Core.Editor {
             }
             else {
                 AssetDatabase.TryGetGUIDAndLocalFileIdentifier(localeAsset.GetInstanceID(), out string assetGuid, out long _);
-                table.AddEntry(key, assetGuid);
+                table.AddEntry(key.ToString(), assetGuid);
                 if (property.FindPropertyRelative("m_TableEntryReference.m_KeyId").longValue != key) {
                     property.FindPropertyRelative("m_TableEntryReference.m_KeyId").longValue = key;
                     AssetDatabase.Refresh();

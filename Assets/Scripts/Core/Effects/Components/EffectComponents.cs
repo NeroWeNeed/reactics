@@ -8,9 +8,10 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using UnityEngine.AddressableAssets;
 
-[assembly: RegisterGenericComponentType(typeof(EffectTarget<Point>))]
+
+[assembly: RegisterGenericComponentType(typeof(EffectTarget<PointTarget>))]
 [assembly: RegisterGenericComponentType(typeof(EffectTarget<MapBodyTarget>))]
-[assembly: RegisterGenericComponentType(typeof(EffectTarget<MapBodyDirection>))]
+[assembly: RegisterGenericComponentType(typeof(EffectTarget<DirectionTarget>))]
 namespace Reactics.Core.Effects {
 
     public struct Effect : IComponentData {

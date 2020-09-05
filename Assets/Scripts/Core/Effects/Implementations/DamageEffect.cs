@@ -12,7 +12,6 @@ namespace Reactics.Core.Effects {
     /// </summary>
     [Serializable]
     public struct DamageEffect : IEffect<MapBodyTarget>, IEffectBehaviour<MapBodyTarget> {
-
         public byte damage;
 
         public void Invoke(EffectPayload<MapBodyTarget> payload, EntityCommandBuffer entityCommandBuffer) {

@@ -14,9 +14,14 @@
     min-width: 300px;
     min-height: 300px;
 }
-ObjectGraphVariable {
-    align-items: flex-start;
+
+ObjectGraphVariable #title-label {
+padding-top: 1px;
+padding-bottom: 2px;
 }
-ObjectGraphVariable Port {
-    font-size: 12px;
+.value-port-container-element--visible {
+    display: flex;
+}
+.value-port-container-element--hidden {
+    display: none;
 }

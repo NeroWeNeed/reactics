@@ -1,3 +1,6 @@
-ObjectGraphVariable {
+ObjectGraphVariable #contents {
+    align-items: flex-start;
+}
+.object-graph-variable .pill {
     align-items: flex-start;
 }

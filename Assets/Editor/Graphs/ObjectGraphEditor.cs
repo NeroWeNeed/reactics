@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
 
     public abstract class ObjectGraphEditor<TAsset> : EditorWindow where TAsset : ScriptableObject {
 
@@ -24,7 +24,7 @@ namespace Reactics.Core.Editor.Graph {
         }
 
 
-        protected static bool OnOpen<TEditorWindow>(int instanceId, int line, Func<TAsset, string> titleFunction) where TEditorWindow : ObjectGraphEditor<TAsset> {
+        public static bool OnOpen<TEditorWindow>(int instanceId, int line, Func<TAsset, string> titleFunction) where TEditorWindow : ObjectGraphEditor<TAsset> {
             var obj = EditorUtility.InstanceIDToObject(instanceId);
             if (obj is TAsset asset) {
                 var window = ShowWindow<TEditorWindow>(titleFunction.Invoke(asset));
@@ -40,7 +40,7 @@ namespace Reactics.Core.Editor.Graph {
         public ObjectGraphView graphView { get; private set; }
 
 
-        public ObjectGraphModelEditor ModelEditor { get; protected set; }
+
 
         public ObjectGraphModel Model { get; protected set; }
 
@@ -74,17 +74,11 @@ namespace Reactics.Core.Editor.Graph {
         protected ObjectGraphEditor(params IObjectGraphModule[] modules) {
             this.Modules = modules;
         }
-        public virtual ObjectGraphModel CreateModel() => ScriptableObject.CreateInstance<ObjectGraphModel>();
-        public virtual ObjectGraphModelEditor CreateModelEditor(ObjectGraphModel model) => new ObjectGraphModelEditor(model);
 
         private void OnEnable() {
             if (Model == null) {
-                Model = CreateModel();
+                Model = CreateInstance<ObjectGraphModel>();
             }
-            ModelEditor = CreateModelEditor(Model);
-
-
-
             PreInit();
             graphView = CreateGraphView();
             AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AssetDatabase.GUIDToAssetPath(TOOLBAR_UXML)).CloneTree(rootVisualElement);
@@ -99,7 +93,7 @@ namespace Reactics.Core.Editor.Graph {
         }
 
         private ObjectGraphView CreateGraphView() {
-            var graphView = new ObjectGraphView(ModelEditor, (p) => p - this.position.position, Modules);
+            var graphView = new ObjectGraphView(Model, (p) => p - this.position.position, Modules);
             graphView.RegisterCallback<ObjectGraphValidateEvent>((evt) => rootVisualElement.Query<VisualElement>(null, "require-validation").ForEach((e) => e.SetEnabled(evt.isValid)));
             graphView.style.flexGrow = 1;
             return graphView;
@@ -127,7 +121,7 @@ namespace Reactics.Core.Editor.Graph {
         }
         public virtual void Load(SerializedObject obj) {
             graphView.Clean();
-            graphView.ModelEditor = ModelEditor;
+            //graphView.Model = Model;
             DoLoad(obj);
             graphView.RefreshInspector(obj);
         }

@@ -11,7 +11,7 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
 
 
     [CustomPropertyDrawer(typeof(EmbeddedLocalizedAsset<>))]

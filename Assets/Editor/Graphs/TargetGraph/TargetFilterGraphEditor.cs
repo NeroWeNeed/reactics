@@ -2,7 +2,7 @@ using Reactics.Core.Battle;
 using Reactics.Core.Effects;
 using UnityEditor.Callbacks;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
 
 
     public class TargetFilterGraphEditor : ObjectGraphEditor<TargetFilterAsset> {

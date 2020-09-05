@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.Collections;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public interface IVariableProvider : IObjectGraphModule {
-        Type[] VariableTypes { get; }
+        IObjectGraphVariableProvider[] VariableTypes { get; }
     }
+
 
 }

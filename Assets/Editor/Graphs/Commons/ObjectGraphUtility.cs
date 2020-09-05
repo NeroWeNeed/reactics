@@ -12,34 +12,34 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
 
 
 
     public static class ObjectGraphUtility {
 
-        public static TNode[] CollectNodes<TNode>(Port origin) where TNode : ObjectGraphNode {
-            if (origin == null || !origin.connected)
+        public static ObjectGraphNode[] CollectNodes(Port origin) {
+            if (origin?.connected != true)
                 return default;
-            var nodes = new List<TNode>();
+            var nodes = new List<ObjectGraphNode>();
             foreach (var connection in origin.connections) {
                 CollectNodes(connection.output?.node, nodes);
             }
             return nodes.ToArray();
         }
-        private static void CollectNodes<TNode>(Node target, List<TNode> nodes) where TNode : ObjectGraphNode {
-            if (target is TNode node && !nodes.Contains(node)) {
+        private static void CollectNodes(Node target, List<ObjectGraphNode> nodes) {
+            if (target is ObjectGraphNode node && !nodes.Contains(node)) {
                 nodes.Add(node);
                 node.Query<Port>().ForEach((port) =>
                 {
                     switch (port.direction) {
                         case Direction.Input:
                             foreach (var connection in port.connections)
-                                CollectNodes<TNode>(connection.output?.node, nodes);
+                                CollectNodes(connection.output?.node, nodes);
                             break;
                         case Direction.Output:
                             foreach (var connection in port.connections)
-                                CollectNodes<TNode>(connection.input?.node, nodes);
+                                CollectNodes(connection.input?.node, nodes);
                             break;
                     }
 
@@ -56,15 +56,9 @@ namespace Reactics.Core.Editor.Graph {
             if (target == null) {
                 port.DisconnectAll();
             }
-            else if (target is ObjectGraphNode objectGraphNode) {
-                graphView.AddElement(port.ConnectTo(objectGraphNode.InputPort));
-            }
-            else {
-                var edge = node.ConnectToMaster(port, target);
-                if (edge != null)
-                    graphView.AddElement(edge);
-
-
+            var targetPort = target.Q<Port>(null, node.TargetInputPortClassName);
+            if (targetPort != null) {
+                graphView.AddElement(port.ConnectTo(targetPort));
             }
         }
 

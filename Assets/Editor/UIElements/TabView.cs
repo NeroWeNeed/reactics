@@ -1,7 +1,7 @@
 using System.Linq;
 using UnityEditor;
 using UnityEngine.UIElements;
-namespace Reactics.Core.Editor {
+namespace Reactics.Editor {
     public class TabView : VisualElement {
         public const string TAB_BUTTON_CLASS = "tab-button";
         public const string TAB_BUTTON_SELECTED_CLASS = "tab-button--selected";

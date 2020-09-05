@@ -4,7 +4,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public class ObjectGraphSearchWindow : ScriptableObject, ISearchWindowProvider {
         public ObjectGraphView graphView;
         public IObjectGraphNodeProvider[] providers;
@@ -33,7 +33,9 @@ namespace Reactics.Core.Editor.Graph {
 
         public bool OnSelectEntry(SearchTreeEntry searchTreeEntry, SearchWindowContext context) {
             if (searchTreeEntry.userData is SearchTreeEntryData data && data.IsValid()) {
-                var node = data.provider.Create(data.type, new Rect(graphView.contentViewContainer.WorldToLocal(graphView.panel.visualTree.ChangeCoordinatesTo(graphView.panel.visualTree, screenToWorldConverter(context.screenMousePosition))), new Vector2(100, 100)));
+                var entry = graphView.Model.CreateEntry(data.type, out string id);
+                var node = data.provider.Create(id, entry, new Rect(graphView.contentViewContainer.WorldToLocal(graphView.panel.visualTree.ChangeCoordinatesTo(graphView.panel.visualTree, screenToWorldConverter(context.screenMousePosition))), new Vector2(100, 100)));
+                Debug.Log(node.Id);
                 graphView.AddElement(node);
             }
             return true;

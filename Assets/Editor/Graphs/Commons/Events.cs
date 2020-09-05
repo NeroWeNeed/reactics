@@ -5,7 +5,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
     public class ChangeFieldEvent : EventBase<ChangeFieldEvent> {
         public Type type { get; protected set; }
 
@@ -34,12 +34,14 @@ namespace Reactics.Core.Editor.Graph {
     }
     public class PortChangedEvent : EventBase<PortChangedEvent> {
 
-        public IEnumerable<Edge> edges { get; private set; }
+        public IEnumerable<Edge> edges { get; protected set; }
+
+
         public PortChangedEvent() {
             base.Init();
             Initialize();
         }
-        private void Initialize() {
+        protected void Initialize() {
             var prop = typeof(PortChangedEvent).GetProperty("propagation", BindingFlags.Instance |
                             BindingFlags.NonPublic |
                             BindingFlags.Public);
@@ -53,6 +55,7 @@ namespace Reactics.Core.Editor.Graph {
 
         }
     }
+
 
     public class ObjectGraphValidateEvent : EventBase<ObjectGraphValidateEvent> {
 

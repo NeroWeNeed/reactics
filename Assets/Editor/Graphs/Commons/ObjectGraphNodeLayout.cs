@@ -1,8 +1,15 @@
+using System;
 using UnityEngine;
-namespace Reactics.Core.Editor.Graph {
+namespace Reactics.Editor.Graph {
 
 
     public class ObjectGraphNodeLayout : ScriptableObject {
-        public Rect[] layout;
+
+
+        public BehaviourModelLayout value;
+
+
     }
+
+
 }
