@@ -1,0 +1,30 @@
+FieldNode {
+    background-color: #3F3F3F;
+}
+FixedBufferNode {
+    background-color: #3F3F3F;
+}
+CharFixedBufferNode {
+    background-color: #3F3F3F;
+}
+.BehaviourGraphInspector {
+    background-color: #2B2B2B;
+    border-color: #191919;
+    padding: 0px 0px 0px 0px;
+}
+.BehaviourGraphInspector #header {
+    background-color: #393939;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-color: #191919;
+    border-bottom-width: 1px;
+    font-size: 14px;
+    padding: 2px;
+}
+.BehaviourGraphInspector #titleContainer {
+    padding: 8px;
+}
+.variable-node #contents {
+    margin-top: 3px;
+    margin-bottom: 3px;
+}

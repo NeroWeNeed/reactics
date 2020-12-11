@@ -1,4 +1,5 @@
 using System;
+using NeroWeNeed.Commons;
 using Reactics.Core.Commons;
 using Unity.Collections;
 using Unity.Entities;
@@ -9,7 +10,6 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace Reactics.Core.Map.Authoring {
-    [RequiresEntityConversion]
     [ConverterVersion("Nero", 2)]
 
     public class Map : MonoBehaviour, IConvertGameObjectToEntity {

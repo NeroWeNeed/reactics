@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement style="flex-direction: row;">
+        <ui:VisualElement style="flex-grow: 1;">
+            <ui:Label text="Unknown" display-tooltip-when-elided="True" name="data-name" />
+            <ui:Label text="Unknown" display-tooltip-when-elided="True" name="data-location" />
+        </ui:VisualElement>
+        <ui:VisualElement style="align-items: stretch; justify-content: center;">
+            <ui:Button text="Open" display-tooltip-when-elided="True" name="data-open-button" style="flex-direction: column;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

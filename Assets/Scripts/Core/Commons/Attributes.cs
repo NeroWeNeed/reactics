@@ -56,4 +56,8 @@ namespace Reactics.Core.Commons {
 
     }
 
+    public interface Identifiable {
+        string Identifier { get; }
+    }
+
 }

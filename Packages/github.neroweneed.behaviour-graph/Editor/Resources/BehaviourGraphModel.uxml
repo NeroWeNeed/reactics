@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement name="mainContainer">
+        <ui:Foldout text="Info">
+            <uie:EnumField label="Compile On" value="Center" name="compileOptions" binding-path="options" />
+            <uie:PropertyField name="behaviourType" binding-path="behaviourType" label="Behaviour Type" />
+        </ui:Foldout>
+        <ui:Foldout text="Output">
+            <ui:VisualElement style="flex-direction: column; flex-grow: 1; flex-shrink: 0;">
+                <uie:PropertyField name="outputDirectory" binding-path="outputDirectory" label="Directory" />
+                <uie:PropertyField name="outputFileName" binding-path="outputFileName" label="File Name" style="flex-basis: auto; flex-grow: 2;" />
+            </ui:VisualElement>
+        </ui:Foldout>
+        <ui:VisualElement style="flex-direction: row; flex-grow: 1; flex-shrink: 0;">
+            <ui:Button text="Compile" display-tooltip-when-elided="True" name="compileButton" style="flex-grow: 2;" />
+            <ui:Button text="Edit" display-tooltip-when-elided="True" name="editButton" style="flex-grow: 1;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

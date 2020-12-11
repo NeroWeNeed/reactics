@@ -1,0 +1,18 @@
+{
+    "name": "NeroWeNeed.BehaviourGraph.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "GUID:4e4a10f31e908ca46a41e81cad616cbc",
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:2665a8d13d1b3f18800f46e256720795"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

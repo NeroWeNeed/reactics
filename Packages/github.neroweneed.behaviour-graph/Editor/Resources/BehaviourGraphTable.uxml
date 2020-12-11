@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <uie:Toolbar>
+        <uie:ToolbarMenu display-tooltip-when-elided="True" text="File" />
+    </uie:Toolbar>
+    <ui:Foldout text="Behaviours" name="behaviour-list-foldout">
+        <ui:ListView focusable="True" name="behaviour-list" />
+    </ui:Foldout>
+    <ui:Foldout text="Variables" name="variable-list-foldout">
+        <ui:ListView focusable="True" name="behaviour-list" />
+    </ui:Foldout>
+</ui:UXML>

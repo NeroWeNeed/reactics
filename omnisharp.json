@@ -53,5 +53,5 @@
         "NewLineForMembersInAnonymousTypes": true,
         "NewLineForClausesInQuery": true,
         "OrganizeImports": true
-    }
+    },
 }

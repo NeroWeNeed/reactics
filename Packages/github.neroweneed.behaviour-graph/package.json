@@ -1,0 +1,17 @@
+{
+    "name": "github.neroweneed.behaviour-graph",
+    "version": "1.0.0",
+    "displayName": "Behaviour Graph",
+    "description": "Editor tool for creating pluggable behaviours.",
+    "unity": "2020.1",
+    "dependencies": {
+        "com.unity.ui.builder": "1.0.0-preview.3",
+        "github.neroweneed.commons": "1.0.0",
+        "org.nuget.newtonsoft.json": "12.0.3"
+    },
+    "author": {
+        "name": "NeroWeNeed",
+        "email": "neroweneed@gmail.com",
+        "url": "https://github.com/NeroWeNeed"
+    }
+}

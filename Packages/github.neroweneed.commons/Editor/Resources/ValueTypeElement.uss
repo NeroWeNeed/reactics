@@ -1,0 +1,20 @@
+.value-type-element-node {
+    flex-direction: row;
+}
+.value-type-element-terminal {
+    flex-grow: 1;
+}
+.value-type-element-buffer {
+    flex-grow: 1;
+}
+.value-type-element-container {
+    flex-direction: column;
+}
+.value-type-element-node-label {
+    -unity-text-align: middle-left;
+    width: 100px;
+    text-overflow: ellipsis;
+    margin-left: 4px;
+    margin-right: 4px;
+    overflow: hidden;
+}

@@ -23,7 +23,6 @@ namespace Reactics.Editor {
             if (!AssetDatabase.IsValidFolder(LOCALE_ASSET_PATH)) {
                 AssetDatabase.CreateFolder(LOCALE_ASSET_PATH.Substring(0, LOCALE_ASSET_PATH.LastIndexOf("/")), LOCALE_ASSET_PATH.Substring(LOCALE_ASSET_PATH.LastIndexOf("/") + 1));
 
-
             }
         }
         public static async void Validate(SerializedProperty property) {

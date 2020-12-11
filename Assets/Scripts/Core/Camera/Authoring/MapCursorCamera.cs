@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace Reactics.Core.Camera.Authoring {
 
-    [RequiresEntityConversion]
-    [RequireComponent(typeof(EntityCamera))]
+    //TODO: GO Component for camera
+    //[RequireComponent(typeof(EntityCamera))]
     public class MapCursorCamera : MonoBehaviour, IConvertGameObjectToEntity {
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {
             /*EntityQuery query = EntityManager.CreateEntityQuery(typeof(CameraMovementData));

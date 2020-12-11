@@ -1,0 +1,16 @@
+{
+    "name": "github.neroweneed.uidots",
+    "version": "1.0.0",
+    "displayName": "UI Dots Implementation",
+    "description": "Dynamic & Static UI System designed for Unity Dots",
+    "unity": "2020.1",
+    "dependencies": {
+        "com.unity.ui.builder": "1.0.0-preview.3",
+        "github.neroweneed.commons": "1.0.0"
+    },
+    "author": {
+        "name": "NeroWeNeed",
+        "email": "neroweneed@gmail.com",
+        "url": "https://github.com/NeroWeNeed"
+    }
+}

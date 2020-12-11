@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2c1a76fc0fc80b4cafd3949ab693c75, type: 3}
+  m_Name: Reactics.Core.AssetDefinitions.EffectDelegate
+  m_EditorClassIdentifier: 
+  outputFileName: 
+  outputDirectory: Assets/ResourceData/Behaviour/Effects
+  options: 7
+  entries: []
+  assemblies:
+  - {fileID: 5897886265953266890, guid: 109f3d546da5fd142802dfa5c0f088d5, type: 3}
+  behaviourName: Effect
+  behaviours:
+  - identifier: sample
+    displayName: Sample Effect
+    configurationType:
+      assemblyQualifiedName: Reactics.Core.SampleEffectData, Reactics.Core, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+    method:
+      container:
+        assemblyQualifiedName: Reactics.Core.SampleEffects, Reactics.Core, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+      name: Sample
+  - identifier: damage
+    displayName: Damage Effect
+    configurationType:
+      assemblyQualifiedName: Reactics.Core.Effects.DamageEffect, Reactics.Core, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+    method:
+      container:
+        assemblyQualifiedName: Reactics.Core.Effects.SkillEffectTable, Reactics.Core,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: DoDamage
+  - identifier: track
+    displayName: Tracking Effect
+    configurationType:
+      assemblyQualifiedName: Reactics.Core.Effects.TrackingEffect, Reactics.Core,
+        Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    method:
+      container:
+        assemblyQualifiedName: Reactics.Core.Effects.SkillEffectTable, Reactics.Core,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: Track
+  models:
+  - asset: 1ca27335774bb9345851ea4704959098
+    options: 6
+  variableDefinition:
+    assemblyQualifiedName: Reactics.Core.SampleVariableDefinition, Reactics.Core,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  compiler:
+    assemblyQualifiedName: NeroWeNeed.BehaviourGraph.Editor.StandardBehaviourGraphCompiler,
+      NeroWeNeed.BehaviourGraph.Editor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  provider:
+    assemblyQualifiedName: NeroWeNeed.BehaviourGraph.Editor.StandardBehaviourGraphProvider,
+      NeroWeNeed.BehaviourGraph.Editor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  automaticRefresh: 1

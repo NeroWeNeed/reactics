@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using NeroWeNeed.Commons;
 using Reactics.Core.Commons;
 using Reactics.Core.Map;
 using Unity.Mathematics;
@@ -337,6 +338,7 @@ namespace Reactics.Editor {
                 for (int x = left; x <= right; x++) {
                     if (MathCommons.WithinEllipse(xRadius, yRadius, x - left - xRadius, y - bottom - yRadius, true))
                         output.Add(new Point(x, y));
+
                 }
             }
 

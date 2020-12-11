@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b38c20e5266653a4b9ebd4cb12d6d80f, type: 3}
+  m_Name: BehaviourGraphGlobalSettings
+  m_EditorClassIdentifier: 
+  behaviours:
+  - assemblyQualifiedName: Reactics.Core.AssetDefinitions.EffectDelegate, Reactics.Core,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  - assemblyQualifiedName: Reactics.Core.AssetDefinitions.FilterDelegate, Reactics.Core,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  - assemblyQualifiedName: NeroWeNeed.UIDots.UIPass, NeroWeNeed.UIDots.Runtime, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  entries:
+  - type:
+      assemblyQualifiedName: Reactics.Core.AssetDefinitions.EffectDelegate, Reactics.Core,
+        Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    asset: {fileID: 11400000, guid: 6cf96750be592214a95c0ac1d382474c, type: 2}
+  - type:
+      assemblyQualifiedName: Reactics.Core.AssetDefinitions.FilterDelegate, Reactics.Core,
+        Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    asset: {fileID: 11400000, guid: 3f5bf83c1b23b0442a69c5aca7a53a50, type: 2}
+  - type:
+      assemblyQualifiedName: NeroWeNeed.UIDots.UIPass, NeroWeNeed.UIDots.Runtime,
+        Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    asset: {fileID: 11400000, guid: 1932362e94af7ec4e9246eb5c61cd0e5, type: 2}
+  baseOutputDirectory: Assets/Resources/Behaviour

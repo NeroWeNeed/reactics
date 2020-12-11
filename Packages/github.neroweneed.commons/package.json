@@ -1,0 +1,15 @@
+{
+    "name": "github.neroweneed.commons",
+    "version": "1.0.0",
+    "displayName": "NeroWeNeed's Commons",
+    "description": "Commons",
+    "unity": "2020.1",
+    "dependencies": {
+        "com.unity.ui.builder": "1.0.0-preview.3"
+    },
+    "author": {
+        "name": "NeroWeNeed",
+        "email": "neroweneed@gmail.com",
+        "url": "https://github.com/NeroWeNeed"
+    }
+}
