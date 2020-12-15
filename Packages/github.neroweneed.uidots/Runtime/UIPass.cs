@@ -23,24 +23,24 @@ namespace NeroWeNeed.UIDots {
 
     public unsafe delegate void UIPass(
         byte type,
-        void* configPtr,
+        IntPtr configPtr,
         int configOffset,
         int configLength,
-        void* statePtr,
+        IntPtr statePtr,
         int* stateChildren,
         int stateIndex,
         int stateChildLocalIndex,
         int stateChildCount,
-        void* vertexDataPtr,
+        IntPtr vertexDataPtr,
         int vertexDataOffset,
-        void* context
+        IntPtr context
     );
     /// <summary>
     /// Optional delegate for determining how many render boxes are needed for each element. If not set, element will use 1.
     /// </summary>
     /// <param name="configPtr"></param>
     /// <returns></returns>
-    public unsafe delegate int UIRenderBoxHandler(void* configPtr, int configOffset, int configLength);
+    public unsafe delegate int UIRenderBoxHandler(IntPtr configPtr, int configOffset, int configLength);
     public struct UIPassState {
         public static readonly UIPassState DEFAULT = new UIPassState
         {

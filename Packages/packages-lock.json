@@ -13,7 +13,7 @@
       "dependencies": {}
     },
     "com.unity.addressables": {
-      "version": "1.16.13",
+      "version": "1.16.15",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -60,7 +60,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.burst": {
-      "version": "1.4.2",
+      "version": "1.4.3",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -265,7 +265,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.render-pipelines.core": {
-      "version": "10.2.0",
+      "version": "10.2.2",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -274,22 +274,22 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.render-pipelines.universal": {
-      "version": "10.2.0",
+      "version": "10.2.2",
       "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.mathematics": "1.1.0",
-        "com.unity.render-pipelines.core": "10.2.0",
-        "com.unity.shadergraph": "10.2.0"
+        "com.unity.render-pipelines.core": "10.2.2",
+        "com.unity.shadergraph": "10.2.2"
       },
       "url": "https://packages.unity.com"
     },
     "com.unity.rendering.hybrid": {
-      "version": "0.8.0-preview.19",
+      "version": "0.10.0-preview.21",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.entities": "0.14.0-preview.19"
+        "com.unity.entities": "0.16.0-preview.21"
       },
       "url": "https://packages.unity.com"
     },
@@ -321,11 +321,11 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.shadergraph": {
-      "version": "10.2.0",
+      "version": "10.2.2",
       "depth": 1,
       "source": "registry",
       "dependencies": {
-        "com.unity.render-pipelines.core": "10.2.0",
+        "com.unity.render-pipelines.core": "10.2.2",
         "com.unity.searcher": "4.3.1"
       },
       "url": "https://packages.unity.com"

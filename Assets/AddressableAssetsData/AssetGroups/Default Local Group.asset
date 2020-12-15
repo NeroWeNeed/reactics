@@ -35,8 +35,8 @@ MonoBehaviour:
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}
     m_TargetAsset: {fileID: 0}
-  - m_GUID: febf1b09b380b7d46ab5ebfccfca54d2
-    m_Address: Assets/ResourceData/OutlineMaterial.mat
+  - m_GUID: 75524750e45630a43a3ef1a9c9ea8fd0
+    m_Address: Assets/ResourceData/Materials/UIMaterial
     m_ReadOnly: 0
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}

@@ -1,6 +1,0 @@
-<UiGraph> 
-    <Hbox backgroundColor="#FFFF66">
-        <Hbox name="Sample" padding.left="4px" backgroundImage="7bca1cba8157a2245a0daafa79cc772f"/>
-    </Hbox>
-    <Hbox/>
-</UiGraph>

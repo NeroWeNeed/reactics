@@ -4,10 +4,12 @@ namespace NeroWeNeed.UIDots {
 
     [PreferBinarySerialization]
     public class UICompiledModel : ScriptableObject {
-        [SerializeField]
+        [SerializeField, HideInInspector]
         public byte[] graph;
-        [SerializeField]
+        [SerializeField, HideInInspector]
         public byte[] initialConfiguration;
+
+        public Material material;
         public Mesh mesh;
         public Texture2D atlas;
 

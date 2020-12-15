@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6383fc424e8530146a28de7905198eea, type: 3}
+  m_Name: UISchema
+  m_EditorClassIdentifier: 
+  entries:
+  - identifier: TextElement
+    displayName: TextElement
+    config:
+      assemblyQualifiedName: NeroWeNeed.UIDots.TextConfig, NeroWeNeed.UIDots.Runtime,
+        Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    pass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: TextElement
+  - identifier: HBox
+    displayName: HBox
+    config:
+      assemblyQualifiedName: NeroWeNeed.UIDots.BoxConfig, NeroWeNeed.UIDots.Runtime,
+        Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    pass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: HBox
+  - identifier: VBox
+    displayName: VBox
+    config:
+      assemblyQualifiedName: NeroWeNeed.UIDots.BoxConfig, NeroWeNeed.UIDots.Runtime,
+        Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    pass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: VBox

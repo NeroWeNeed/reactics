@@ -4,13 +4,13 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using ICSharpCode.NRefactory.Ast;
 using TMPro;
 using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Entities.Serialization;
 using Unity.Mathematics;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
 using UnityEngine.TextCore;
@@ -58,17 +58,17 @@ namespace NeroWeNeed.UIDots {
                 case UILengthUnit.Auto:
                     break;
                 case UILengthUnit.Px:
-                    return value;
+                    return value * context.pixelScale;
                 case UILengthUnit.Cm:
-                    return value * context.dpi * 2.54f;
+                    return value * context.pixelScale * context.dpi * 2.54f;
                 case UILengthUnit.Mm:
-                    return value * context.dpi * 25.4f;
+                    return value * context.pixelScale * context.dpi * 25.4f;
                 case UILengthUnit.In:
-                    return value * context.dpi;
+                    return value * context.pixelScale * context.dpi;
                 case UILengthUnit.Pt:
-                    return value * context.dpi * (1f / 72f);
+                    return value * context.pixelScale * context.dpi * (1f / 72f);
                 case UILengthUnit.Pc:
-                    return value * context.dpi * (1f / 6f);
+                    return value * context.pixelScale * context.dpi * (1f / 6f);
                 case UILengthUnit.Em:
 
                     break;
@@ -79,15 +79,15 @@ namespace NeroWeNeed.UIDots {
                 case UILengthUnit.Rem:
                     break;
                 case UILengthUnit.Vw:
-                    return value * (context.viewportSize.x * 0.01f);
+                    return value * context.pixelScale * (context.viewportSize.x * 0.01f);
                 case UILengthUnit.Vh:
-                    return value * (context.viewportSize.y * 0.01f);
+                    return value * context.pixelScale * (context.viewportSize.y * 0.01f);
                 case UILengthUnit.Vmin:
-                    return value * (math.min(context.viewportSize.x, context.viewportSize.y) * 0.01f);
+                    return value * context.pixelScale * (math.min(context.viewportSize.x, context.viewportSize.y) * 0.01f);
                 case UILengthUnit.Vmax:
-                    return value * (math.max(context.viewportSize.x, context.viewportSize.y) * 0.01f);
+                    return value * context.pixelScale * (math.max(context.viewportSize.x, context.viewportSize.y) * 0.01f);
                 case UILengthUnit.Percent:
-                    return value * context.relativeTo;
+                    return value * context.pixelScale * context.relativeTo;
                 default:
                     break;
             }
@@ -100,10 +100,17 @@ namespace NeroWeNeed.UIDots {
 
     }
     public struct UILengthContext {
-
-        public int dpi;
+        public float dpi;
+        public float pixelScale;
         public float2 viewportSize;
         public float relativeTo;
+        public static UILengthContext CreateContext(Camera camera = null) {
+            return new UILengthContext
+            {
+                dpi = Screen.dpi,
+                pixelScale = 0.001f
+            };
+        }
     }
     public struct FontInfo {
         public float lineHeight;
@@ -129,8 +136,28 @@ namespace NeroWeNeed.UIDots {
         }
     }
     [Terminal]
-    public unsafe struct LocalizedAssetPtr {
+    public unsafe struct BlittableAssetReference : IEquatable<BlittableAssetReference> {
         public fixed byte guid[16];
+        public BlittableAssetReference(string guid) {
+            if (GUID.TryParse(guid, out GUID result)) {
+                fixed (byte* g = this.guid) {
+                    UnsafeUtility.CopyStructureToPtr(ref result, g);
+                }
+            }
+        }
+        public BlittableAssetReference(GUID guid) {
+            fixed (byte* g = this.guid) {
+                UnsafeUtility.CopyStructureToPtr(ref guid, g);
+            }
+        }
+
+        public bool Equals(BlittableAssetReference other) {
+            fixed (byte* thisGuidPtr = guid) {
+                return UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref other), thisGuidPtr, 16) == 0;
+            }
+
+        }
+        public static implicit operator BlittableAssetReference(GUID guid) => new BlittableAssetReference(guid);
         public string ToHex() {
             var sb = new StringBuilder(32);
             char t;
@@ -156,13 +183,33 @@ namespace NeroWeNeed.UIDots {
     public struct CharInfo {
         public uint unicode;
         public float4 uvs;
+        public byte index;
         public GlyphMetrics metrics;
     }
     public enum UILengthUnit : byte {
-        Auto, Px, Cm, Mm, In, Pt, Pc, Em, Ex, Ch, Rem, Vw, Vh, Vmin, Vmax, Percent
+        Px = 0b00000000, Cm = 0b00000010, Mm = 0b00000100, In = 0b00000110, Pt = 0b00001000, Pc = 0b00001010,
+        Em = 0b00000001, Ex = 0b00000011, Ch = 0b00000101, Rem = 0b00000111, Vw = 0b00001001, Vh = 0b00001011, Vmin = 0b00001101, Vmax = 0b00001111, Percent = 0b00010001, Auto = 0b00010011
     }
 
+
     public static class UILengthExtensions {
+        public static bool IsAbsolute(this UILengthUnit unit) => ((byte)unit & 0b00000001) == 0;
+        public static bool IsRelative(this UILengthUnit unit) => ((byte)unit & 0b00000001) != 0;
+        public static bool IsAbsolute(this UILength length) => ((byte)length.unit & 0b00000001) == 0;
+        public static bool IsRelative(this UILength length) => ((byte)length.unit & 0b00000001) != 0;
+        public static bool4 IsAbsolute<TComposite>(this TComposite self) where TComposite : struct, ICompositeData<UILength> {
+            return new bool4(self.X.IsAbsolute(), self.Y.IsAbsolute(), self.Z.IsAbsolute(), self.W.IsAbsolute());
+        }
+        public static bool4 IsRelative<TComposite>(this TComposite self) where TComposite : struct, ICompositeData<UILength> {
+            return new bool4(self.X.IsRelative(), self.Y.IsRelative(), self.Z.IsRelative(), self.W.IsRelative());
+        }
+        public static bool AllAbsolute<TComposite>(this TComposite self) where TComposite : struct, ICompositeData<UILength> {
+            return self.X.IsAbsolute() && self.Y.IsAbsolute() && self.Z.IsAbsolute() && self.W.IsAbsolute();
+        }
+        public static bool AllRelative<TComposite>(this TComposite self) where TComposite : struct, ICompositeData<UILength> {
+            return self.X.IsRelative() && self.Y.IsRelative() && self.Z.IsRelative() && self.W.IsRelative();
+        }
+
         public static float4 Normalize<TComposite>(this TComposite self, UILengthContext context) where TComposite : struct, ICompositeData<UILength> {
             return new float4(self.X.Normalize(context), self.Y.Normalize(context), self.Z.Normalize(context), self.W.Normalize(context));
         }
@@ -198,8 +245,8 @@ namespace NeroWeNeed.UIDots {
         public static UILength Percent(this float value) => new UILength(value, UILengthUnit.Percent);
     }
 
-
-    public interface ICompositeData<TValue> where TValue : struct {
+    public interface ICompositeData { }
+    public interface ICompositeData<TValue> : ICompositeData where TValue : struct {
         public TValue X { get; set; }
         public TValue Y { get; set; }
         public TValue Z { get; set; }

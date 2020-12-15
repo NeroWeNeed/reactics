@@ -24,7 +24,7 @@ using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.U2D;
 namespace NeroWeNeed.UIDots.Editor {
-    public class EmitUIMesh : EndNameEditAction {
+/*     public class EmitUIMesh : EndNameEditAction {
         [MenuItem("Assets/Compile with Mesh")]
         public unsafe static void EmitMesh() {
             if (Selection.activeObject is UIModel model) {
@@ -44,7 +44,7 @@ namespace NeroWeNeed.UIDots.Editor {
                 {
                     graph = blob,
                     configuration = configPtr,
-                    meshData = meshData
+                    meshData = meshData[0]
                 };
                 compileJob.Execute();
                 Mesh.ApplyAndDisposeWritableMeshData(meshData, mesh, UnityEngine.Rendering.MeshUpdateFlags.Default);
@@ -71,7 +71,7 @@ namespace NeroWeNeed.UIDots.Editor {
                 var compileJob = new UILayoutJob
                 {
                     graph = blob,
-                    meshData = meshData
+                    meshData = meshData[0]
                 };
                 compileJob.Execute();
                 Mesh.ApplyAndDisposeWritableMeshData(meshData, mesh, UnityEngine.Rendering.MeshUpdateFlags.Default);
@@ -83,5 +83,5 @@ namespace NeroWeNeed.UIDots.Editor {
 
         }
 
-    }
+    } */
 }

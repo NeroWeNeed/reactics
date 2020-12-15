@@ -13,8 +13,8 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 namespace NeroWeNeed.UIDots {
     public interface IInitializable {
-        void PreInit(UIConfig config, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset);
-        void PostInit(UIConfig config, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset);
+        void PreInit(UIConfig config, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context);
+        void PostInit(UIConfig config, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context);
     }
     public struct UIConfig {
         public static readonly UIConfig DEFAULT = new UIConfig
@@ -69,6 +69,8 @@ namespace NeroWeNeed.UIDots {
         {
             minWidth = new UILength(0, UILengthUnit.Px),
             maxWidth = new UILength(float.PositiveInfinity, UILengthUnit.Px),
+            width = new UILength(float.NaN,UILengthUnit.Px),
+            height = new UILength(float.NaN, UILengthUnit.Px),
             minHeight = new UILength(0, UILengthUnit.Px),
             maxHeight = new UILength(float.PositiveInfinity, UILengthUnit.Px),
         };
@@ -85,7 +87,7 @@ namespace NeroWeNeed.UIDots {
             size = new UILength(12, UILengthUnit.Px)
         };
         [AssetReference]
-        public LocalizedAssetPtr asset;
+        public BlittableAssetReference asset;
         public UILength size;
         public Color32 color;
         public HorizontalAlignStyle horizontalAlign;
@@ -102,6 +104,7 @@ namespace NeroWeNeed.UIDots {
     public struct BackgroundConfig {
         public static readonly BackgroundConfig DEFAULT = default;
         public Color32 color;
+        [AssetReference]
         public UVData image;
         public Color32 imageTint;
     }
@@ -127,19 +130,19 @@ namespace NeroWeNeed.UIDots {
             return UnsafeUtility.ReadArrayElement<CharInfo>((((IntPtr)configPtr) + charInfoOffset).ToPointer(), index);
         }
 
-        public void PreInit(UIConfig config, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset) {
+        public void PreInit(UIConfig config, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
 
         }
-        public unsafe void PostInit(UIConfig config, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset) {
+        public unsafe void PostInit(UIConfig config, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
             TMP_FontAsset fontAsset;
+            var guid = config.font.asset.ToHex();
 #if UNITY_EDITOR
-            fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(AssetDatabase.GUIDToAssetPath(config.font.asset.ToHex()));
+            fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(AssetDatabase.GUIDToAssetPath(guid));
 #else
-            fontAsset = Addressables.LoadAsset<TMP_FontAsset>(config.font.asset.ToHex());
+            fontAsset = Addressables.LoadAsset<TMP_FontAsset>(guid);
 #endif
             if (fontAsset != null) {
                 fontInfo = new FontInfo(fontAsset);
-
 
                 charInfoOffset = extraBytesStream.Length;
                 for (int charIndex = 0; charIndex < text.length; charIndex++) {
@@ -149,6 +152,7 @@ namespace NeroWeNeed.UIDots {
                     {
                         uvs = new float4(charInfo.glyph.glyphRect.x / (float)fontAsset.atlasWidth, charInfo.glyph.glyphRect.y / (float)fontAsset.atlasHeight, charInfo.glyph.glyphRect.width / (float)fontAsset.atlasWidth, charInfo.glyph.glyphRect.height / (float)fontAsset.atlasHeight),
                         metrics = charInfo.glyph.metrics,
+                        index = (byte)(Array.IndexOf(context.fonts, guid) + (context.spriteGroup?.IsEmpty == false ? 1 : 0)),
                         unicode = charInfo.unicode
                     };
                     extraBytesStream.WriteBytes(UnsafeUtility.AddressOf(ref charInfoValue), UnsafeUtility.SizeOf<CharInfo>());

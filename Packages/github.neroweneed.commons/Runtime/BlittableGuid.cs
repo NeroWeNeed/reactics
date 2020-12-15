@@ -17,6 +17,7 @@ namespace NeroWeNeed.Commons {
                 UnsafeUtility.MemCpy(dstPtr, srcPtr, UnsafeUtility.SizeOf<byte>() * SIZE);
             }
         }
+
         public BlittableGuid(byte[] bytes) {
             if (bytes.Length != SIZE)
                 throw new ArgumentException("Invalid Guid");

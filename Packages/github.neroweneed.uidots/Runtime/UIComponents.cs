@@ -6,16 +6,47 @@ using Unity.Entities;
 using Unity.Jobs;
 
 namespace NeroWeNeed.UIDots {
-    public unsafe struct UIConfiguration : IComponentData {
+    public struct UIConfiguration : IComponentData {
         public int index;
-        public void* configData;
-        public int ConfigLength { get => UnsafeUtility.ReadArrayElement<int>(configData, 0); }
+        public int submesh;
     }
+    public struct UIByteData : IBufferElementData {
+        public byte value;
+
+        public override bool Equals(object obj) {
+            return obj is UIByteData data &&
+                   value == data.value;
+        }
+
+        public override int GetHashCode() {
+            return -1584136870 + value.GetHashCode();
+        }
+    }
+
     public unsafe struct UIRoot : IComponentData {
         public BlobAssetReference<UIGraph> graph;
-        public void* configuration;
-        public long length;
-        public long allocatedLength;
+
+        public UIRoot(BlobAssetReference<UIGraph> graph) {
+            this.graph = graph;
+        }
+    }
+    public struct UIDirtyState : ISharedComponentData, IEquatable<UIDirtyState> {
+
+        public bool value;
+        public UIDirtyState(bool value) {
+            this.value = value;
+        }
+
+        public bool Equals(UIDirtyState other) {
+            return this.value == other.value;
+        }
+        public override bool Equals(object obj) {
+            return ((UIDirtyState)obj).value == value;
+        }
+        public override int GetHashCode() {
+            return -1584136870 + value.GetHashCode();
+        }
+        public static implicit operator UIDirtyState(bool value) => new UIDirtyState(value);
     }
     public struct UINode : IBufferElementData {
         public Entity value;

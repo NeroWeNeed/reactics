@@ -28,45 +28,54 @@ using UnityEngine.U2D;
 [assembly: SearchableAssembly]
 namespace NeroWeNeed.UIDots.Editor {
 
+
     public static class UIGraphReader {
         public const string ROOT_ELEMENT = "UIGraph";
+        public const string GROUP_ATTRIBUTE = "group";
 
-        public static void InitModel(UIModel model, StringReader reader) {
+        public static void InitModel(UIModel model, StringReader reader, string guid) {
             using XmlReader xmlReader = XmlReader.Create(reader);
-            InitModel(xmlReader, model);
+            InitModel(xmlReader, model, guid);
         }
-        private static void InitModel(XmlReader reader, UIModel model) {
+        private static void InitModel(XmlReader reader, UIModel model, string guid) {
+            model.spriteGroupName = "default";
             var referencedAssets = new List<string>();
             var nodes = new List<UIGraphNode>();
             var xmlNodes = new List<UIGraphXmlNode>();
-            var schema = UISchemaAsset.Schema;
+            var schema = UISchema.Default;
             TypeDecomposer decomposer = new TypeDecomposer();
             if (reader.Read() && IsRoot(reader)) {
                 if (reader.HasAttributes) {
-                    if (reader.MoveToAttribute("output")) {
-                        model.outputDirectory = reader.Value.Substring(0, reader.Value.LastIndexOf('/'));
-                        model.outputFileName = reader.Value.Substring(reader.Value.LastIndexOf('/') + 1);
-                    }
-                    if (reader.MoveToAttribute("spriteTable")) {
-                        model.spriteTable = AssetDatabase.LoadAssetAtPath<UISpriteTable>(reader.Value.StartsWith("guid:") ? AssetDatabase.GUIDToAssetPath(reader.Value.Substring(5)) : reader.Value);
+                    if (reader.MoveToAttribute(GROUP_ATTRIBUTE)) {
+                        model.spriteGroupName = reader.Value;
                     }
                     reader.MoveToElement();
                 }
-
                 var childReader = reader.ReadSubtree();
                 var root = UIGraphXmlNode.Create(null, default, -1);
                 while (childReader.Read()) {
                     Parse(reader, root, -1, 0, schema, xmlNodes, decomposer);
                 }
             }
-            model.assets.AddRange(xmlNodes.SelectMany(xmlNode => xmlNode.assetReferences));
-            model.nodes.AddRange(xmlNodes.Select(node => new UIModel.Node(node)));
-
+            model.assets.AddRange(xmlNodes.SelectMany(xmlNode => xmlNode.assetReferences).Distinct());
+            var group = UISpriteGroup.Find(model.spriteGroupName);
+            if (group != null) {
+                var textures = model.assets.Where(a =>
+                {
+                    Debug.Log(a);
+                    Debug.Log(AssetDatabase.GetMainAssetTypeAtPath(AssetDatabase.GUIDToAssetPath(a)));
+                    return AssetDatabase.GetMainAssetTypeAtPath(AssetDatabase.GUIDToAssetPath(a)) == typeof(Texture2D);
+                }).ToArray();
+                group.Add(guid, textures);
+                EditorUtility.SetDirty(group);
+            }
+            model.assets.Sort();
+            model.nodes.AddRange(xmlNodes.Select(node => node.ToNode()));
         }
         private static bool IsRoot(XmlReader reader) => reader.NodeType == XmlNodeType.Element && reader.Name == ROOT_ELEMENT;
-        public unsafe static void Parse(XmlReader reader, UIGraphXmlNode parent, int parentIndex, int depth, UISchemaAsset schema, List<UIGraphXmlNode> xmlNodes, TypeDecomposer decomposer) {
+        public unsafe static void Parse(XmlReader reader, UIGraphXmlNode parent, int parentIndex, int depth, UISchema schema, List<UIGraphXmlNode> xmlNodes, TypeDecomposer decomposer) {
             while (reader.Read()) {
-                if (reader.NodeType == XmlNodeType.Element && schema.Elements.TryGetValue(reader.Name, out UISchema.Element entry)) {
+                if (reader.NodeType == XmlNodeType.Element && schema.Entries.TryGetValue(reader.Name, out UISchema.Element entry)) {
                     var node = UIGraphXmlNode.Create(reader.Name, entry, parentIndex);
                     if (reader.HasAttributes) {
                         var fields = decomposer.Decompose<UIConfig>('-');
@@ -81,7 +90,10 @@ namespace NeroWeNeed.UIDots.Editor {
                             reader.MoveToAttribute(i);
                             node.properties[reader.Name] = reader.Value;
                             if (fields.TryGetValue(reader.Name, out TypeDecomposer.FieldData data) && data.isAssetReference) {
-                                node.assetReferences.Add(reader.Value);
+                                var guid = reader.Value.StartsWith("guid:") ? reader.Value.Substring(5) : AssetDatabase.GUIDFromAssetPath(reader.Value).ToString();
+                                if (!node.assetReferences.Contains(guid))
+                                    node.assetReferences.Add(guid);
+                                node.properties[reader.Name] = guid;
                             }
                         }
                         reader.MoveToElement();
@@ -117,6 +129,18 @@ namespace NeroWeNeed.UIDots.Editor {
         public static UIGraphXmlNode Create(string identifier, UISchema.Element element, int parentIndex) => new UIGraphXmlNode { identifier = identifier, children = new List<int>(), properties = new Dictionary<string, string>(), element = element, parent = parentIndex, assetReferences = new List<string>() };
         public override string ToString() {
             return string.IsNullOrEmpty(name) ? $"{identifier}" : $"{identifier} ({name})";
+        }
+        public NeroWeNeed.UIDots.UIModel.Node ToNode() {
+            return new UIDots.UIModel.Node
+            {
+                identifier = identifier,
+                name = name,
+                pass = pass,
+                properties = properties?.Select(property => new NeroWeNeed.UIDots.UIModel.Node.Property { path = property.Key, value = property.Value })?.ToList(),
+                children = children,
+                parent = parent
+            };
+
         }
     }
 }
