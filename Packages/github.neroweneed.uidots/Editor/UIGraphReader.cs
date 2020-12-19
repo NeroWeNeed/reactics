@@ -11,6 +11,7 @@ using System.Xml;
 using NeroWeNeed.BehaviourGraph.Editor;
 using NeroWeNeed.BehaviourGraph.Editor.Model;
 using NeroWeNeed.Commons;
+using TMPro;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -58,13 +59,12 @@ namespace NeroWeNeed.UIDots.Editor {
                 }
             }
             model.assets.AddRange(xmlNodes.SelectMany(xmlNode => xmlNode.assetReferences).Distinct());
-            var group = UISpriteGroup.Find(model.spriteGroupName);
+            var group = UIAssetGroup.Find(model.spriteGroupName);
             if (group != null) {
                 var textures = model.assets.Where(a =>
                 {
-                    Debug.Log(a);
-                    Debug.Log(AssetDatabase.GetMainAssetTypeAtPath(AssetDatabase.GUIDToAssetPath(a)));
-                    return AssetDatabase.GetMainAssetTypeAtPath(AssetDatabase.GUIDToAssetPath(a)) == typeof(Texture2D);
+                    var type = AssetDatabase.GetMainAssetTypeAtPath(AssetDatabase.GUIDToAssetPath(a));
+                    return  type == typeof(Texture2D) || type == typeof(TMP_FontAsset);
                 }).ToArray();
                 group.Add(guid, textures);
                 EditorUtility.SetDirty(group);

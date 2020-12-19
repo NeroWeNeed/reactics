@@ -22,7 +22,6 @@ namespace Reactics.Core.Battle {
         public const float SIMULATION_RATE = 1f / SIMULATION_FRAME_RATE;
         protected override void OnCreate() {
             base.OnCreate();
-            FixedRateUtils.EnableFixedRateSimple(this, SIMULATION_RATE);
 
 
         }

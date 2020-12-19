@@ -21,8 +21,7 @@ namespace NeroWeNeed.UIDots {
         void Write(string s, IntPtr ptr, TypeDecomposer.FieldData fieldData, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context);
     }
     public struct UIPropertyWriterContext {
-        public UISpriteGroup spriteGroup;
-        public string[] fonts;
+        public UIAssetGroup spriteGroup;
     }
     public interface IUIPropertyWriter<TValue> : IUIPropertyWriter where TValue : struct {
 
@@ -132,9 +131,12 @@ namespace NeroWeNeed.UIDots {
 
         }
         private static void WriteEnum(Type type, string s, IntPtr ptr, TypeDecomposer.FieldData fieldData, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-            var parser = typeof(Enum).GetMethod(nameof(Enum.TryParse), BindingFlags.Static | BindingFlags.Public).MakeGenericMethod(type).CreateDelegate(typeof(UIPropertyParser<>).MakeGenericType(type));
+            var parser = typeof(UIPropertyWriterFactory).GetMethod(nameof(TryParseEnum), BindingFlags.Static | BindingFlags.Public).MakeGenericMethod(type).CreateDelegate(typeof(UIPropertyParser<>).MakeGenericType(type));
             var writer = Activator.CreateInstance(typeof(UIPropertyWriter<>).MakeGenericType(type), parser) as IUIPropertyWriter;
             writer.Write(s, ptr, fieldData, extraBytesStream, extraByteStreamOffset, context);
+        }
+        public static bool TryParseEnum<TEnum>(string s, out TEnum result) where TEnum : struct {
+            return Enum.TryParse(s, true, out result);
         }
         private static void DoCompositeWrite(this IUIPropertyWriter targetWriter, Type type, IntPtr ptr, TypeDecomposer.FieldData fieldData, string sx, string sy, string sz, string sw, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
             var size = UnsafeUtility.SizeOf(type);

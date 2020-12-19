@@ -24,6 +24,7 @@ namespace NeroWeNeed.UIDots {
     public unsafe delegate void UIPass(
         byte type,
         IntPtr configPtr,
+        IntPtr configOffsetLayoutPtr,
         int configOffset,
         int configLength,
         IntPtr statePtr,
@@ -50,9 +51,7 @@ namespace NeroWeNeed.UIDots {
         public float2 widthConstraint;
         public float2 heightConstraint;
         public float4 globalBox;
-        public float4 margin;
-        public float4 padding;
-        public float2 localOffset;
+        public float4 localBox;
         public float2 size;
     }
     /// <summary>
@@ -62,6 +61,6 @@ namespace NeroWeNeed.UIDots {
     /// When terminal node is reached, size pass is called on node and the node goes back
     /// </summary>
     public enum UIPassType : byte {
-        Unknown = 0, LayoutSelf = 1, LayoutChild = 2, SizeSelf = 3, SizeChild = 4, Render = 5
+        Unknown = 0, Constrain = 2, Size = 3, Render = 5
     }
 }

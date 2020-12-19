@@ -19,13 +19,7 @@ namespace NeroWeNeed.UIDots {
         [HideInInspector]
         public List<Node> nodes = new List<Node>();
         public string spriteGroupName;
-        public void CollectTextures(out Texture2D atlas, out Texture2D[] fonts) {
-            var spriteGroup = UISpriteGroup.Find(spriteGroupName);
-            atlas = spriteGroup?.GenerateTexture();
-            fonts = this.assets.Select(a => AssetDatabase.GUIDToAssetPath(a)).Where(a => a != null && AssetDatabase.GetMainAssetTypeAtPath(a) == typeof(TMP_FontAsset))
-            .Select(a => Array.Find(AssetDatabase.LoadAllAssetRepresentationsAtPath(a), b => b is Texture2D)).Where(a => a != null).OfType<Texture2D>().ToArray();
-        }
-
+        public Material GetMaterial() => UIAssetGroup.Find(spriteGroupName)?.UpdateMaterial();
 
 
         public unsafe BlobAssetReference<UIGraph> Create(Allocator blobAllocator = Allocator.TempJob) {
@@ -33,10 +27,10 @@ namespace NeroWeNeed.UIDots {
             ref UIGraph graph = ref builder.ConstructRoot<UIGraph>();
             var schema = UISchema.Default;
             using var configurationWriter = new MemoryBinaryWriter();
+            var assetGroup = UIAssetGroup.Find(spriteGroupName);
             var context = new UIPropertyWriterContext
             {
-                spriteGroup = UISpriteGroup.Find(spriteGroupName),
-                fonts = this.assets.Where(a => AssetDatabase.GetMainAssetTypeAtPath(a) == typeof(TMP_FontAsset)).ToArray()
+                spriteGroup = assetGroup
             };
             var configInfo = new List<ConfigData>();
             var decomposer = new TypeDecomposer();
@@ -135,7 +129,7 @@ namespace NeroWeNeed.UIDots {
 
         }
         private void OnDestroy() {
-            UISpriteGroup.Find(spriteGroupName)?.Remove(this, this.assets);
+            UIAssetGroup.Find(spriteGroupName)?.Remove(this, this.assets);
 
         }
         [Serializable]

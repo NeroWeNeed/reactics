@@ -4,24 +4,27 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Users;
 
 namespace Reactics.Core.Input {
     //Clean up inputs to a readable format for the PlayerInputProcessorSystem.
     //TODO: Consider breaking up into system groups for each ActionMap, filter with a sharedcomponent holding current action map with SetSharedComponentFilter.
     //Store old version of input state to compare to newer poll in systems to determine whether or not to write to input components. This way systems looking for changes on input components can be reactive.
 
-    [UpdateInGroup(typeof(InputSystemGroup))]
+    /* [UpdateInGroup(typeof(InputSystemGroup))]
     public class InputInterpreterSystem : ComponentSystem {
         protected override void OnUpdate() {
             InputSystem.Update();
 
-            if (BattlePlayer.instance == null)
+            if (InputHandler.instance == null)
                 return;
             //TODO: Check if just setting the battleplayer.instance saves time (does calling battleplayer.instance like this result in a call every time..? probably.)
-            Controls input = BattlePlayer.instance.input;
-            var playerInput = BattlePlayer.instance.playerInput;
+            Controls input = InputHandler.instance.input;
+
+
+            var playerInput = InputHandler.instance.playerInput;
             float screenEdgeLength = 40f;
-            ControlSchemes controlScheme = BattlePlayer.instance.GetControlScheme();
+            ControlSchemes controlScheme = InputHandler.instance.GetControlScheme();
             //var actionMap = BattlePlayer.instance.GetActionMap(); //maybe unnecessary.
 
             //Check action map so we know which inputs we're going to be dealing with
@@ -50,9 +53,10 @@ namespace Reactics.Core.Input {
                 //Clean up camera panning inputs
                 //These inputs are converted to simpler values to pan the camera certain directions.
                 float2 cleanedHoverInput = new float2(0, 0);
+                
                 if (playerInput.currentControlScheme == "Keyboard + Mouse") {
                     //Get the world coordinates of the mouse based on a raycast
-                    mousePositionRayCast = BattlePlayer.instance.GetMouseCursorWorldCoordinates(hoverInput);
+                    mousePositionRayCast = InputHandler.instance.GetMouseCursorWorldCoordinates(hoverInput);
 
                     //If the mouse is close enough to the edge of the screen, pan appropriately.
                     if (hoverInput.y >= Screen.height - screenEdgeLength)
@@ -119,5 +123,5 @@ namespace Reactics.Core.Input {
                 });
             }
         }
-    }
+    } */
 }

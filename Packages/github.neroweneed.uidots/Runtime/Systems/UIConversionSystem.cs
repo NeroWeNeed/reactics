@@ -18,6 +18,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.UIElements;
 using Hash128 = Unity.Entities.Hash128;
 
 namespace NeroWeNeed.UIDots {
@@ -29,39 +30,9 @@ namespace NeroWeNeed.UIDots {
             Entities.ForEach((UIObject obj) => DeclareReferencedAsset(obj.model));
             Entities.WithNone<Mesh, Material>().ForEach((Entity entity, UIModel model) =>
              {
-                 var mesh = new Mesh();
-                 var material = GetUIMaterial(model).material;
-                 EntityManager.AddComponentObject(entity, mesh);
+                 var material = model.GetMaterial();
                  EntityManager.AddComponentObject(entity, material);
              });
-        }
-        private unsafe MaterialInfo GetUIMaterial(UIModel model) {
-            model.CollectTextures(out Texture2D atlas, out Texture2D[] fonts);
-            var info = new MaterialInfo
-            {
-                material = new Material(AssetDatabase.LoadAssetAtPath<Shader>(SHADER_ASSET))
-            };
-            if (fonts?.Length > 0) {
-                /*  var fontTextureSize = fonts.Aggregate(int2.zero, (size, texture) => new int2(math.max(size.x, texture.width), math.max(size.y, texture.height)));
-                fontTextureSize = math.ceilpow2(fontTextureSize);
-                var fontArray = new Texture2DArray(fontTextureSize.x, fontTextureSize.y, fonts.Length, TextureFormat.RFloat, 0, true);
-                var buffer = new Texture2D(fontTextureSize.x, fontTextureSize.y, TextureFormat.RFloat, 0, true);
-                for (int i = 0; i < fonts.Length; i++) {
-                    Graphics.ConvertTexture(fonts[i], buffer);
-                    var target = fontArray.GetPixelData<float>(0, i);
-                    var src = buffer.GetPixelData<float>(0);
-                    UnsafeUtility.MemCpy(target.GetUnsafePtr(), src.GetUnsafePtr(), src.Length * UnsafeUtility.SizeOf<float>());
-                    //scalePixels[i] = new float2(textures[i].width / (float)size.x, textures[i].height / (float)size.y);
-                }
-                info.material.SetTexture("_Fonts", fontArray);
-                info.fonts = fontArray;  */
-                info.material.SetTexture("_Fonts", fonts[0]);
-            }
-            if (atlas != null) {
-                info.material.SetTexture("_Images", atlas);
-                info.atlas = atlas;
-            }
-            return info;
         }
 
         private struct MaterialInfo {
@@ -70,75 +41,7 @@ namespace NeroWeNeed.UIDots {
             public Texture2DArray fonts;
         }
     }
-/*     public struct UIGeneratedBlob : IComponentData {
-        public BlobAssetReference<UIGraph> blob;
-    }
-    [WorldSystemFilter(WorldSystemFilterFlags.GameObjectConversion)]
-    [UpdateInGroup(typeof(GameObjectConversionGroup))]
-    public class UIBlobConversionSystem : GameObjectConversionSystem {
-        private List<Mesh> meshes = new List<Mesh>();
-        private List<UIModel> models = new List<UIModel>();
-        protected unsafe override void OnUpdate() {
-            var processBlobAssets = new NativeList<Hash128>(8, Allocator.Temp);
-            using var context = new BlobAssetComputationContext<Settings, UIGraph>(BlobAssetStore, 32, Allocator.Temp);
-            Entities.ForEach((Entity entity, UIModel model, Mesh mesh) =>
-            {
 
-                var hash = new Hash128((uint)((model?.GetHashCode()) ?? 0), 0, 0, 0);
-                processBlobAssets.Add(hash);
-                context.AssociateBlobAssetWithUnityObject(hash, model);
-                if (context.NeedToComputeBlobAsset(hash)) {
-                    var settings = new Settings
-                    {
-                        hash = hash,
-                        dataEntity = entity
-                    };
-                    models.Add(model);
-
-                    context.AddBlobAssetToCompute(hash, settings);
-                }
-                meshes.Add(mesh);
-            });
-            using var settings = context.GetSettings(Allocator.Temp);
-
-            var graphs = new NativeArray<BlobAssetReference<UIGraph>>(settings.Length, Allocator.TempJob);
-            var meshData = Mesh.AllocateWritableMeshData(settings.Length);
-            var contexts = new NativeArray<UILengthContext>(settings.Length, Allocator.TempJob);
-            var ctx = new UILengthContext
-            {
-                dpi = Screen.dpi,
-                pixelScale = 0.01f
-            };
-            UnsafeUtility.MemCpyReplicate(contexts.GetUnsafePtr(), UnsafeUtility.AddressOf(ref ctx), UnsafeUtility.SizeOf<UILengthContext>(), settings.Length);
-            for (int i = 0; i < settings.Length; i++) {
-                var blob = models[i].Create(Allocator.Persistent);
-                context.AddComputedBlobAsset(settings[i].hash, blob);
-                graphs[i] = blob;
-            }
-            new UILayoutJob
-            {
-                graphs = graphs,
-                contexts = contexts,
-                meshDataArray = meshData
-            }.Schedule(settings.Length, 1).Complete();
-            Mesh.ApplyAndDisposeWritableMeshData(meshData, meshes);
-            foreach (var m in meshes) {
-                m.RecalculateBounds();
-            }
-            int index = 0;
-            Entities.ForEach((Entity entity, UIModel model, Mesh mesh) =>
-            {
-                var hash = processBlobAssets[index++];
-                context.GetBlobAsset(hash, out var blob);
-                EntityManager.AddComponentData(entity, new UIGeneratedBlob { blob = blob });
-            });
-        }
-
-        public struct Settings {
-            public Hash128 hash;
-            public Entity dataEntity;
-        }
-    } */
     [WorldSystemFilter(WorldSystemFilterFlags.GameObjectConversion)]
     [UpdateInGroup(typeof(GameObjectConversionGroup))]
     public class UIConversionSystem : GameObjectConversionSystem {
@@ -148,24 +51,48 @@ namespace NeroWeNeed.UIDots {
         }
         private List<Mesh> meshes = new List<Mesh>();
         private List<UIModel> models = new List<UIModel>();
-        private EntityQuery modelQuery;
+
+
         protected unsafe override void OnCreate() {
-            modelQuery = GetEntityQuery(typeof(UIModel), typeof(Mesh), typeof(Material));
             base.OnCreate();
         }
         protected unsafe override void OnUpdate() {
-            var processBlobAssets = new NativeList<Hash128>(8, Allocator.Temp);
-            var modelEntities = new NativeList<Entity>(8, Allocator.Temp);
-            var entityMap = new NativeHashMap<BlittableAssetReference, ValueTuple<Entity, Hash128>>(8, Allocator.Temp);
+
+            //Stores meshHash, blob hash, blob entity
+            var objectProcessList = new NativeList<ValueTuple<Hash128, Hash128, UIContext, UICameraContext, int>>(8, Allocator.Temp);
+            var objectHashes = new NativeHashMap<Hash128, int>(8, Allocator.Temp);
+            var entityMap = new NativeHashMap<Hash128, Entity>(8, Allocator.Temp);
+
+            //var nodeInfoMap = new NativeMultiHashMap<Hash128, UINodeDecompositionJob.NodeInfo>(8, Allocator.Temp);
             models.Clear();
             this.meshes.Clear();
             using var context = new BlobAssetComputationContext<Settings, UIGraph>(BlobAssetStore, 32, Allocator.Temp);
-            Entities.ForEach((Entity entity, UIModel model, Mesh mesh) =>
+            Entities.ForEach((UIObject uiObject) =>
+            {
+                var meshHash = new Hash128((uint)(uiObject.model?.GetHashCode() ?? 0), (uint)(uiObject.uiCamera?.GetHashCode() ?? 0), 0, 0);
+                var blobHash = new Hash128((uint)((uiObject.model?.GetHashCode()) ?? 0), 0, 0, 0);
+                UIContext context = UIContext.CreateContext(uiObject.uiCamera);
+                UICameraContext cameraContext = default;
+
+                if (uiObject.uiCamera != null)
+                    cameraContext = new UICameraContext
+                    {
+                        cameraLTW = uiObject.uiCamera.UILayerCameraObject.transform.localToWorldMatrix,
+                        clipPlane = new float2(uiObject.uiCamera.UILayerCamera.nearClipPlane, uiObject.uiCamera.UILayerCamera.farClipPlane)
+                    };
+                if (!objectHashes.TryGetValue(meshHash, out int meshIndex)) {
+                    meshIndex = this.meshes.Count;
+                    this.meshes.Add(new Mesh());
+                }
+                Debug.Log("here");
+                objectProcessList.Add(ValueTuple.Create(meshHash, blobHash, context, cameraContext, meshIndex));
+
+
+            });
+            Entities.ForEach((Entity entity, UIModel model) =>
             {
                 var hash = new Hash128((uint)((model?.GetHashCode()) ?? 0), 0, 0, 0);
-                processBlobAssets.Add(hash);
-                modelEntities.Add(entity);
-                entityMap[AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(model))] = new ValueTuple<Entity, Hash128>(entity, hash);
+                entityMap[hash] = entity;
                 context.AssociateBlobAssetWithUnityObject(hash, model);
                 if (context.NeedToComputeBlobAsset(hash)) {
                     var settings = new Settings
@@ -177,87 +104,87 @@ namespace NeroWeNeed.UIDots {
 
                     context.AddBlobAssetToCompute(hash, settings);
                 }
-                meshes.Add(mesh);
             });
 
+
             using var settings = context.GetSettings(Allocator.Temp);
+            var nodes = new NativeMultiHashMap<Hash128, UINodeDecompositionJob.NodeInfo>(8, Allocator.TempJob);
             for (int i = 0; i < settings.Length; i++) {
                 context.AddComputedBlobAsset(settings[i].hash, models[i].Create(Allocator.Persistent));
             }
-            if (modelEntities.Length > 0) {
-                var graphs = new NativeArray<BlobAssetReference<UIGraph>>(modelEntities.Length, Allocator.TempJob);
-                var meshData = Mesh.AllocateWritableMeshData(modelEntities.Length);
-                var contexts = new NativeArray<UILengthContext>(modelEntities.Length, Allocator.TempJob);
-                var ctx = UILengthContext.CreateContext();
-                UnsafeUtility.MemCpyReplicate(contexts.GetUnsafePtr(), UnsafeUtility.AddressOf(ref ctx), UnsafeUtility.SizeOf<UILengthContext>(), modelEntities.Length);
-                for (int i = 0; i < modelEntities.Length; i++) {
-                    context.GetBlobAsset(processBlobAssets[i], out var blob);
+            if (objectProcessList.Length > 0) {
+                var graphs = new NativeArray<BlobAssetReference<UIGraph>>(objectProcessList.Length, Allocator.TempJob);
+                var meshData = Mesh.AllocateWritableMeshData(objectProcessList.Length);
+                var contexts = new NativeArray<UIContext>(objectProcessList.Length, Allocator.TempJob);
+
+
+                int streamSize = 0;
+                for (int i = 0; i < objectProcessList.Length; i++) {
+                    context.GetBlobAsset(objectProcessList[i].Item2, out var blob);
                     graphs[i] = blob;
+                    contexts[i] = objectProcessList[i].Item3;
+                    streamSize += blob.Value.nodes.Length;
                 }
+                var nodeStream = new NativeStream(streamSize, Allocator.TempJob);
+
                 new UILayoutJob
                 {
                     graphs = graphs,
                     contexts = contexts,
                     meshDataArray = meshData
-                }.Schedule(modelEntities.Length, 1).Complete();
+                }.Schedule(objectProcessList.Length, 1).Complete();
+
+                new UINodeDecompositionJob
+                {
+                    graphs = graphs,
+                    nodes = nodeStream.AsWriter()
+                }.Schedule(objectProcessList.Length, 1).Complete();
+                var result = nodeStream.ToNativeArray<UINodeDecompositionJob.NodeInfo>(Allocator.Temp);
+                for (int i = 0; i < result.Length; i++) {
+                    nodes.Add(objectProcessList[result[i].graphIndex].Item2, result[i]);
+                }
+                contexts.Dispose();
+                nodeStream.Dispose();
+                graphs.Dispose();
                 Mesh.ApplyAndDisposeWritableMeshData(meshData, meshes);
                 foreach (var m in meshes) {
                     m.RecalculateBounds();
+
                 }
             }
+            int index = 0;
             Entities.ForEach((UIObject obj) =>
             {
-                
+
                 DeclareAssetDependency(obj.gameObject, obj.model);
                 var entity = GetPrimaryEntity(obj);
                 DstEntityManager.AddSharedComponentData<UIDirtyState>(entity, true);
-                if (entityMap.TryGetValue(AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(obj.model)), out var data)) {
-                    var dataEntity = data.Item1;
-                    context.GetBlobAsset(data.Item2, out var blob);
-                    var material = EntityManager.GetComponentObject<Material>(dataEntity);
-                    var mesh = EntityManager.GetComponentObject<Mesh>(dataEntity);
-                    DstEntityManager.AddComponentData(entity, new UIRoot(blob));
-                    DstEntityManager.AddSharedComponentData(entity, new RenderMesh
-                    {
-                        mesh = mesh,
-                        material = material,
-                        subMesh = 0,
-                        castShadows = ShadowCastingMode.Off,
-                        receiveShadows = false,
-                        needMotionVectorPass = false,
-                        layer = obj.gameObject.layer
-                    });
-                    DstEntityManager.AddComponentData(entity, new RenderBounds
-                    {
-                        Value = mesh.bounds.ToAABB()
-                    });
+                Mesh mesh;
+                Material material;
+                BlobAssetReference<UIGraph> graph;
+                IEnumerator<UINodeDecompositionJob.NodeInfo> nodeIter;
+                bool updateCache;
+                var info = objectProcessList[index++];
+                if (entityMap.TryGetValue(info.Item2, out var dataEntity)) {
+                    context.GetBlobAsset(info.Item2, out graph);
+                    material = EntityManager.GetComponentObject<Material>(dataEntity);
+                    mesh = meshes[info.Item5];
+                    nodeIter = nodes.GetValuesForKey(info.Item2);
+                    updateCache = true;
                 }
                 else {
-                    DstEntityManager.AddComponent<UIRoot>(entity);
-                    DstEntityManager.AddSharedComponentData(entity, new RenderMesh());
-                    DstEntityManager.AddComponent<RenderBounds>(entity);
+                    mesh = obj.cachedMesh;
+                    material = obj.cachedMaterial;
+                    graph = obj.cachedBlob;
+                    nodeIter = obj.cachedNodeData.GetEnumerator();
+                    updateCache = false;
                 }
-                DstEntityManager.AddComponentData(entity, new LocalToWorld { Value = obj.transform.localToWorldMatrix });
-                ConfigureEditorRenderData(entity, obj.gameObject, true);
-            });
+                if (obj.uiCamera != null) {
+                    DstEntityManager.AddComponent<UIScreenElement>(entity);
+                }
+                var contextSource = obj.uiCamera == null ? Entity.Null : GetPrimaryEntity(obj.uiCamera.gameObject);
+                DstEntityManager.AddComponentData(entity, new UIRoot(graph, contextSource));
 
-            processBlobAssets.Dispose();
-            /* var assetEntities = new NativeHashMap<BlittableAssetReference, Entity>(8, Allocator.Temp);
-            Entities.ForEach((Entity entity, UIModel model, Mesh mesh) =>
-            {
-                assetEntities[AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(model))] = entity;
-            });
-            Entities.ForEach((UIObject obj) =>
-            {
-
-                DeclareAssetDependency(obj.gameObject, obj.model);
-                var dataEntity = assetEntities[AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(obj.model))];
-                var entity = GetPrimaryEntity(obj);
-                var blob = EntityManager.GetComponentData<UIGeneratedBlob>(dataEntity).blob;
-                var material = EntityManager.GetComponentObject<Material>(dataEntity);
-                var mesh = EntityManager.GetComponentObject<Mesh>(dataEntity);
-                DstEntityManager.AddComponentData(entity, new UIRoot(blob));
-                DstEntityManager.AddSharedComponentData<UIDirtyState>(entity, true);
                 DstEntityManager.AddSharedComponentData(entity, new RenderMesh
                 {
                     mesh = mesh,
@@ -266,15 +193,102 @@ namespace NeroWeNeed.UIDots {
                     castShadows = ShadowCastingMode.Off,
                     receiveShadows = false,
                     needMotionVectorPass = false,
-                    layer = 0
+                    layer = obj.gameObject.layer
                 });
+
                 DstEntityManager.AddComponentData(entity, new RenderBounds
                 {
-                    Value = mesh.bounds.ToAABB()
+                    Value = mesh.GetSubMesh(0).bounds.ToAABB()
                 });
-                DstEntityManager.AddComponentData(entity, new LocalToWorld { Value = obj.transform.localToWorldMatrix });
+                if (updateCache) {
+                    obj.cachedMesh = mesh;
+                    obj.cachedBlob = graph;
+                    obj.cachedMaterial = material;
+                    obj.cachedNodeData.Clear();
+                }
+
+
+                this.DeclareLinkedEntityGroup(obj.gameObject);
+                var children = new NativeList<UINode>(Allocator.Temp);
+
+                var loc = obj.transform.position;
+                var rot = obj.transform.rotation;
+                var scale = obj.transform.localScale;
+                if (obj.faceCamera && obj.uiCamera != null) {
+                    rot = math.mul(rot, (quaternion)obj.uiCamera.UILayerCameraObject.transform.rotation);
+
+                }
+                var baseLtw = float4x4.TRS(loc, rot, scale);
+                while (nodeIter.MoveNext()) {
+                    if (updateCache)
+                        obj.cachedNodeData.Add(nodeIter.Current);
+                    var nodeEntity = CreateAdditionalEntity(obj);
+                    DstEntityManager.AddComponentData(nodeEntity, new UIConfiguration { index = nodeIter.Current.graphNodeIndex, submesh = nodeIter.Current.subMesh });
+                    var ptr = ((UIConfig*)((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + nodeIter.Current.location.offset)));
+                    DstEntityManager.SetName(nodeEntity, $"{obj.name}[{ptr->name.ToString(ptr)}]");
+                    DstEntityManager.AddComponentData(nodeEntity, new UIParent { value = entity });
+                    DstEntityManager.AddSharedComponentData(nodeEntity, new RenderMesh
+                    {
+                        mesh = mesh,
+                        material = material,
+                        subMesh = nodeIter.Current.subMesh,
+                        castShadows = ShadowCastingMode.Off,
+                        receiveShadows = false,
+                        needMotionVectorPass = false,
+                        layer = obj.gameObject.layer
+                    });
+                    var subMesh = mesh.GetSubMesh(nodeIter.Current.subMesh);
+                    var bounds = subMesh.bounds;
+                    DstEntityManager.AddComponentData(nodeEntity, new RenderBounds
+                    {
+                        Value = mesh.bounds.ToAABB()
+                    });
+                    /*                             var topLeft = mesh.vertices[subMesh.firstVertex];
+                                                float4x4.TRS(new float3(-bounds.extents.x+(topLeft.x)))
+
+                                                var position = obj.transform.localToWorldMatrix.SetTRS(new float3(bounds.e)) */
+                    DstEntityManager.AddComponentData(nodeEntity, new LocalToWorld { Value = baseLtw });
+                    DstEntityManager.AddComponentData<UIParent>(nodeEntity, entity);
+                    DstEntityManager.AddComponent<UICameraContext>(nodeEntity);
+                    DstEntityManager.AddComponent<UIContext>(nodeEntity);
+                    if (obj.uiCamera != null) {
+                        DstEntityManager.AddComponentData(nodeEntity, new UIContextSource { value = GetPrimaryEntity(obj.uiCamera.UILayerCameraObject) });
+                        if (obj.faceCamera) {
+                            DstEntityManager.AddComponent<UIFaceScreen>(nodeEntity);
+                        }
+                        if (obj.screenUI) {
+                            DstEntityManager.AddComponentData<UIScreenElement>(nodeEntity,new UIScreenElement { alignment = Alignment.Left });
+                        }
+                    }
+                    children.Add(nodeEntity);
+                    ConfigureEditorRenderData(nodeEntity, obj.gameObject, true);
+
+                    /*                             DstEntityManager.AddComponent<Translation>(nodeEntity);
+                                                DstEntityManager.AddComponent<Rotation>(nodeEntity);
+                                                DstEntityManager.AddComponent<Scale>(nodeEntity); */
+                }
+                DstEntityManager.AddComponentData(entity, new LocalToWorld { Value = baseLtw });
+                if (DstEntityManager.HasComponent<Rotation>(entity)) {
+                    DstEntityManager.SetComponentData<Rotation>(entity, new Rotation { Value = rot });
+                }
+                DstEntityManager.AddComponent<UICameraContext>(entity);
+                DstEntityManager.AddComponent<UIContext>(entity);
+                if (obj.uiCamera != null) {
+                    DstEntityManager.AddComponentData(entity, new UIContextSource { value = GetPrimaryEntity(obj.uiCamera.UILayerCameraObject) });
+                    if (obj.faceCamera) {
+                        DstEntityManager.AddComponent<UIFaceScreen>(entity);
+                    }
+                    if (obj.screenUI) {
+                        DstEntityManager.AddComponentData<UIScreenElement>(entity, new UIScreenElement { alignment = Alignment.Left });
+                    }
+                }
+                var childrenBuffer = DstEntityManager.AddBuffer<UINode>(entity);
+                childrenBuffer.AddRange(children);
                 ConfigureEditorRenderData(entity, obj.gameObject, true);
-            }); */
+
+            });
+            nodes.Dispose();
+
         }
         protected override void OnDestroy() {
             base.OnDestroy();

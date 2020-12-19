@@ -69,7 +69,7 @@ namespace NeroWeNeed.UIDots {
         {
             minWidth = new UILength(0, UILengthUnit.Px),
             maxWidth = new UILength(float.PositiveInfinity, UILengthUnit.Px),
-            width = new UILength(float.NaN,UILengthUnit.Px),
+            width = new UILength(float.NaN, UILengthUnit.Px),
             height = new UILength(float.NaN, UILengthUnit.Px),
             minHeight = new UILength(0, UILengthUnit.Px),
             maxHeight = new UILength(float.PositiveInfinity, UILengthUnit.Px),
@@ -84,25 +84,22 @@ namespace NeroWeNeed.UIDots {
     public struct FontConfig {
         public static readonly FontConfig DEFAULT = new FontConfig
         {
-            size = new UILength(12, UILengthUnit.Px)
+            size = new UILength(12, UILengthUnit.Px),
+            color = new Color32(0, 0, 0, byte.MaxValue)
         };
         [AssetReference]
         public BlittableAssetReference asset;
         public UILength size;
         public Color32 color;
-        public HorizontalAlignStyle horizontalAlign;
-        public VerticalAlignStyle verticalAlign;
         public bool wrap;
     }
 
-    public enum HorizontalAlignStyle : byte {
-        Left = 0, Center = 1, Right = 2
-    }
-    public enum VerticalAlignStyle : byte {
-        Top = 0, Center = 1, Bottom = 2
-    }
+
     public struct BackgroundConfig {
-        public static readonly BackgroundConfig DEFAULT = default;
+        public static readonly BackgroundConfig DEFAULT = new BackgroundConfig {
+            color = Color.white,
+            imageTint = Color.white
+        };
         public Color32 color;
         [AssetReference]
         public UVData image;
@@ -116,6 +113,9 @@ namespace NeroWeNeed.UIDots {
     }
     public struct BoxConfig {
         public UILength spacing;
+
+        public HorizontalAlignment horizontalAlign;
+        public VerticalAlignment verticalAlign;
     }
 
     public struct TextConfig : IInitializable {
@@ -141,9 +141,10 @@ namespace NeroWeNeed.UIDots {
 #else
             fontAsset = Addressables.LoadAsset<TMP_FontAsset>(guid);
 #endif
-            if (fontAsset != null) {
+            var index = context.spriteGroup.GetAtlasIndex(guid);
+            if (fontAsset != null && index >= 0) {
+                
                 fontInfo = new FontInfo(fontAsset);
-
                 charInfoOffset = extraBytesStream.Length;
                 for (int charIndex = 0; charIndex < text.length; charIndex++) {
                     UnsafeUtility.CopyPtrToStructure((((IntPtr)extraBytesStream.Data) + (text.offset - extraByteStreamOffset) + (charIndex * 2)).ToPointer(), out char character);
@@ -152,7 +153,7 @@ namespace NeroWeNeed.UIDots {
                     {
                         uvs = new float4(charInfo.glyph.glyphRect.x / (float)fontAsset.atlasWidth, charInfo.glyph.glyphRect.y / (float)fontAsset.atlasHeight, charInfo.glyph.glyphRect.width / (float)fontAsset.atlasWidth, charInfo.glyph.glyphRect.height / (float)fontAsset.atlasHeight),
                         metrics = charInfo.glyph.metrics,
-                        index = (byte)(Array.IndexOf(context.fonts, guid) + (context.spriteGroup?.IsEmpty == false ? 1 : 0)),
+                        index = (byte)index,
                         unicode = charInfo.unicode
                     };
                     extraBytesStream.WriteBytes(UnsafeUtility.AddressOf(ref charInfoValue), UnsafeUtility.SizeOf<CharInfo>());

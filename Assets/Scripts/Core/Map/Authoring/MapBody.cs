@@ -6,8 +6,6 @@ using Unity.Transforms;
 using UnityEngine;
 namespace Reactics.Core.Map.Authoring {
 
-    [RequiresEntityConversion]
-    [ConverterVersion("Nero", 1)]
     public class MapBody : MonoBehaviour, IConvertGameObjectToEntity {
         [SerializeField]
         public Point position;

@@ -11,19 +11,6 @@ namespace Reactics.Core.Commons {
             this.max = max;
         }
     }
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class UpdateInGroupFirstAttribute : UpdateInGroupAttribute {
-        public UpdateInGroupFirstAttribute(Type groupType) : base(groupType) {
-            OrderFirst = true;
-        }
-    }
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class UpdateInGroupLastAttribute : UpdateInGroupAttribute {
-        public UpdateInGroupLastAttribute(Type groupType) : base(groupType) {
-            OrderLast = true;
-        }
-    }
-
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Interface)]
     public sealed class TypeColorAttribute : Attribute {
 

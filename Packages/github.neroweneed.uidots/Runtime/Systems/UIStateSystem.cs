@@ -38,74 +38,74 @@ namespace NeroWeNeed.UIDots {
 
     /* [WorldSystemFilter(WorldSystemFilterFlags.All)]
     [UpdateInGroup(typeof(SimulationSystemGroup))] */
+    [UpdateInGroup(typeof(UISystemGroup))]
+    [UpdateAfter(typeof(UIContextUpdateSystem))]
     public class UIStateSystem : SystemBase {
         private EntityCommandBufferSystem entityCommandBufferSystem;
         private EntityQuery query;
         public List<Mesh> meshes;
-        public List<RenderMesh> renderMeshes;
         protected override void OnCreate() {
             entityCommandBufferSystem = World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>();
             query = GetEntityQuery(ComponentType.ReadOnly<UIRoot>(), ComponentType.ReadOnly<UINode>(), ComponentType.ReadWrite<UIDirtyState>());
             query.SetSharedComponentFilter<UIDirtyState>(true);
             this.RequireForUpdate(query);
             this.meshes = new List<Mesh>();
-            this.renderMeshes = new List<RenderMesh>();
 
         }
         protected unsafe override void OnUpdate() {
             this.meshes.Clear();
-            this.renderMeshes.Clear();
             var entities = new NativeList<Entity>(8, Allocator.TempJob);
+            var contexts = new NativeList<UIContext>(8, Allocator.TempJob);
             var referencedGraphs = new NativeList<BlobAssetReference<UIGraph>>(8, Allocator.TempJob);
-            Entities.WithAll<UINode>().WithSharedComponentFilter<UIDirtyState>(true).ForEach((Entity entity, in UIRoot root, in UIDirtyState dirtyState, in RenderMesh renderMesh) =>
+            //var entityUpdate = new NativeMultiHashMap<int, Entity>(8, Allocator.Temp);
+            Entities.WithSharedComponentFilter<UIDirtyState>(true).ForEach((Entity entity, DynamicBuffer<UINode> nodes, in UIRoot root, in UIContext context, in UICameraContext cameraContext, in UIDirtyState dirtyState, in RenderMesh renderMesh) =>
             {
-                if (!meshes.Contains(renderMesh.mesh)) {
+                int index = meshes.IndexOf(renderMesh.mesh);
+                if (index < 0) {
+                    index = meshes.Count;
                     meshes.Add(renderMesh.mesh);
-                    renderMeshes.Add(renderMesh);
                     entities.Add(entity);
                     referencedGraphs.Add(root.graph);
+                    contexts.Add(context);
                 }
+                /*                 entityUpdate.Add(index, entity);
+                                foreach (var node in nodes) {
+                                    entityUpdate.Add(index, node.value);
+                                } */
             }).WithoutBurst().Run();
             this.CompleteDependency();
             if (entities.Length > 0) {
                 var ecb = entityCommandBufferSystem.CreateCommandBuffer();
-
                 var meshData = Mesh.AllocateWritableMeshData(entities.Length);
-                var contexts = new NativeArray<UILengthContext>(entities.Length, Allocator.TempJob);
-
-                var ctx = UILengthContext.CreateContext();
-
-                UnsafeUtility.MemCpyReplicate(contexts.GetUnsafePtr(), UnsafeUtility.AddressOf(ref ctx), UnsafeUtility.SizeOf<UILengthContext>(), entities.Length);
-                var graphs = new NativeArray<BlobAssetReference<UIGraph>>(entities.Length, Allocator.TempJob);
-                graphs.CopyFrom(referencedGraphs);
                 var layoutJob = new UILayoutJob
                 {
                     meshDataArray = meshData,
-                    graphs = graphs,
-                    contexts = contexts
+                    graphs = referencedGraphs.AsArray(),
+                    contexts = contexts.AsArray()
                 };
                 var layoutHandle = layoutJob.Schedule(entities.Length, 1);
                 layoutHandle.Complete();
-
-
                 Job.WithCode(() =>
                 {
                     for (int i = 0; i < entities.Length; i++) {
                         ecb.SetSharedComponent<UIDirtyState>(entities[i], false);
                     }
                     Mesh.ApplyAndDisposeWritableMeshData(meshData, this.meshes);
+                    //TODO: Push Bound calculation to end of layout job.
                     for (int i = 0; i < this.meshes.Count; i++) {
                         var m = this.meshes[i];
                         m.RecalculateBounds();
-                        ecb.SetComponent(entities[i], new RenderBounds { Value = m.bounds.ToAABB() });
-                        /*                         var rm = renderMeshes[i];
-                                                rm.mesh = m;
-                                                ecb.SetSharedComponent(entities[i], rm); */
+                        /*                         var iter = entityUpdate.GetValuesForKey(i);
+                                                var bounds = m.GetSubMesh(0).bounds.ToAABB();
+                                                while (iter.MoveNext()) {
+                                                    ecb.SetComponent(iter.Current, new RenderBounds { Value = bounds });
+                                                } */
                     }
                 }).WithoutBurst().Run();
                 this.CompleteDependency();
                 entityCommandBufferSystem.AddJobHandleForProducer(this.Dependency);
             }
+            contexts.Dispose();
             referencedGraphs.Dispose();
             entities.Dispose();
 

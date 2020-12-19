@@ -5,7 +5,6 @@ using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 namespace Reactics.Core.Camera.Authoring {
-    [RequiresEntityConversion]
     public class Cursor : MonoBehaviour, IConvertGameObjectToEntity {
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {
             EntityQuery cameraQuery = dstManager.CreateEntityQuery(typeof(CameraMovementData));
