@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Rendering;
 using Unity.Transforms;
+using UnityEngine;
 
 namespace NeroWeNeed.UIDots {
     [UpdateInGroup(typeof(UISystemGroup))]
@@ -33,8 +34,10 @@ namespace NeroWeNeed.UIDots {
 
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float3 GetTranslation(float3 up, float3 right,float2 size, AABB bounds, Alignment alignment) {
-            var offset = alignment.GetOffset(new float2(bounds.Extents.x * 2, bounds.Extents.y * 2), size);
+        public static float3 GetTranslation(float3 up, float3 right, float2 size, AABB bounds, Alignment alignment) {
+            Debug.Log(size);
+            var offset = alignment.GetOffset(new float2(bounds.Extents.x * 2, bounds.Extents.y * 2), size,Alignment.BottomLeft)/size;
+            Debug.Log(offset);
             return (right * offset.x) + (up * offset.y);
         }
 

@@ -6,10 +6,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEditor.Graphs;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.UIElements;
 using static UnityEngine.Mesh;
 
 namespace NeroWeNeed.UIDots {
@@ -166,7 +163,7 @@ namespace NeroWeNeed.UIDots {
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void DecomposeHead(BlobAssetReference<UIGraph> graph, int threadIndex) {
-            var submeshCount = UIJobUtility.InitConfigLayout(graph, out NativeArray<OffsetInfo> configLayout, Allocator.Temp);
+            var submeshCount = UIJobUtility.GetConfigLayout(graph, out NativeArray<OffsetInfo> configLayout, Allocator.Temp);
             int currentSubmesh = 0;
             var nodeInfo = new NativeArray<NodeInfo>(submeshCount, Allocator.Temp);
             Decompose(graph, threadIndex, 0, configLayout, ref currentSubmesh, nodeInfo, submeshCount + 1);
@@ -175,15 +172,15 @@ namespace NeroWeNeed.UIDots {
                 nodes.Write(nodeInfo[i]);
             }
             nodes.EndForEachIndex();
+
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe void Decompose(BlobAssetReference<UIGraph> graph, int threadIndex, int graphIndex, NativeArray<OffsetInfo> configLayout, ref int currentSubmesh, NativeArray<NodeInfo> nodes, int subMeshCount) {
-            var config = (UIConfig*)((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[graphIndex].offset).ToPointer());
-            if (config->name.IsCreated) {
-                nodes[currentSubmesh] = new NodeInfo(threadIndex, configLayout[graphIndex], graphIndex, subMeshCount - (++currentSubmesh));
+        public unsafe void Decompose(BlobAssetReference<UIGraph> graph, int threadIndex, int currentIndex, NativeArray<OffsetInfo> configLayout, ref int currentSubmesh, NativeArray<NodeInfo> nodes, int subMeshCount) {
+            if (UIConfigLayout.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset)) {
+                nodes[currentSubmesh] = new NodeInfo(threadIndex, configLayout[currentIndex], currentIndex, subMeshCount - (++currentSubmesh));
             }
-            for (int i = 0; i < graph.Value.nodes[graphIndex].children.Length; i++) {
-                Decompose(graph, threadIndex, graph.Value.nodes[graphIndex].children[i], configLayout, ref currentSubmesh, nodes, subMeshCount);
+            for (int i = 0; i < graph.Value.nodes[currentIndex].children.Length; i++) {
+                Decompose(graph, threadIndex, graph.Value.nodes[currentIndex].children[i], configLayout, ref currentSubmesh, nodes, subMeshCount);
             }
         }
         public struct NodeInfo {
@@ -201,59 +198,7 @@ namespace NeroWeNeed.UIDots {
         }
     }
 
-    public static class UIJobUtility {
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int InitConfigLayout(BlobAssetReference<UIGraph> graph, out NativeArray<OffsetInfo> configLayout, Allocator allocator) {
-            var offset = 0;
-            int subMeshCount = 0;
-            configLayout = new NativeArray<OffsetInfo>(graph.Value.nodes.Length, allocator);
-            for (int i = 0; i < graph.Value.nodes.Length; i++) {
-                var size = UnsafeUtility.AsRef<int>((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + offset).ToPointer());
-                if (((UIConfig*)((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + offset + UnsafeUtility.SizeOf<int>()).ToPointer()))->name.IsCreated)
-                    subMeshCount++;
-                offset += UnsafeUtility.SizeOf<int>();
-                configLayout[i] = new OffsetInfo(offset, size);
-                offset += size;
-            }
-            return subMeshCount;
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float2 GetAlignmentAdjustment(Alignment alignment, float2 outer, float2 inner) {
-            return alignment.GetOffset(inner, outer, Alignment.Left, Alignment.Left);
-            //return math.max(outer - inner, float2.zero) * new float2(((byte)horizontal) * 0.5f, ((byte)vertical) * 0.5f);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float2 Constrain(float2 widthConstraints, float2 heightConstraints, float2 size) {
-            return new float2(float.IsPositiveInfinity(widthConstraints.y) ? math.max(size.x,widthConstraints.x) : math.clamp(size.x, widthConstraints.x, widthConstraints.y), float.IsPositiveInfinity(heightConstraints.y) ? math.max(size.y,heightConstraints.x) : math.clamp(size.y, heightConstraints.x, heightConstraints.y));
-        }
-        public static float2 Maximize(float2 widthConstraints, float2 heightConstraints, float2 size) {
-            return new float2(float.IsPositiveInfinity(widthConstraints.y) ? math.max(size.x, widthConstraints.x) : math.max(size.x, widthConstraints.y), float.IsPositiveInfinity(heightConstraints.y) ? math.max(size.y, heightConstraints.x) : math.max(size.y, heightConstraints.y));
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void AdjustPosition(float2 size, BoxConfig* boxConfig, UIPassState* selfPtr, IntPtr statePtr, int stateChildCount, void* stateChildren) {
-            var outer = UIJobUtility.Maximize(selfPtr->widthConstraint, selfPtr->heightConstraint, size);
-/*             float width = 0f;
-            float height = 0f;
-            for (int i = 0; i < stateChildCount; i++) {
-                var childState = (UIPassState*)(statePtr + (UnsafeUtility.SizeOf<UIPassState>() * (UnsafeUtility.ReadArrayElement<int>(stateChildren, i)))).ToPointer();
-                width += childState->size.x + childState->localBox.x + childState->localBox.z;
-                height += childState->size.y + childState->localBox.y + childState->localBox.w;
-            } */
-            //var adjustment = UIJobUtility.GetAlignmentAdjustment(boxConfig->horizontalAlign, boxConfig->verticalAlign, outer, new float2(width,height));
-            for (int i = 0; i < stateChildCount; i++) {
-                var childState = (UIPassState*)(statePtr + (UnsafeUtility.SizeOf<UIPassState>() * (UnsafeUtility.ReadArrayElement<int>(stateChildren, i)))).ToPointer();
-                var adjustment = UIJobUtility.GetAlignmentAdjustment(boxConfig->horizontalAlign.As2D(boxConfig->verticalAlign), outer, new float2(childState->size.x, childState->size.y));
-                childState->localBox.x += adjustment.x;
-                childState->localBox.y += adjustment.y;
-            }
-            selfPtr->size = outer;
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float2 ConstrainOuterBox(float2 widthConstraints, float2 heightConstraints, float2 size) {
-            return new float2(float.IsPositiveInfinity(widthConstraints.y) ? size.x : math.max(size.x, widthConstraints.y), float.IsPositiveInfinity(widthConstraints.y) ? size.y : math.max(size.y, heightConstraints.y));
-        }
-    }
     [BurstCompile]
     public unsafe struct UILayoutJob : IJobParallelFor {
         [ReadOnly]
@@ -279,11 +224,11 @@ namespace NeroWeNeed.UIDots {
                 var stateLayout = new NativeArray<UIPassState>(graph.Value.nodes.Length, Allocator.Temp);
                 var initial = UIPassState.DEFAULT;
                 UnsafeUtility.MemCpyReplicate(stateLayout.GetUnsafePtr(), UnsafeUtility.AddressOf(ref initial), UnsafeUtility.SizeOf<UIPassState>(), stateLayout.Length);
-                int subMeshCount = UIJobUtility.InitConfigLayout(graph, out NativeArray<OffsetInfo> configLayout, Allocator.Temp);
-
+                int subMeshCount = UIJobUtility.GetConfigLayout(graph, out NativeArray<OffsetInfo> configLayout, Allocator.Temp);
                 var renderBoxLayout = new NativeArray<OffsetInfo>(graph.Value.nodes.Length, Allocator.Temp);
                 var subMeshes = new NativeArray<SubMeshInfo>(subMeshCount, Allocator.Temp);
                 var renderBoxCount = InitRenderBoxLayout(graph, configLayout, renderBoxLayout);
+
                 InitMeshData(meshData, renderBoxCount);
                 NativeArray<UIVertexData> vertices = meshData.GetVertexData<UIVertexData>();
                 var contextPtr = (UIContext*)((IntPtr)contexts.GetUnsafePtr() + (UnsafeUtility.SizeOf<UIContext>() * index)).ToPointer();
@@ -307,10 +252,10 @@ namespace NeroWeNeed.UIDots {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int InitRenderBoxLayout(BlobAssetReference<UIGraph> graph, NativeArray<OffsetInfo> configLayout, NativeArray<OffsetInfo> renderBoxLayout) {
             int count = 0;
-            for (int i = 0; i < graph.Value.nodes.Length; i++) {
-                var l = graph.Value.nodes[i].renderBoxHandler.IsCreated ? graph.Value.nodes[i].renderBoxHandler.Invoke((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr(), configLayout[i].offset, configLayout[i].length) : 1;
-                renderBoxLayout[i] = new OffsetInfo(count, l);
-                count += renderBoxLayout[i].length;
+            for (int currentIndex = 0; currentIndex < graph.Value.nodes.Length; currentIndex++) {
+                var l = graph.Value.nodes[currentIndex].renderBoxHandler.IsCreated ? graph.Value.nodes[currentIndex].renderBoxHandler.Invoke((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr(), configLayout[currentIndex].offset, configLayout[currentIndex].length, graph.Value.nodes[currentIndex].configurationMask) : 1;
+                renderBoxLayout[currentIndex] = new OffsetInfo(count, l);
+                count += renderBoxLayout[currentIndex].length;
             }
             return count;
         }
@@ -324,15 +269,8 @@ namespace NeroWeNeed.UIDots {
             float4 bounds = float4.zero;
             RenderSubMesh0((UIVertexData*)vertices.GetUnsafePtr(), context, indices, graph, configLayout, renderBoxLayout, stateLayout, subMeshes, ref submeshIndex, ref renderIndex, ref bounds);
             meshData.subMeshCount = subMeshes.Length + 1;
-            float3 totalSize = new float3(math.abs(bounds.z - bounds.x), math.abs(bounds.y - bounds.w), 0f);
-            var adjust = new float3(totalSize.x / 2f, totalSize.y / 2f, 0);
-            meshData.SetSubMesh(0, new UnityEngine.Rendering.SubMeshDescriptor(0, renderIndex * 6)
-            /*             {
-                            bounds = new Bounds(float3.zero, totalSize),
-                            firstVertex = 0,
-                            vertexCount = vertices.Length
-                        } */
-            , MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
+            float4 totalBounds  = bounds;
+            int submesh0RenderIndexCount = renderIndex;
             for (int i = 0; i < subMeshes.Length; i++) {
                 //while (submeshes.IsCreated && !submeshes.IsEmpty()) {
                 SubMeshInfo current = subMeshes[i];
@@ -344,6 +282,7 @@ namespace NeroWeNeed.UIDots {
                     (IntPtr)configLayout.GetUnsafePtr(),
                     configLayout[current.nodeIndex].offset,
                     configLayout[current.nodeIndex].length,
+                    graph.Value.nodes[current.nodeIndex].configurationMask,
                     (IntPtr)stateLayout.GetUnsafePtr(),
                     (int*)graph.Value.nodes[current.nodeIndex].children.GetUnsafePtr(),
                     current.nodeIndex,
@@ -353,7 +292,7 @@ namespace NeroWeNeed.UIDots {
                     renderIndex * UnsafeUtility.SizeOf<UIVertexData>() * 4,
                     (IntPtr)context
                 );
-
+                bounds = float4.zero;
                 for (int j = 0; j < renderBoxLayout[current.nodeIndex].length; j++) {
                     indices[(renderIndex + j) * 6] = (ushort)((renderIndex + j) * 4);
                     indices[((renderIndex + j) * 6) + 1] = (ushort)(((renderIndex + j) * 4) + 2);
@@ -361,28 +300,30 @@ namespace NeroWeNeed.UIDots {
                     indices[((renderIndex + j) * 6) + 3] = (ushort)(((renderIndex + j) * 4) + 2);
                     indices[((renderIndex + j) * 6) + 4] = (ushort)(((renderIndex + j) * 4) + 3);
                     indices[((renderIndex + j) * 6) + 5] = (ushort)(((renderIndex + j) * 4) + 1);
+                    UpdateBounds(indices, (UIVertexData*)vertices.GetUnsafePtr(), (renderIndex + j) * 4, ref bounds);
                 }
                 renderIndex += renderBoxLayout[current.nodeIndex].length;
-                bounds = float4.zero;
                 RenderMesh(current.nodeIndex, (UIVertexData*)vertices.GetUnsafePtr(), context, indices, graph, configLayout, renderBoxLayout, stateLayout, subMeshes, true, false, false, ref submeshIndex, ref renderIndex, ref bounds);
                 var size = new float3(math.abs(bounds.z - bounds.x), math.abs(bounds.y - bounds.w), 0f);
+                totalBounds = new float4(math.min(totalBounds.x, bounds.x), math.min(totalBounds.y, bounds.y), math.max(totalBounds.z, bounds.z), math.max(totalBounds.w, bounds.w));
                 current.meshIndexStart = initialRenderIndex * 6;
                 current.meshIndexCount = (renderIndex - initialRenderIndex) * 6;
-
+                current.bounds = bounds;
+                subMeshes[i] = current;
                 for (int j = 0; j < (renderIndex - initialRenderIndex); j++) {
                     for (int k = 0; k < 4; k++) {
                         UIVertexData vertex = vertices[(initialRenderIndex + j) * 4 + k];
-                        vertex.position.z -= 0.00001f * (i + 1);
+                        vertex.position.z -= 0.001f * (i + 1);
                         vertices[(initialRenderIndex + j) * 4 + k] = vertex;
                     }
                 }
-                meshData.SetSubMesh(meshData.subMeshCount - (i + 1), new UnityEngine.Rendering.SubMeshDescriptor(current.meshIndexStart, current.meshIndexCount)
-                /*                 {
-                    bounds = new Bounds(new float3(bounds.x+(size.x/2f),bounds.y + (size.y / 2f),0f)-adjust, size),
-                    firstVertex = (current.meshIndexStart/6) * 4,
-                    vertexCount = (current.meshIndexCount/6)*4
-                } */
-                , MeshUpdateFlags.DontValidateIndices);
+                /*                 meshData.SetSubMesh(meshData.subMeshCount - (i + 1), new UnityEngine.Rendering.SubMeshDescriptor(current.meshIndexStart, current.meshIndexCount)
+                                {
+                                    bounds = new Bounds(new float3(bounds.x + (size.x / 2f), bounds.y + (size.y / 2f), 0f) - adjust, size),
+                                    firstVertex = (current.meshIndexStart / 6) * 4,
+                                    vertexCount = (current.meshIndexCount / 6) * 4
+                                }
+                                , MeshUpdateFlags.DontValidateIndices); */
 
                 /*                 meshData.SetSubMesh(i + 1, new UnityEngine.Rendering.SubMeshDescriptor(current.meshIndexStart, current.meshIndexCount)
                                 {
@@ -391,12 +332,37 @@ namespace NeroWeNeed.UIDots {
             }
             //meshData.SetSubMesh(0, new UnityEngine.Rendering.SubMeshDescriptor(0, indices.Length));
             //Center Mesh
-
-/*             for (int i = 0; i < vertices.Length; i++) {
+            float3 totalSize = new float3(math.abs(totalBounds.z - totalBounds.x), math.abs(totalBounds.y - totalBounds.w), 0f);
+            var adjust = new float3(totalSize.x / 2f, totalSize.y / 2f, 0);
+            for (int i = 0; i < vertices.Length; i++) {
                 UIVertexData vertex = vertices[i];
                 vertex.position -= adjust;
                 vertices[i] = vertex;
-            } */
+            }
+            for (int i = 0; i < subMeshes.Length; i++) {
+                SubMeshInfo current = subMeshes[i];
+                var size = new float3(math.abs(current.bounds.z - current.bounds.x), math.abs(current.bounds.y - current.bounds.w), 0.00001f);
+                meshData.SetSubMesh(meshData.subMeshCount - (i + 1), new UnityEngine.Rendering.SubMeshDescriptor(current.meshIndexStart, current.meshIndexCount)
+                {
+
+                    //bounds = new Bounds(new float3(current.bounds.x + (size.x / 2f), bounds.y + (size.y / 2f), 0f) - adjust, size),
+                    bounds = new Bounds(float3.zero, size),
+                    firstVertex = (current.meshIndexStart / 6) * 4,
+                    vertexCount = (current.meshIndexCount / 6) * 4
+                }
+                //,MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices
+                );
+
+            }
+            meshData.SetSubMesh(0, new UnityEngine.Rendering.SubMeshDescriptor(0, submesh0RenderIndexCount * 6)
+            {
+
+                bounds = new Bounds(float3.zero, new float3(totalSize.x,totalSize.y,0.00001f)),
+                firstVertex = 0,
+                vertexCount = submesh0RenderIndexCount * 4
+            }
+            //,MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices
+            );
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void RenderSubMesh0(
@@ -413,11 +379,10 @@ namespace NeroWeNeed.UIDots {
             ref float4 bounds
             ) {
             const int currentIndex = 0;
-            var config = (UIConfig*)((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset).ToPointer());
             var box = stateLayout[currentIndex];
             box.globalBox = box.localBox;
             stateLayout[currentIndex] = box;
-            if (config->name.IsCreated) {
+            if (UIConfigLayout.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset)) {
                 subMeshes[currentSubmesh] = new SubMeshInfo(++currentSubmesh, currentIndex);
                 RenderMesh(currentIndex, vertexPtr, context, indices, graph, configLayout, renderBoxLayout, stateLayout, subMeshes, false, true, true, ref currentSubmesh, ref renderIndex, ref bounds);
             }
@@ -429,6 +394,7 @@ namespace NeroWeNeed.UIDots {
                     (IntPtr)configLayout.GetUnsafePtr(),
                     configLayout[currentIndex].offset,
                     configLayout[currentIndex].length,
+                    graph.Value.nodes[currentIndex].configurationMask,
                     (IntPtr)stateLayout.GetUnsafePtr(),
                     (int*)graph.Value.nodes[currentIndex].children.GetUnsafePtr(),
                     currentIndex,
@@ -445,7 +411,7 @@ namespace NeroWeNeed.UIDots {
                     indices[((renderIndex + j) * 6) + 3] = (ushort)(((renderIndex + j) * 4) + 2);
                     indices[((renderIndex + j) * 6) + 4] = (ushort)(((renderIndex + j) * 4) + 3);
                     indices[((renderIndex + j) * 6) + 5] = (ushort)(((renderIndex + j) * 4) + 1);
-                    UpdateBounds(indices, vertexPtr, renderIndex + j, ref bounds);
+                    UpdateBounds(indices, vertexPtr, (renderIndex + j) * 4, ref bounds);
                 }
                 renderIndex += renderBoxLayout[currentIndex].length;
 
@@ -454,10 +420,10 @@ namespace NeroWeNeed.UIDots {
             }
 
         }
-        private void UpdateBounds(NativeArray<ushort> indices, UIVertexData* vertexPtr, int renderBoxIndex, ref float4 bounds) {
-            var topLeft = UnsafeUtility.ReadArrayElement<UIVertexData>(vertexPtr, indices[(renderBoxIndex * 6) + 2]);
-            var bottomRight = UnsafeUtility.ReadArrayElement<UIVertexData>(vertexPtr, indices[(renderBoxIndex * 6) + 1]);
-            bounds = new float4(math.min(topLeft.position.x, bounds.x), math.max(topLeft.position.y, bounds.y), math.max(bottomRight.position.x, bounds.z), math.min(bottomRight.position.y, bounds.w));
+        private void UpdateBounds(NativeArray<ushort> indices, UIVertexData* vertexPtr, int renderIndex, ref float4 bounds) {
+            var topLeft = UnsafeUtility.ReadArrayElement<UIVertexData>(vertexPtr, renderIndex);
+            var bottomRight = UnsafeUtility.ReadArrayElement<UIVertexData>(vertexPtr, renderIndex + 3);
+            bounds = new float4(math.min(topLeft.position.x, bounds.x), math.min(topLeft.position.y, bounds.y), math.max(bottomRight.position.x, bounds.z), math.max(bottomRight.position.y, bounds.w));
 
         }
         private void RenderMesh(
@@ -479,13 +445,12 @@ namespace NeroWeNeed.UIDots {
             ) {
             for (int i = 0; i < graph.Value.nodes[index].children.Length; i++) {
                 var currentIndex = graph.Value.nodes[index].children[i];
-                var config = (UIConfig*)((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset).ToPointer());
                 if (accumulate) {
                     var box = stateLayout[currentIndex];
                     box.globalBox = stateLayout[index].globalBox + box.localBox;
                     stateLayout[currentIndex] = box;
                 }
-                if (config->name.IsCreated) {
+                if (UIConfigLayout.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset)) {
                     if (updateSubmeshCount) {
                         subMeshes[currentSubmesh] = new SubMeshInfo(++currentSubmesh, currentIndex);
                     }
@@ -498,6 +463,7 @@ namespace NeroWeNeed.UIDots {
                         (IntPtr)configLayout.GetUnsafePtr(),
                         configLayout[currentIndex].offset,
                         configLayout[currentIndex].length,
+                        graph.Value.nodes[currentIndex].configurationMask,
                         (IntPtr)stateLayout.GetUnsafePtr(),
                         (int*)graph.Value.nodes[currentIndex].children.GetUnsafePtr(),
                         currentIndex,
@@ -514,7 +480,7 @@ namespace NeroWeNeed.UIDots {
                         indices[((renderIndex + j) * 6) + 3] = (ushort)(((renderIndex + j) * 4) + 2);
                         indices[((renderIndex + j) * 6) + 4] = (ushort)(((renderIndex + j) * 4) + 3);
                         indices[((renderIndex + j) * 6) + 5] = (ushort)(((renderIndex + j) * 4) + 1);
-                        UpdateBounds(indices, vertexPtr, renderIndex + j, ref bounds);
+                        UpdateBounds(indices, vertexPtr, (renderIndex + j) * 4, ref bounds);
                     }
                     renderIndex += renderBoxLayout[currentIndex].length;
 
@@ -528,10 +494,15 @@ namespace NeroWeNeed.UIDots {
             }
         }
         private void Layout(int currentIndex, BlobAssetReference<UIGraph> graph, NativeArray<OffsetInfo> configLayout, NativeArray<OffsetInfo> renderBoxLayout, NativeArray<UIPassState> stateLayout, UIContext* context, UIVertexData* vertexPtr) {
-            var config = (UIConfig*)((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset).ToPointer());
-            var state = (UIPassState*)(((IntPtr)stateLayout.GetUnsafePtr()) + UnsafeUtility.SizeOf<UIPassState>() * (currentIndex)).ToPointer();
-            state->localBox += config->margin.Normalize(*context);
-            var padding = config->padding.Normalize(*context);
+            var configSource = ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset;
+            //var config = (UIConfig*)((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset).ToPointer());
+            var state = (UIPassState*)(((IntPtr)stateLayout.GetUnsafePtr()) + (UnsafeUtility.SizeOf<UIPassState>() * currentIndex)).ToPointer();
+            float4 padding = float4.zero;
+            if (UIConfigLayout.TryGetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayout.BoxConfig, configSource, out IntPtr boxConfig)) {
+                BoxConfig* boxConfigPtr = ((BoxConfig*)boxConfig.ToPointer());
+                state->localBox += boxConfigPtr->margin.Normalize(*context);
+                padding = boxConfigPtr->padding.Normalize(*context);
+            }
             for (int index = 0; index < graph.Value.nodes[currentIndex].children.Length; index++) {
                 graph.Value.nodes[currentIndex].pass.Invoke(
                     (byte)UIPassType.Constrain,
@@ -539,6 +510,7 @@ namespace NeroWeNeed.UIDots {
                     (IntPtr)configLayout.GetUnsafePtr(),
                     configLayout[currentIndex].offset,
                     configLayout[currentIndex].length,
+                    graph.Value.nodes[currentIndex].configurationMask,
                     (IntPtr)stateLayout.GetUnsafePtr(),
                     (int*)graph.Value.nodes[currentIndex].children.GetUnsafePtr(),
                     currentIndex,
@@ -557,6 +529,7 @@ namespace NeroWeNeed.UIDots {
                 (IntPtr)configLayout.GetUnsafePtr(),
                 configLayout[currentIndex].offset,
                 configLayout[currentIndex].length,
+                graph.Value.nodes[currentIndex].configurationMask,
                 (IntPtr)stateLayout.GetUnsafePtr(),
                 (int*)graph.Value.nodes[currentIndex].children.GetUnsafePtr(),
                 currentIndex,
@@ -568,9 +541,13 @@ namespace NeroWeNeed.UIDots {
             );
             // + config->padding.left.Normalize(*context) + config->padding.right.Normalize(*context)
             // + config->padding.top.Normalize(*context) + config->padding.bottom.Normalize(*context)
-            state->size = new float2(
-                    math.clamp(state->size.x, config->size.minWidth.Normalize(*context), config->size.maxWidth.Normalize(*context)),
-                    math.clamp(state->size.y, config->size.minHeight.Normalize(*context), config->size.maxHeight.Normalize(*context)));
+            if (UIConfigLayout.TryGetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayout.SizeConfig, configSource, out IntPtr sizeConfig)) {
+                var sizeConfigPtr = ((SizeConfig*)sizeConfig.ToPointer());
+                state->size = new float2(
+                    math.clamp(state->size.x, sizeConfigPtr->minWidth.Normalize(*context), sizeConfigPtr->maxWidth.Normalize(*context)),
+                    math.clamp(state->size.y, sizeConfigPtr->minHeight.Normalize(*context), sizeConfigPtr->maxHeight.Normalize(*context)));
+            }
+
 
         }
 
@@ -584,12 +561,14 @@ namespace NeroWeNeed.UIDots {
             public int nodeIndex;
             public int meshIndexStart;
             public int meshIndexCount;
+            public float4 bounds;
 
             public SubMeshInfo(int subMesh, int index) {
                 this.subMesh = subMesh;
                 this.nodeIndex = index;
                 meshIndexStart = 0;
                 meshIndexCount = 0;
+                bounds = float4.zero;
             }
         }
 

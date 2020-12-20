@@ -11,7 +11,7 @@ using UnityEditor;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
-
+/* 
 namespace Reactics.Core.Commons {
     //[UpdateInGroup(typeof(InitializationSystemGroup))]
     public abstract class ResourceManager : SystemBase {
@@ -479,4 +479,4 @@ namespace Reactics.Core.Commons {
     }
 
 
-}
+} */

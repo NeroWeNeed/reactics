@@ -22,6 +22,7 @@ using UnityEngine.UIElements;
 using Hash128 = Unity.Entities.Hash128;
 
 namespace NeroWeNeed.UIDots {
+    #if UNITY_EDITOR
     [WorldSystemFilter(WorldSystemFilterFlags.GameObjectConversion)]
     [UpdateInGroup(typeof(GameObjectDeclareReferencedObjectsGroup))]
     public class BindModelSystem : GameObjectConversionSystem {
@@ -33,12 +34,6 @@ namespace NeroWeNeed.UIDots {
                  var material = model.GetMaterial();
                  EntityManager.AddComponentObject(entity, material);
              });
-        }
-
-        private struct MaterialInfo {
-            public Material material;
-            public Texture2D atlas;
-            public Texture2DArray fonts;
         }
     }
 
@@ -74,20 +69,19 @@ namespace NeroWeNeed.UIDots {
                 UIContext context = UIContext.CreateContext(uiObject.uiCamera);
                 UICameraContext cameraContext = default;
 
-                if (uiObject.uiCamera != null)
+                if (uiObject.uiCamera != null) {
                     cameraContext = new UICameraContext
                     {
                         cameraLTW = uiObject.uiCamera.UILayerCameraObject.transform.localToWorldMatrix,
                         clipPlane = new float2(uiObject.uiCamera.UILayerCamera.nearClipPlane, uiObject.uiCamera.UILayerCamera.farClipPlane)
                     };
+                }
+
                 if (!objectHashes.TryGetValue(meshHash, out int meshIndex)) {
                     meshIndex = this.meshes.Count;
                     this.meshes.Add(new Mesh());
                 }
-                Debug.Log("here");
                 objectProcessList.Add(ValueTuple.Create(meshHash, blobHash, context, cameraContext, meshIndex));
-
-
             });
             Entities.ForEach((Entity entity, UIModel model) =>
             {
@@ -147,10 +141,10 @@ namespace NeroWeNeed.UIDots {
                 nodeStream.Dispose();
                 graphs.Dispose();
                 Mesh.ApplyAndDisposeWritableMeshData(meshData, meshes);
-                foreach (var m in meshes) {
+/*                 foreach (var m in meshes) {
                     m.RecalculateBounds();
 
-                }
+                } */
             }
             int index = 0;
             Entities.ForEach((UIObject obj) =>
@@ -179,12 +173,8 @@ namespace NeroWeNeed.UIDots {
                     nodeIter = obj.cachedNodeData.GetEnumerator();
                     updateCache = false;
                 }
-                if (obj.uiCamera != null) {
-                    DstEntityManager.AddComponent<UIScreenElement>(entity);
-                }
                 var contextSource = obj.uiCamera == null ? Entity.Null : GetPrimaryEntity(obj.uiCamera.gameObject);
                 DstEntityManager.AddComponentData(entity, new UIRoot(graph, contextSource));
-
                 DstEntityManager.AddSharedComponentData(entity, new RenderMesh
                 {
                     mesh = mesh,
@@ -195,38 +185,34 @@ namespace NeroWeNeed.UIDots {
                     needMotionVectorPass = false,
                     layer = obj.gameObject.layer
                 });
-
-                DstEntityManager.AddComponentData(entity, new RenderBounds
-                {
-                    Value = mesh.GetSubMesh(0).bounds.ToAABB()
-                });
                 if (updateCache) {
                     obj.cachedMesh = mesh;
                     obj.cachedBlob = graph;
                     obj.cachedMaterial = material;
                     obj.cachedNodeData.Clear();
                 }
-
-
                 this.DeclareLinkedEntityGroup(obj.gameObject);
                 var children = new NativeList<UINode>(Allocator.Temp);
-
                 var loc = obj.transform.position;
                 var rot = obj.transform.rotation;
                 var scale = obj.transform.localScale;
                 if (obj.faceCamera && obj.uiCamera != null) {
-                    rot = math.mul(rot, (quaternion)obj.uiCamera.UILayerCameraObject.transform.rotation);
-
+                    rot = math.mul(rot, obj.uiCamera.UILayerCameraObject.transform.rotation);
                 }
                 var baseLtw = float4x4.TRS(loc, rot, scale);
+                DstEntityManager.AddComponentData(entity, new LocalToWorld { Value = baseLtw });
+                if (DstEntityManager.HasComponent<Rotation>(entity)) {
+                    DstEntityManager.SetComponentData<Rotation>(entity, new Rotation { Value = math.mul(rot, obj.uiCamera.UILayerCameraObject.transform.rotation) });
+                }
                 while (nodeIter.MoveNext()) {
                     if (updateCache)
                         obj.cachedNodeData.Add(nodeIter.Current);
                     var nodeEntity = CreateAdditionalEntity(obj);
                     DstEntityManager.AddComponentData(nodeEntity, new UIConfiguration { index = nodeIter.Current.graphNodeIndex, submesh = nodeIter.Current.subMesh });
-                    var ptr = ((UIConfig*)((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + nodeIter.Current.location.offset)));
-                    DstEntityManager.SetName(nodeEntity, $"{obj.name}[{ptr->name.ToString(ptr)}]");
+                    var name = UIConfigLayout.GetName(graph.Value.nodes[nodeIter.Current.graphNodeIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + nodeIter.Current.location.offset);
+                    DstEntityManager.SetName(nodeEntity, $"{obj.name}[{name}]");
                     DstEntityManager.AddComponentData(nodeEntity, new UIParent { value = entity });
+                    DstEntityManager.AddComponentData(nodeEntity, new Parent { Value = entity });
                     DstEntityManager.AddSharedComponentData(nodeEntity, new RenderMesh
                     {
                         mesh = mesh,
@@ -237,61 +223,62 @@ namespace NeroWeNeed.UIDots {
                         needMotionVectorPass = false,
                         layer = obj.gameObject.layer
                     });
-                    var subMesh = mesh.GetSubMesh(nodeIter.Current.subMesh);
-                    var bounds = subMesh.bounds;
-                    DstEntityManager.AddComponentData(nodeEntity, new RenderBounds
-                    {
-                        Value = mesh.bounds.ToAABB()
-                    });
-                    /*                             var topLeft = mesh.vertices[subMesh.firstVertex];
-                                                float4x4.TRS(new float3(-bounds.extents.x+(topLeft.x)))
-
-                                                var position = obj.transform.localToWorldMatrix.SetTRS(new float3(bounds.e)) */
-                    DstEntityManager.AddComponentData(nodeEntity, new LocalToWorld { Value = baseLtw });
                     DstEntityManager.AddComponentData<UIParent>(nodeEntity, entity);
-                    DstEntityManager.AddComponent<UICameraContext>(nodeEntity);
-                    DstEntityManager.AddComponent<UIContext>(nodeEntity);
-                    if (obj.uiCamera != null) {
-                        DstEntityManager.AddComponentData(nodeEntity, new UIContextSource { value = GetPrimaryEntity(obj.uiCamera.UILayerCameraObject) });
-                        if (obj.faceCamera) {
-                            DstEntityManager.AddComponent<UIFaceScreen>(nodeEntity);
-                        }
-                        if (obj.screenUI) {
-                            DstEntityManager.AddComponentData<UIScreenElement>(nodeEntity,new UIScreenElement { alignment = Alignment.Left });
-                        }
-                    }
-                    children.Add(nodeEntity);
-                    ConfigureEditorRenderData(nodeEntity, obj.gameObject, true);
 
+                    DstEntityManager.AddComponentData<LocalToWorld>(nodeEntity, new LocalToWorld { Value = float4x4.identity });
+                    DstEntityManager.AddComponentData<Rotation>(nodeEntity, new Rotation { Value = quaternion.identity });
+                    DstEntityManager.AddComponent<Translation>(nodeEntity);
+                    DstEntityManager.AddComponentData<Scale>(nodeEntity, new Scale { Value = 1f });
+                    DstEntityManager.AddComponentData(nodeEntity, new LocalToParent { Value = float4x4.identity });
+                    DecorateEntity(obj, nodeEntity, graph, nodeIter.Current.graphNodeIndex, nodeIter.Current.subMesh, mesh);
+                    children.Add(nodeEntity);
                     /*                             DstEntityManager.AddComponent<Translation>(nodeEntity);
                                                 DstEntityManager.AddComponent<Rotation>(nodeEntity);
                                                 DstEntityManager.AddComponent<Scale>(nodeEntity); */
                 }
-                DstEntityManager.AddComponentData(entity, new LocalToWorld { Value = baseLtw });
-                if (DstEntityManager.HasComponent<Rotation>(entity)) {
-                    DstEntityManager.SetComponentData<Rotation>(entity, new Rotation { Value = rot });
-                }
-                DstEntityManager.AddComponent<UICameraContext>(entity);
-                DstEntityManager.AddComponent<UIContext>(entity);
-                if (obj.uiCamera != null) {
-                    DstEntityManager.AddComponentData(entity, new UIContextSource { value = GetPrimaryEntity(obj.uiCamera.UILayerCameraObject) });
-                    if (obj.faceCamera) {
-                        DstEntityManager.AddComponent<UIFaceScreen>(entity);
-                    }
-                    if (obj.screenUI) {
-                        DstEntityManager.AddComponentData<UIScreenElement>(entity, new UIScreenElement { alignment = Alignment.Left });
-                    }
-                }
-                var childrenBuffer = DstEntityManager.AddBuffer<UINode>(entity);
-                childrenBuffer.AddRange(children);
-                ConfigureEditorRenderData(entity, obj.gameObject, true);
-
+                var uiChildrenBuffer = DstEntityManager.AddBuffer<UINode>(entity);
+                uiChildrenBuffer.AddRange(children);
+                var childBuffer = DstEntityManager.AddBuffer<Child>(entity);
+                childBuffer.AddRange(children.AsArray().Reinterpret<Child>());
+                DecorateEntity(obj, entity, graph, 0, 0, mesh);
             });
             nodes.Dispose();
 
+        }
+        private unsafe void DecorateEntity(UIObject obj, Entity entity, BlobAssetReference<UIGraph> graph, int currentIndex, int currentSubmesh, Mesh mesh) {
+
+            DstEntityManager.AddComponentData(entity, new RenderBounds
+            {
+                //Value = currentSubmesh == 0 ? mesh.GetSubMesh(0).bounds.ToAABB() : mesh.bounds.ToAABB()
+                Value = mesh.GetSubMesh(currentSubmesh).bounds.ToAABB()
+            });
+            DstEntityManager.AddComponent<UICameraContext>(entity);
+            DstEntityManager.AddComponent<UIContext>(entity);
+            if (obj.uiCamera != null) {
+                DstEntityManager.AddComponentData(entity, new UIContextSource { value = GetPrimaryEntity(obj.uiCamera.UILayerCameraObject) });
+                if (obj.faceCamera) {
+                    DstEntityManager.AddComponent<UIFaceScreen>(entity);
+                }
+                if (obj.screenUI) {
+                    DstEntityManager.AddComponentData<UIScreenElement>(entity, new UIScreenElement { alignment = Alignment.Center });
+                }
+            }
+            if (UIConfigLayout.HasConfigBlock(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayout.SelectableConfig)) {
+                var configOffset = UIJobUtility.GetConfigOffset(graph, currentIndex, out int configLength);
+                var selectable = (SelectableConfig*)UIConfigLayout.GetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayout.SelectableConfig, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configOffset);
+                DstEntityManager.AddComponent<UISelectable>(entity);
+                if (selectable->onSelect.IsCreated) {
+                    DstEntityManager.AddComponentData(entity, new UIOnSelect { value = selectable->onSelect });
+                }
+            }
+            DstEntityManager.AddComponent<PerInstanceCullingTag>(entity);
+            
+            DstEntityManager.AddComponent<FrozenRenderSceneTag>(entity);
+            ConfigureEditorRenderData(entity, obj.gameObject, true);
         }
         protected override void OnDestroy() {
             base.OnDestroy();
         }
     }
+    #endif
 }

@@ -28,11 +28,11 @@ namespace Reactics.Core.Input {
                                                 InputHandlerState state = InputHandlerState.Clean;
                                                 if (controlSchemeDirty) {
                                                     state |= InputHandlerState.ControlSchemeDirty;
-                                                    EntityManager.SetSharedComponentData(entity, new InputControlSchemeData { name = input.currentControlScheme });
+                                                    EntityManager.SetSharedComponentData(entity, new InputControlSchemeData { name = input?.currentControlScheme });
                                                 }
                                                 if (actionMapDirty) {
                                                     state |= InputHandlerState.ActionMapDirty;
-                                                    EntityManager.SetSharedComponentData(entity, new InputActionMapData { name = input.currentActionMap.id.ToString() });
+                                                    EntityManager.SetSharedComponentData(entity, new InputActionMapData { name = input?.currentActionMap?.id.ToString() });
                                                 }
                                                 if (state != InputHandlerState.Clean) {
                                                     EntityManager.SetComponentData(entity, new InputHandlerStateData { value = state });

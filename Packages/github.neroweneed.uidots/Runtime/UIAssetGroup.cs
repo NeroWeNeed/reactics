@@ -4,17 +4,23 @@ using System.Linq;
 using TMPro;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
 namespace NeroWeNeed.UIDots {
+    
     [CreateAssetMenu(fileName = "UIAssetGroup", menuName = "UIDots/UI Asset Group", order = 0)]
     public class UIAssetGroup : ScriptableObject {
+#if UNITY_EDITOR
         public static UIAssetGroup Find(string name) {
             return AssetDatabase.FindAssets($"t:{nameof(UIAssetGroup)}").Select(a => AssetDatabase.LoadAssetAtPath<UIAssetGroup>(AssetDatabase.GUIDToAssetPath(a))).FirstOrDefault(a => a.identifier == name);
         }
+
         public const string SHADER_ASSET = "Packages/github.neroweneed.uidots/Runtime/Resources/UIShader.shadergraph";
+
         public string identifier;
         [SerializeField]
         private List<Reference> references = new List<Reference>();
@@ -68,9 +74,11 @@ namespace NeroWeNeed.UIDots {
             }
         }
         public bool TryGetUVs(string guid, out Rect uv) {
+            #if UNITY_EDITOR
             if (IsTextureDirty(out int _)) {
                 UpdateMaterial();
             }
+            #endif
             var index = Array.FindIndex(uvs, uv => uv.guid == guid);
             if (index < 0) {
                 uv = default;
@@ -211,6 +219,7 @@ namespace NeroWeNeed.UIDots {
 
 
         }
+        #endif
         [Serializable]
         public class Reference : IComparable<Reference> {
             public string guid;

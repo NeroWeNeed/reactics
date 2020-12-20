@@ -10,7 +10,6 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Entities.Serialization;
-using UnityEditor;
 using UnityEngine;
 namespace NeroWeNeed.UIDots {
     public class UIModel : ScriptableObject {
@@ -18,31 +17,33 @@ namespace NeroWeNeed.UIDots {
         public List<string> assets = new List<string>();
         [HideInInspector]
         public List<Node> nodes = new List<Node>();
-        public string spriteGroupName;
-        public Material GetMaterial() => UIAssetGroup.Find(spriteGroupName)?.UpdateMaterial();
-
+        public string groupName;
+        #if UNITY_EDITOR
+        public Material GetMaterial() => UIAssetGroup.Find(groupName)?.UpdateMaterial();
 
         public unsafe BlobAssetReference<UIGraph> Create(Allocator blobAllocator = Allocator.TempJob) {
             BlobBuilder builder = new BlobBuilder(Allocator.Temp);
             ref UIGraph graph = ref builder.ConstructRoot<UIGraph>();
             var schema = UISchema.Default;
             using var configurationWriter = new MemoryBinaryWriter();
-            var assetGroup = UIAssetGroup.Find(spriteGroupName);
+            var assetGroup = UIAssetGroup.Find(groupName);
             var context = new UIPropertyWriterContext
             {
-                spriteGroup = assetGroup
+                group = assetGroup
             };
             var configInfo = new List<ConfigData>();
             var decomposer = new TypeDecomposer();
+            var types = new List<Type>();
             for (int i = 0; i < nodes.Count; i++) {
-                configInfo.Add(Configure(nodes[i], configurationWriter, schema, decomposer, context));
+                configInfo.Add(Configure(nodes[i], configurationWriter, schema, decomposer, context, types));
             }
             var nodeBuilder = builder.Allocate<UIGraphNode>(ref graph.nodes, nodes.Count);
             for (int i = 0; i < nodes.Count; i++) {
 
                 nodeBuilder[i] = new UIGraphNode
                 {
-                    pass = BurstCompiler.CompileFunctionPointer<UIPass>(nodes[i].pass.Value.CreateDelegate(typeof(UIPass)) as UIPass)
+                    pass = BurstCompiler.CompileFunctionPointer<UIPass>(nodes[i].pass.Value.CreateDelegate(typeof(UIPass)) as UIPass),
+                    configurationMask = nodes[i].mask
                 };
                 var renderBoxHandlerAttr = nodes[i].pass.Value.GetCustomAttribute<UIDotsRenderBoxHandlerAttribute>();
                 if (renderBoxHandlerAttr != null) {
@@ -62,76 +63,63 @@ namespace NeroWeNeed.UIDots {
             return asset;
 
         }
-        private unsafe static ConfigData Configure(UIModel.Node node, MemoryBinaryWriter writer, UISchema schema, TypeDecomposer decomposer, UIPropertyWriterContext context) {
+        private unsafe static void PostInitConfigBlock<TConfig>(IntPtr configData, ulong mask, int offset, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) where TConfig : struct, IConfig {
+            var configBlock = UnsafeUtility.AsRef<TConfig>((configData + offset).ToPointer());
+            configBlock.PostInit(configData, mask, extraBytesStream, extraByteStreamOffset, context);
+            UnsafeUtility.CopyStructureToPtr(ref configBlock, (configData + offset).ToPointer());
+        }
+        private unsafe static void PostInitConfigBlockTypeless(Type type, IntPtr configData, ulong mask, int offset, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
+            typeof(UIModel).GetMethod(nameof(PostInitConfigBlock), BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public).MakeGenericMethod(type).Invoke(null, new object[] { configData, mask, offset, extraBytesStream, extraByteStreamOffset, context });
+        }
+        private unsafe static ConfigData Configure(UIModel.Node node, MemoryBinaryWriter writer, UISchema schema, TypeDecomposer decomposer, UIPropertyWriterContext context, List<Type> types) {
             var element = schema.Entries[node.identifier];
-            var configHeader = UIConfig.DEFAULT;
-            var extraConfigType = element.config.Value;
-            var configSize = UnsafeUtility.SizeOf<UIConfig>();
-            void* configData;
-
+            UIConfigLayout.GetTypes(element.mask, types);
+            var configBlocks = new List<IConfig>();
+            UIConfigLayout.CreateConfiguration(element.mask, configBlocks);
+            var configSize = UIConfigLayout.GetLength(element.mask);
             using var extraBytesStream = new MemoryBinaryWriter();
-            if (extraConfigType != null) {
-                configSize += UnsafeUtility.SizeOf(extraConfigType);
-                var extraConfigObj = Activator.CreateInstance(extraConfigType);
-                if (extraConfigObj is IInitializable initializable)
-                    initializable.PreInit(configHeader, extraBytesStream, configSize, context);
-                configData = UnsafeUtility.Malloc(configSize, 0, Allocator.Temp);
-                UnsafeUtility.CopyStructureToPtr(ref configHeader, configData);
-                Marshal.StructureToPtr(extraConfigObj, (IntPtr)configData + UnsafeUtility.SizeOf<UIConfig>(), false);
-            }
-            else {
-                configData = UnsafeUtility.Malloc(configSize, 0, Allocator.Temp);
-                UnsafeUtility.CopyStructureToPtr(ref configHeader, configData);
+            IntPtr configData = (IntPtr) UnsafeUtility.Malloc(configSize, 0, Allocator.Temp);
+            int configOffset = 0;
+            var configFields = new Dictionary<string, TypeDecomposer.FieldData>();
+            foreach (var configBlock in configBlocks) {
+                decomposer.Decompose(configBlock.GetType(), configFields, configBlock.GetType().GetCustomAttribute<UIConfigBlockAttribute>()?.Name,configOffset,'-');
+                configBlock.PreInit(element.mask, context);
+                Marshal.StructureToPtr(configBlock, configData + configOffset, true);
+                configOffset += UnsafeUtility.SizeOf(configBlock.GetType());
             }
 
-            var baseConfigFields = decomposer.Decompose(typeof(UIConfig), '-');
-
-            if (extraConfigType != null) {
-                var extraConfigFields = decomposer.Decompose(extraConfigType, '-');
-                TypeDecomposer.FieldData fieldData;
-                foreach (var property in node.properties) {
-
-                    if (baseConfigFields.TryGetValue(property.path, out fieldData)) {
-                        StandardPropertyWriters.writers.Write(property.Value, (IntPtr)configData, fieldData, extraBytesStream, configSize, context);
-                    }
-                    else if (extraConfigFields.TryGetValue(property.path, out fieldData)) {
-                        StandardPropertyWriters.writers.Write(property.Value, (IntPtr)configData, new TypeDecomposer.FieldData(fieldData, UnsafeUtility.SizeOf<UIConfig>()), extraBytesStream, configSize, context);
-                    }
-                }
-                UnsafeUtility.CopyPtrToStructure<UIConfig>(configData, out UIConfig c);
-                var t = Marshal.PtrToStructure(((IntPtr)configData) + UnsafeUtility.SizeOf<UIConfig>(), extraConfigType);
-                if (t is IInitializable initializable) {
-                    initializable.PostInit(c, extraBytesStream, configSize, context);
-                    Marshal.StructureToPtr(t, ((IntPtr)configData) + UnsafeUtility.SizeOf<UIConfig>(), true);
+            foreach (var property in node.properties) {
+                if (configFields.TryGetValue(property.path, out TypeDecomposer.FieldData fieldData)) {
+                    StandardPropertyWriters.writers.Write(property.Value, configData, fieldData, extraBytesStream, configSize, context);
                 }
             }
-            else {
-                foreach (var property in node.properties) {
-                    if (baseConfigFields.TryGetValue(property.path, out TypeDecomposer.FieldData fieldData)) {
-                        StandardPropertyWriters.writers.Write(property.Value, (IntPtr)configData, fieldData, extraBytesStream, configSize, context);
-                    }
-                }
+            configOffset = 0;
+            foreach (var configBlockType in types) {
+                PostInitConfigBlockTypeless(configBlockType, configData, element.mask, configOffset, extraBytesStream, configSize, context);
+                configOffset += UnsafeUtility.SizeOf(configBlockType);
             }
             var config = new ConfigData
             {
                 offset = writer.Length
             };
             writer.Write(configSize + extraBytesStream.Length);
-            writer.WriteBytes(configData, configSize);
+            writer.WriteBytes(configData.ToPointer(), configSize);
 
             if (extraBytesStream.Length > 0) {
                 writer.WriteBytes(extraBytesStream.Data, extraBytesStream.Length);
             }
-            UnsafeUtility.Free(configData, Allocator.Temp);
+            UnsafeUtility.Free(configData.ToPointer(), Allocator.Temp);
             config.length = writer.Length - config.length;
             return config;
 
 
         }
+
         private void OnDestroy() {
-            UIAssetGroup.Find(spriteGroupName)?.Remove(this, this.assets);
+            UIAssetGroup.Find(groupName)?.Remove(this, this.assets);
 
         }
+        #endif
         [Serializable]
         public struct Node {
             public string identifier;
@@ -140,6 +128,7 @@ namespace NeroWeNeed.UIDots {
             public List<Property> properties;
             public List<int> children;
             public int parent;
+            public ulong mask;
 
             [Serializable]
             public struct Property {

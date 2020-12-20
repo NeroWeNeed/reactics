@@ -296,7 +296,7 @@ namespace Reactics.Core
             ""id"": ""5703d1d3-8315-4905-9332-c9b7d4b21314"",
             ""actions"": [
                 {
-                    ""name"": ""Navigation"",
+                    ""name"": ""DirectionalNavigation"",
                     ""type"": ""Value"",
                     ""id"": ""7f6a1313-255a-4c17-bba4-8cf826deb3ac"",
                     ""expectedControlType"": ""Vector2"",
@@ -318,6 +318,14 @@ namespace Reactics.Core
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""PointerNavigation"",
+                    ""type"": ""Button"",
+                    ""id"": ""7066077e-eb47-47f1-a4fb-63a092e53454"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -328,7 +336,7 @@ namespace Reactics.Core
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Navigation"",
+                    ""action"": ""DirectionalNavigation"",
                     ""isComposite"": true,
                     ""isPartOfComposite"": false
                 },
@@ -339,7 +347,7 @@ namespace Reactics.Core
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard + Mouse"",
-                    ""action"": ""Navigation"",
+                    ""action"": ""DirectionalNavigation"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -349,8 +357,8 @@ namespace Reactics.Core
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Navigation"",
+                    ""groups"": ""Keyboard + Mouse"",
+                    ""action"": ""DirectionalNavigation"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -360,8 +368,8 @@ namespace Reactics.Core
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Navigation"",
+                    ""groups"": ""Keyboard + Mouse"",
+                    ""action"": ""DirectionalNavigation"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -372,20 +380,9 @@ namespace Reactics.Core
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard + Mouse"",
-                    ""action"": ""Navigation"",
+                    ""action"": ""DirectionalNavigation"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""4b006ba7-5a9f-4a3a-b21c-190bdd0bffde"",
-                    ""path"": ""<Mouse>/position"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": ""Keyboard + Mouse"",
-                    ""action"": ""Navigation"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -394,7 +391,7 @@ namespace Reactics.Core
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Gamepad"",
-                    ""action"": ""Navigation"",
+                    ""action"": ""DirectionalNavigation"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -452,6 +449,17 @@ namespace Reactics.Core
                     ""action"": ""Back"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4b006ba7-5a9f-4a3a-b21c-190bdd0bffde"",
+                    ""path"": ""<Mouse>/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard + Mouse"",
+                    ""action"": ""PointerNavigation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -501,9 +509,10 @@ namespace Reactics.Core
             m_CommandControls_MenuMovement = m_CommandControls.FindAction("Menu Movement", throwIfNotFound: true);
             // Menu Controls
             m_MenuControls = asset.FindActionMap("Menu Controls", throwIfNotFound: true);
-            m_MenuControls_Navigation = m_MenuControls.FindAction("Navigation", throwIfNotFound: true);
+            m_MenuControls_DirectionalNavigation = m_MenuControls.FindAction("DirectionalNavigation", throwIfNotFound: true);
             m_MenuControls_Select = m_MenuControls.FindAction("Select", throwIfNotFound: true);
             m_MenuControls_Back = m_MenuControls.FindAction("Back", throwIfNotFound: true);
+            m_MenuControls_PointerNavigation = m_MenuControls.FindAction("PointerNavigation", throwIfNotFound: true);
         }
 
         public void Dispose()
@@ -675,16 +684,18 @@ namespace Reactics.Core
         // Menu Controls
         private readonly InputActionMap m_MenuControls;
         private IMenuControlsActions m_MenuControlsActionsCallbackInterface;
-        private readonly InputAction m_MenuControls_Navigation;
+        private readonly InputAction m_MenuControls_DirectionalNavigation;
         private readonly InputAction m_MenuControls_Select;
         private readonly InputAction m_MenuControls_Back;
+        private readonly InputAction m_MenuControls_PointerNavigation;
         public struct MenuControlsActions
         {
             private @Controls m_Wrapper;
             public MenuControlsActions(@Controls wrapper) { m_Wrapper = wrapper; }
-            public InputAction @Navigation => m_Wrapper.m_MenuControls_Navigation;
+            public InputAction @DirectionalNavigation => m_Wrapper.m_MenuControls_DirectionalNavigation;
             public InputAction @Select => m_Wrapper.m_MenuControls_Select;
             public InputAction @Back => m_Wrapper.m_MenuControls_Back;
+            public InputAction @PointerNavigation => m_Wrapper.m_MenuControls_PointerNavigation;
             public InputActionMap Get() { return m_Wrapper.m_MenuControls; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
@@ -694,28 +705,34 @@ namespace Reactics.Core
             {
                 if (m_Wrapper.m_MenuControlsActionsCallbackInterface != null)
                 {
-                    @Navigation.started -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnNavigation;
-                    @Navigation.performed -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnNavigation;
-                    @Navigation.canceled -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnNavigation;
+                    @DirectionalNavigation.started -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnDirectionalNavigation;
+                    @DirectionalNavigation.performed -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnDirectionalNavigation;
+                    @DirectionalNavigation.canceled -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnDirectionalNavigation;
                     @Select.started -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnSelect;
                     @Select.performed -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnSelect;
                     @Select.canceled -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnSelect;
                     @Back.started -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnBack;
                     @Back.performed -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnBack;
                     @Back.canceled -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnBack;
+                    @PointerNavigation.started -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnPointerNavigation;
+                    @PointerNavigation.performed -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnPointerNavigation;
+                    @PointerNavigation.canceled -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnPointerNavigation;
                 }
                 m_Wrapper.m_MenuControlsActionsCallbackInterface = instance;
                 if (instance != null)
                 {
-                    @Navigation.started += instance.OnNavigation;
-                    @Navigation.performed += instance.OnNavigation;
-                    @Navigation.canceled += instance.OnNavigation;
+                    @DirectionalNavigation.started += instance.OnDirectionalNavigation;
+                    @DirectionalNavigation.performed += instance.OnDirectionalNavigation;
+                    @DirectionalNavigation.canceled += instance.OnDirectionalNavigation;
                     @Select.started += instance.OnSelect;
                     @Select.performed += instance.OnSelect;
                     @Select.canceled += instance.OnSelect;
                     @Back.started += instance.OnBack;
                     @Back.performed += instance.OnBack;
                     @Back.canceled += instance.OnBack;
+                    @PointerNavigation.started += instance.OnPointerNavigation;
+                    @PointerNavigation.performed += instance.OnPointerNavigation;
+                    @PointerNavigation.canceled += instance.OnPointerNavigation;
                 }
             }
         }
@@ -755,9 +772,10 @@ namespace Reactics.Core
         }
         public interface IMenuControlsActions
         {
-            void OnNavigation(InputAction.CallbackContext context);
+            void OnDirectionalNavigation(InputAction.CallbackContext context);
             void OnSelect(InputAction.CallbackContext context);
             void OnBack(InputAction.CallbackContext context);
+            void OnPointerNavigation(InputAction.CallbackContext context);
         }
     }
 }

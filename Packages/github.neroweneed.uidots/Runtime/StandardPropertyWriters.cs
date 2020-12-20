@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace NeroWeNeed.UIDots {
+    #if UNITY_EDITOR
     public static class StandardPropertyWriters {
         internal static readonly Dictionary<Type, IUIPropertyWriter> writers = new Dictionary<Type, IUIPropertyWriter>
         {
@@ -32,4 +33,5 @@ namespace NeroWeNeed.UIDots {
             }
         }
     }
+    #endif
 }

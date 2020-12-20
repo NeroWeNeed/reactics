@@ -28,7 +28,7 @@ namespace NeroWeNeed.UIDots {
         public BlobAssetReference<UIGraph> graph;
         public Entity contextSource;
 
-        public UIRoot(BlobAssetReference<UIGraph> graph,Entity contextSource) {
+        public UIRoot(BlobAssetReference<UIGraph> graph, Entity contextSource) {
             this.graph = graph;
             this.contextSource = contextSource;
         }
@@ -86,6 +86,30 @@ namespace NeroWeNeed.UIDots {
     }
     public struct UIFaceScreen : IComponentData { }
     public struct UICameraLayerData : IComponentData {
+
+    }
+    public struct UICursor : IComponentData {
+        public Entity target;
+        public int index;
+    }
+    public struct UICursorInput : IComponentData {
+        public float3 startVector;
+        public quaternion direction;
+        //Infinity/Nan will result in the cursor moving immediately.
+        public float speed;
+        public bool selected;
+    }
+    public struct UIOnSelect : IComponentData {
+        public FunctionPointer<UISelectDelegate> value;
+    }
+
+    public struct UISelectable : IComponentData {
+    }
+    public struct UICursorDirty : IComponentData {
+        public bool value;
+        public UICursorDirty(bool dirty) {
+            this.value = dirty;
+        }
 
     }
 

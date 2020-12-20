@@ -1,19 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
-using Unity.Burst;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
-using Unity.Entities.Serialization;
 using Unity.Mathematics;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 using UnityEngine.TextCore;
 
 namespace NeroWeNeed.UIDots {
@@ -162,13 +159,14 @@ namespace NeroWeNeed.UIDots {
     public unsafe struct BlittableAssetReference : IEquatable<BlittableAssetReference> {
         public fixed byte guid[16];
         public BlittableAssetReference(string guid) {
-            if (GUID.TryParse(guid, out GUID result)) {
+            
+            if (Guid.TryParse(guid, out Guid result)) {
                 fixed (byte* g = this.guid) {
                     UnsafeUtility.CopyStructureToPtr(ref result, g);
                 }
             }
         }
-        public BlittableAssetReference(GUID guid) {
+        public BlittableAssetReference(Guid guid) {
             fixed (byte* g = this.guid) {
                 UnsafeUtility.CopyStructureToPtr(ref guid, g);
             }
@@ -180,7 +178,7 @@ namespace NeroWeNeed.UIDots {
             }
 
         }
-        public static implicit operator BlittableAssetReference(GUID guid) => new BlittableAssetReference(guid);
+        public static implicit operator BlittableAssetReference(Guid guid) => new BlittableAssetReference(guid);
         public string ToHex() {
             var sb = new StringBuilder(32);
             char t;
@@ -349,9 +347,9 @@ namespace NeroWeNeed.UIDots {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float GetOffset(byte alignment, float objectSize, float containerSize, byte containerAlignment = 0, byte objectAlignment = 0) {
             var multiplier = ((alignment & 0b00000001) - ((alignment & 0b00000010) >> 1)) * 0.5f;
-            var containerOffset = ((containerAlignment & 0b00000001) - ((containerAlignment & 0b00000010) >> 1)) * 0.5f;
-            var objectOffset = ((objectAlignment & 0b00000001) - ((objectAlignment & 0b00000010) >> 1)) * 0.5f;
-            return ((multiplier + containerOffset) * containerSize) - ((multiplier + objectOffset) * objectSize);
+            var containerMultiplier = ((containerAlignment & 0b00000001) - ((containerAlignment & 0b00000010) >> 1)) * 0.5f;
+            var objectMultiplier = ((objectAlignment & 0b00000001) - ((objectAlignment & 0b00000010) >> 1)) * 0.5f;
+            return (((multiplier) * containerSize) - (((multiplier) * objectSize))) + (objectSize * objectMultiplier) - (containerSize * containerMultiplier);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float GetOffset(this HorizontalAlignment alignment, float objectSize, float containerSize, HorizontalAlignment containerAlignment = HorizontalAlignment.Center, HorizontalAlignment objectAlignment = HorizontalAlignment.Center) {
@@ -376,6 +374,110 @@ namespace NeroWeNeed.UIDots {
         public static Alignment As2D(this HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment = VerticalAlignment.Center) => (Alignment)((((byte)horizontalAlignment) & 0b00000011) | (((byte)verticalAlignment) & 0b00001100));
         public static Alignment As2D(this VerticalAlignment verticalAlignment, HorizontalAlignment horizontalAlignment = HorizontalAlignment.Center) => (Alignment)((((byte)horizontalAlignment) & 0b00000011) | (((byte)verticalAlignment) & 0b00001100));
 
+    }
+    public static class UIJobUtility {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static int GetConfigOffset(BlobAssetReference<UIGraph> graph, int index,out int length) {
+            int offset = 0;
+            for (int currentIndex = 0; currentIndex < index; currentIndex++) {
+                var size = UnsafeUtility.AsRef<int>((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + offset).ToPointer());
+                offset += UnsafeUtility.SizeOf<int>() + size;
+            }
+            length = UnsafeUtility.AsRef<int>((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + offset).ToPointer());
+            offset += UnsafeUtility.SizeOf<int>();
+            return offset;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static int GetConfigLayout(BlobAssetReference<UIGraph> graph, out NativeArray<OffsetInfo> configLayout, Allocator allocator) {
+            var offset = 0;
+            int subMeshCount = 0;
+            configLayout = new NativeArray<OffsetInfo>(graph.Value.nodes.Length, allocator);
+            for (int currentIndex = 0; currentIndex < graph.Value.nodes.Length; currentIndex++) {
+                var size = UnsafeUtility.AsRef<int>((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + offset).ToPointer());
+                if (UIConfigLayout.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + UnsafeUtility.SizeOf<int>() + offset)) {
+                    subMeshCount++;
+                }
+                offset += UnsafeUtility.SizeOf<int>();
+                configLayout[currentIndex] = new OffsetInfo(offset, size);
+                offset += size;
+            }
+            return subMeshCount;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float2 GetAlignmentAdjustment(Alignment alignment, float2 outer, float2 inner) {
+            return alignment.GetOffset(inner, outer, Alignment.Left, Alignment.Left);
+            //return math.max(outer - inner, float2.zero) * new float2(((byte)horizontal) * 0.5f, ((byte)vertical) * 0.5f);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float2 Constrain(float2 widthConstraints, float2 heightConstraints, float2 size) {
+            return new float2(float.IsPositiveInfinity(widthConstraints.y) ? math.max(size.x, widthConstraints.x) : math.clamp(size.x, widthConstraints.x, widthConstraints.y), float.IsPositiveInfinity(heightConstraints.y) ? math.max(size.y, heightConstraints.x) : math.clamp(size.y, heightConstraints.x, heightConstraints.y));
+        }
+        public static float2 Maximize(float2 widthConstraints, float2 heightConstraints, float2 size) {
+            return new float2(float.IsPositiveInfinity(widthConstraints.y) ? math.max(size.x, widthConstraints.x) : math.max(size.x, widthConstraints.y), float.IsPositiveInfinity(heightConstraints.y) ? math.max(size.y, heightConstraints.x) : math.max(size.y, heightConstraints.y));
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void AdjustPosition(float2 size, SequentialLayoutConfig* boxConfig, UIPassState* selfPtr, IntPtr statePtr, int stateChildCount, void* stateChildren) {
+            var outer = UIJobUtility.Maximize(selfPtr->widthConstraint, selfPtr->heightConstraint, size);
+            /*             float width = 0f;
+                        float height = 0f;
+                        for (int i = 0; i < stateChildCount; i++) {
+                            var childState = (UIPassState*)(statePtr + (UnsafeUtility.SizeOf<UIPassState>() * (UnsafeUtility.ReadArrayElement<int>(stateChildren, i)))).ToPointer();
+                            width += childState->size.x + childState->localBox.x + childState->localBox.z;
+                            height += childState->size.y + childState->localBox.y + childState->localBox.w;
+                        } */
+            //var adjustment = UIJobUtility.GetAlignmentAdjustment(boxConfig->horizontalAlign, boxConfig->verticalAlign, outer, new float2(width,height));
+            for (int i = 0; i < stateChildCount; i++) {
+                var childState = (UIPassState*)(statePtr + (UnsafeUtility.SizeOf<UIPassState>() * (UnsafeUtility.ReadArrayElement<int>(stateChildren, i)))).ToPointer();
+                var adjustment = UIJobUtility.GetAlignmentAdjustment(boxConfig->horizontalAlign.As2D(boxConfig->verticalAlign), outer, new float2(childState->size.x, childState->size.y));
+                childState->localBox.x += adjustment.x;
+                childState->localBox.y += adjustment.y;
+            }
+            selfPtr->size = outer;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float2 ConstrainOuterBox(float2 widthConstraints, float2 heightConstraints, float2 size) {
+            return new float2(float.IsPositiveInfinity(widthConstraints.y) ? size.x : math.max(size.x, widthConstraints.y), float.IsPositiveInfinity(widthConstraints.y) ? size.y : math.max(size.y, heightConstraints.y));
+        }
+    }
+    public unsafe static class UIGraphUtility {
+        public static int GetFirstSelectableIndex(BlobAssetReference<UIGraph> graph) {
+            if (!graph.IsCreated)
+                return -1;
+            UIJobUtility.GetConfigLayout(graph, out NativeArray<OffsetInfo> layout, Allocator.Temp);
+            //Index, priority
+            var selectableIndices = new NativeList<SelectableIndex>(8, Allocator.Temp);
+            for (int currentIndex = 0; currentIndex < graph.Value.nodes.Length; currentIndex++) {
+                if (UIConfigLayout.TryGetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayout.SelectableConfig, ((IntPtr)graph.GetUnsafePtr()) + layout[currentIndex].offset, out IntPtr block)) {
+                    SelectableConfig* selectableConfig = (SelectableConfig*)block;
+                    if (selectableConfig->onSelect.IsCreated) {
+                        selectableIndices.Add(new SelectableIndex(currentIndex, selectableConfig->priority));
+                    }
+                }
+            }
+            if (selectableIndices.Length < 0)
+                return -1;
+            selectableIndices.Sort();
+            return selectableIndices[0].index;
+
+        }
+        private struct SelectableIndex : IComparable<SelectableIndex> {
+            public int index, priority;
+
+            public SelectableIndex(int index, int priority) {
+                this.index = index;
+                this.priority = priority;
+            }
+
+            public int CompareTo(SelectableIndex other) {
+                var c1 = priority.CompareTo(other.priority);
+                var c2 = index.CompareTo(other.index);
+                return c1 != 0 ? c1 : c2;
+            }
+        }
+    }
+    public enum VisibilityStyle : byte {
+        Hidden = 0, Visible = 1
     }
 
 }

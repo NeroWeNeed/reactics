@@ -16,7 +16,7 @@ namespace NeroWeNeed.UIDots.Editor {
             var transform = Selection.activeTransform;
             
             var bo = (target as UIObject)?.Bounds ?? default;
-            return new Bounds(bo.center+transform.position,bo.size);
+            return new Bounds(float3.zero,bo.size);
         }
     }
 

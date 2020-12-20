@@ -14,7 +14,7 @@ namespace NeroWeNeed.UIDots {
                 var rotation = HasComponent<Rotation>(entity) ? GetComponent<Rotation>(entity).Value : quaternion.identity;
                 var position = HasComponent<Translation>(entity) ? GetComponent<Translation>(entity).Value : ltw.Position;
                 ltw.Value = float4x4.TRS(position, math.mul(rotation,cameraRotation), scale);
-            }).WithoutBurst().Run();
+            }).Schedule();
         }
     }
 }

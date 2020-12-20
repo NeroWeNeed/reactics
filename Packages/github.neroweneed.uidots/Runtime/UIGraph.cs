@@ -7,6 +7,7 @@ namespace NeroWeNeed.UIDots {
         public FunctionPointer<UIPass> pass;
         public FunctionPointer<UIRenderBoxHandler> renderBoxHandler;
         public BlobArray<int> children;
+        public ulong configurationMask;
     }
     public struct UIGraph {
         public BlittableAssetReference material;

@@ -281,7 +281,7 @@
             "id": "5703d1d3-8315-4905-9332-c9b7d4b21314",
             "actions": [
                 {
-                    "name": "Navigation",
+                    "name": "DirectionalNavigation",
                     "type": "Value",
                     "id": "7f6a1313-255a-4c17-bba4-8cf826deb3ac",
                     "expectedControlType": "Vector2",
@@ -303,6 +303,14 @@
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": ""
+                },
+                {
+                    "name": "PointerNavigation",
+                    "type": "Button",
+                    "id": "7066077e-eb47-47f1-a4fb-63a092e53454",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
                 }
             ],
             "bindings": [
@@ -313,7 +321,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Navigation",
+                    "action": "DirectionalNavigation",
                     "isComposite": true,
                     "isPartOfComposite": false
                 },
@@ -324,7 +332,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard + Mouse",
-                    "action": "Navigation",
+                    "action": "DirectionalNavigation",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -334,8 +342,8 @@
                     "path": "<Keyboard>/s",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
-                    "action": "Navigation",
+                    "groups": "Keyboard + Mouse",
+                    "action": "DirectionalNavigation",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -345,8 +353,8 @@
                     "path": "<Keyboard>/a",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
-                    "action": "Navigation",
+                    "groups": "Keyboard + Mouse",
+                    "action": "DirectionalNavigation",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -357,20 +365,9 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard + Mouse",
-                    "action": "Navigation",
+                    "action": "DirectionalNavigation",
                     "isComposite": false,
                     "isPartOfComposite": true
-                },
-                {
-                    "name": "",
-                    "id": "4b006ba7-5a9f-4a3a-b21c-190bdd0bffde",
-                    "path": "<Mouse>/position",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard + Mouse",
-                    "action": "Navigation",
-                    "isComposite": false,
-                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -379,7 +376,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
-                    "action": "Navigation",
+                    "action": "DirectionalNavigation",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -435,6 +432,17 @@
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "Back",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4b006ba7-5a9f-4a3a-b21c-190bdd0bffde",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard + Mouse",
+                    "action": "PointerNavigation",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

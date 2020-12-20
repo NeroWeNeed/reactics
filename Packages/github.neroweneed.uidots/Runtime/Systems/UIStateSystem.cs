@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unity.Burst;
 using Unity.Collections;
@@ -57,8 +58,8 @@ namespace NeroWeNeed.UIDots {
             var entities = new NativeList<Entity>(8, Allocator.TempJob);
             var contexts = new NativeList<UIContext>(8, Allocator.TempJob);
             var referencedGraphs = new NativeList<BlobAssetReference<UIGraph>>(8, Allocator.TempJob);
-            //var entityUpdate = new NativeMultiHashMap<int, Entity>(8, Allocator.Temp);
-            Entities.WithSharedComponentFilter<UIDirtyState>(true).ForEach((Entity entity, DynamicBuffer<UINode> nodes, in UIRoot root, in UIContext context, in UICameraContext cameraContext, in UIDirtyState dirtyState, in RenderMesh renderMesh) =>
+            var entityUpdate = new NativeMultiHashMap<int, ValueTuple<Entity, int>>(8, Allocator.Temp);
+            Entities.WithSharedComponentFilter<UIDirtyState>(true).ForEach((Entity entity, DynamicBuffer<UINode> nodes, in UIRoot root, in UIContext context, in RenderMesh renderMesh) =>
             {
                 int index = meshes.IndexOf(renderMesh.mesh);
                 if (index < 0) {
@@ -68,10 +69,10 @@ namespace NeroWeNeed.UIDots {
                     referencedGraphs.Add(root.graph);
                     contexts.Add(context);
                 }
-                /*                 entityUpdate.Add(index, entity);
-                                foreach (var node in nodes) {
-                                    entityUpdate.Add(index, node.value);
-                                } */
+                entityUpdate.Add(index, ValueTuple.Create(entity, 0));
+                foreach (var node in nodes) {
+                    entityUpdate.Add(index, ValueTuple.Create(node.value, GetComponent<UIConfiguration>(node.value).submesh));
+                }
             }).WithoutBurst().Run();
             this.CompleteDependency();
             if (entities.Length > 0) {
@@ -95,11 +96,11 @@ namespace NeroWeNeed.UIDots {
                     for (int i = 0; i < this.meshes.Count; i++) {
                         var m = this.meshes[i];
                         m.RecalculateBounds();
-                        /*                         var iter = entityUpdate.GetValuesForKey(i);
-                                                var bounds = m.GetSubMesh(0).bounds.ToAABB();
-                                                while (iter.MoveNext()) {
-                                                    ecb.SetComponent(iter.Current, new RenderBounds { Value = bounds });
-                                                } */
+                        var iter = entityUpdate.GetValuesForKey(i);
+
+                        while (iter.MoveNext()) {
+                            ecb.SetComponent(iter.Current.Item1, new RenderBounds { Value = m.GetSubMesh(iter.Current.Item2).bounds.ToAABB() });
+                        }
                     }
                 }).WithoutBurst().Run();
                 this.CompleteDependency();

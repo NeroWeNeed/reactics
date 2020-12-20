@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Unity.Burst;
 using Unity.Entities;
 using UnityEngine;
@@ -9,10 +10,10 @@ namespace NeroWeNeed.UIDots {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
     public sealed class UIDotsElementAttribute : Attribute {
         public string Identifier { get; set; }
-        public Type ConfigurationType { get; set; }
-        public UIDotsElementAttribute(string identifier, Type configurationType = null) {
+        public ulong Mask { get; set; }
+        public UIDotsElementAttribute(string identifier, params byte[] configs) {
             Identifier = identifier;
-            ConfigurationType = configurationType;
+            Mask = UIConfigLayout.CreateMask(configs);
         }
     }
     [AttributeUsage(AttributeTargets.All)]
@@ -23,6 +24,9 @@ namespace NeroWeNeed.UIDots {
     public sealed class TerminalAttribute : Attribute {
 
     }
+
+
+
 
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
     public sealed class UIDotsRenderBoxHandlerAttribute : Attribute {
@@ -43,5 +47,24 @@ namespace NeroWeNeed.UIDots {
     public sealed class EmbedAttribute : System.Attribute {
 
     }
+    [AttributeUsage(AttributeTargets.Struct, AllowMultiple = false)]
+    public sealed class UIConfigBlockAttribute : Attribute {
+        public int Priority { get; }
 
+        public string Name { get; }
+
+        public UIConfigBlockAttribute(string name = null, int priority = 0) {
+            Name = name;
+            this.Priority = priority;
+        }
+    }
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Assembly | AttributeTargets.Method)]
+    public sealed class UICallbackAttribute : Attribute {
+        public string Identifier { get; }
+
+        public UICallbackAttribute(string name = null) {
+            
+            Identifier = name;
+        }
+    }
 }

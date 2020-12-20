@@ -27,6 +27,7 @@ namespace NeroWeNeed.UIDots {
         IntPtr configOffsetLayoutPtr,
         int configOffset,
         int configLength,
+        ulong configurationMask,
         IntPtr statePtr,
         int* stateChildren,
         int stateIndex,
@@ -41,7 +42,7 @@ namespace NeroWeNeed.UIDots {
     /// </summary>
     /// <param name="configPtr"></param>
     /// <returns></returns>
-    public unsafe delegate int UIRenderBoxHandler(IntPtr configPtr, int configOffset, int configLength);
+    public unsafe delegate int UIRenderBoxHandler(IntPtr configPtr, int configOffset, int configLength,ulong configurationMask);
     public struct UIPassState {
         public static readonly UIPassState DEFAULT = new UIPassState
         {

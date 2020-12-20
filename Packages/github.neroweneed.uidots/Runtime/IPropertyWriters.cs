@@ -4,25 +4,21 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
-using TMPro;
+using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities.Serialization;
 using Unity.Mathematics;
 using UnityEditor;
-using UnityEditor.Sprites;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-
+using static NeroWeNeed.UIDots.UIModel;
+#if UNITY_EDITOR
 namespace NeroWeNeed.UIDots {
     public interface IUIPropertyWriter {
         bool CanParse(string s);
 
         void Write(string s, IntPtr ptr, TypeDecomposer.FieldData fieldData, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context);
     }
-    public struct UIPropertyWriterContext {
-        public UIAssetGroup spriteGroup;
-    }
+    
     public interface IUIPropertyWriter<TValue> : IUIPropertyWriter where TValue : struct {
 
     }
@@ -54,7 +50,7 @@ namespace NeroWeNeed.UIDots {
         }
 
         public unsafe void Write(string s, IntPtr ptr, TypeDecomposer.FieldData fieldData, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-            if (context.spriteGroup != null && context.spriteGroup.TryGetUVs(s, out Rect uvs)) {
+            if (context.group != null && context.group.TryGetUVs(s, out Rect uvs)) {
                 var uvData = new UVData
                 {
                     value = new float4(uvs.x, uvs.y, uvs.width, uvs.height)
@@ -81,12 +77,15 @@ namespace NeroWeNeed.UIDots {
             UnsafeUtility.CopyStructureToPtr(ref str, (ptr + fieldData.offset).ToPointer());
         }
     }
+
+
     public class UIAssetPointerPropertyWriter : IUIPropertyWriter<BlittableAssetReference> {
 
         public bool CanParse(string s) {
             return AssetDatabase.GUIDToAssetPath(s) != null;
         }
         public unsafe void Write(string s, IntPtr ptr, TypeDecomposer.FieldData fieldData, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
+            
             if (CanParse(s)) {
                 if (GUID.TryParse(s, out GUID result)) {
                     UnsafeUtility.CopyStructureToPtr(ref result, (ptr + fieldData.offset).ToPointer());
@@ -125,10 +124,39 @@ namespace NeroWeNeed.UIDots {
             else if (fieldData.type.IsEnum) {
                 WriteEnum(fieldData.type, s, ptr, fieldData, extraBytesStream, extraByteStreamOffset, context);
             }
+            else if (fieldData.type.IsConstructedGenericType && typeof(FunctionPointer<>).IsAssignableFrom(fieldData.type.GetGenericTypeDefinition())) {
+                WriteFunctionPointerTypeless(s, ptr, fieldData, extraBytesStream, extraByteStreamOffset, context);
+            }
             else {
                 writers.FirstOrDefault(x => x.Key.IsAssignableFrom(fieldData.type)).Value?.Write(s, ptr, fieldData, extraBytesStream, extraByteStreamOffset, context);
             }
 
+        }
+        private static void WriteFunctionPointerTypeless(string s, IntPtr ptr, TypeDecomposer.FieldData fieldData, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
+            var delegateType = fieldData.type.GenericTypeArguments[0];
+            var separatorIndex = s.IndexOf('#');
+            var containerName = s.Substring(0, separatorIndex);
+            var methodName = s.Substring(separatorIndex + 1);
+            var method = FindMethodInfo(containerName, methodName,delegateType);
+            
+            if (method != null) {
+                typeof(UIPropertyWriterFactory).GetMethod(nameof(WriteFunctionPointer),BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static).MakeGenericMethod(delegateType).Invoke(null, new object[] { ptr, fieldData, method });
+            }
+
+
+        }
+        private static MethodInfo FindMethodInfo(string container, string name,Type delegateType) {
+            return AppDomain.CurrentDomain.GetAssemblies().Where(assembly => assembly.GetCustomAttribute<UICallbackAttribute>() != null)
+            .Select(assembly => assembly.GetType(container, false, true))
+            .Where(type => type != null && type.IsAbstract && type.IsSealed && type.GetCustomAttribute<BurstCompileAttribute>() != null)
+            .Select(type => type.GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
+            .FirstOrDefault(method => method != null && method.GetCustomAttribute<BurstCompileAttribute>() != null && method.CreateDelegate(delegateType) != null);
+
+        }
+        private unsafe static void WriteFunctionPointer<TDelegate>(IntPtr ptr, TypeDecomposer.FieldData fieldData, MethodInfo method) where TDelegate : Delegate {
+            var func = (TDelegate)method.CreateDelegate(typeof(TDelegate));
+            var compiled = BurstCompiler.CompileFunctionPointer<TDelegate>(func);
+            UnsafeUtility.CopyStructureToPtr(ref compiled, (ptr + fieldData.offset).ToPointer());
         }
         private static void WriteEnum(Type type, string s, IntPtr ptr, TypeDecomposer.FieldData fieldData, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
             var parser = typeof(UIPropertyWriterFactory).GetMethod(nameof(TryParseEnum), BindingFlags.Static | BindingFlags.Public).MakeGenericMethod(type).CreateDelegate(typeof(UIPropertyParser<>).MakeGenericType(type));
@@ -189,4 +217,6 @@ namespace NeroWeNeed.UIDots {
             }
         }
     }
+    
 }
+#endif

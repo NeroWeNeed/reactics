@@ -7,35 +7,45 @@ using System.Linq;
 using System.Reflection;
 using NeroWeNeed.Commons;
 using Unity.Burst;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace NeroWeNeed.UIDots {
     public class UISchema : ScriptableObject, IEnumerable<UISchema.Element> {
         public const string ASSET_LOCATION = "Assets/UIDots/UISchema.asset";
         public const string ASSET_FOLDER = "UIDots";
+#if UNITY_EDITOR
         [MenuItem("DOTS/UIDots/Refresh Schema")]
         public static void RefreshData() {
             Default.Refresh();
         }
+        private static UISchema schema = null;
         public static UISchema Default
         {
             get
             {
-                var schema = AssetDatabase.LoadAssetAtPath<UISchema>(ASSET_LOCATION);
                 if (schema == null) {
-                    if (!Directory.Exists("Assets/" + ASSET_FOLDER))
-                        AssetDatabase.CreateFolder("Assets", ASSET_FOLDER);
-                    schema = ScriptableObject.CreateInstance<UISchema>();
-                    schema.name = "Default UI Schema";
-                    schema.Refresh();
-                    AssetDatabase.CreateAsset(schema, ASSET_LOCATION);
-                    AssetDatabase.SaveAssets();
+                    var newSchema = AssetDatabase.LoadAssetAtPath<UISchema>(ASSET_LOCATION);
+                    if (newSchema == null) {
+                        if (!Directory.Exists("Assets/" + ASSET_FOLDER))
+                            AssetDatabase.CreateFolder("Assets", ASSET_FOLDER);
+                        newSchema = ScriptableObject.CreateInstance<UISchema>();
+                        newSchema.name = "Default UI Schema";
+                        newSchema.Refresh();
+                        AssetDatabase.CreateAsset(newSchema, ASSET_LOCATION);
+                        AssetDatabase.SaveAssets();
+                    }
+                    schema = newSchema;
+
                 }
                 return schema;
+
+
             }
         }
-
+#endif
 
         [SerializeField]
         private List<Element> entries = new List<Element>();
@@ -71,7 +81,7 @@ namespace NeroWeNeed.UIDots {
                                     {
                                         identifier = attribute.Identifier,
                                         displayName = attribute.Identifier,
-                                        config = attribute.ConfigurationType,
+                                        mask = attribute.Mask,
                                         pass = method
                                     };
                                 }
@@ -93,7 +103,7 @@ namespace NeroWeNeed.UIDots {
         public struct Element {
             public string identifier;
             public string displayName;
-            public SerializableType config;
+            public ulong mask;
             public SerializableMethod pass;
         }
     }

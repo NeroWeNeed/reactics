@@ -3,6 +3,7 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
+using Unity.Mathematics;
 
 namespace NeroWeNeed.UIDots {
     [UpdateInGroup(typeof(UISystemGroup))]
@@ -24,7 +25,7 @@ namespace NeroWeNeed.UIDots {
                 var camera = EntityManager.GetComponentObject<Camera>(source.value);
                 context.dpi = Screen.dpi;
                 context.pixelScale = source.value == Entity.Null ? 0.001f : 0.01f;
-                context.size = new Unity.Mathematics.float2(camera.orthographicSize * camera.aspect * 2, camera.orthographicSize * 2);
+                context.size = new float2(camera.orthographicSize * camera.aspect * 2, camera.orthographicSize * 2);
                 cameraContext.cameraLTW = camera.transform.localToWorldMatrix;
                 cameraContext.clipPlane.x = camera.nearClipPlane;
                 cameraContext.clipPlane.y = camera.farClipPlane;
