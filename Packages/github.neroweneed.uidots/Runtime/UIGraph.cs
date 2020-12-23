@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace NeroWeNeed.UIDots {
     public struct UIGraphNode {
+        
         public FunctionPointer<UIPass> pass;
         public FunctionPointer<UIRenderBoxHandler> renderBoxHandler;
         public BlobArray<int> children;

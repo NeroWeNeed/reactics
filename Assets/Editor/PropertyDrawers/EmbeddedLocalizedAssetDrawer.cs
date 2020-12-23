@@ -7,13 +7,13 @@ using UnityEditor;
 using UnityEditor.Localization;
 using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.Localization;
-using UnityEngine.Localization.Tables;
+/* using UnityEngine.Localization;
+using UnityEngine.Localization.Tables; */
 using UnityEngine.UIElements;
 
 namespace Reactics.Editor {
 
-
+/* 
     [CustomPropertyDrawer(typeof(EmbeddedLocalizedAsset<>))]
     public class EmbeddedLocalizedAssetPropertyDrawer : PropertyDrawer {
         int localeIndex;
@@ -122,5 +122,5 @@ namespace Reactics.Editor {
 
         }
 
-    }
+    } */
 }

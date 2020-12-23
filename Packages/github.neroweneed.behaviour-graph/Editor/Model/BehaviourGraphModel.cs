@@ -14,13 +14,11 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Entities.Serialization;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
 using UnityEditor.Callbacks;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.ProjectWindowCallback;
 using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.UIElements;
 
 namespace NeroWeNeed.BehaviourGraph.Editor.Model {

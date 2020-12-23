@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-using UnityEngine.Localization;
+/* using UnityEngine.Localization;
 using UnityEngine.Localization.Tables;
 
 namespace Reactics.Core.Commons {
@@ -11,4 +11,4 @@ namespace Reactics.Core.Commons {
     public sealed class EmbeddedLocalizedAssetIdentifier : Attribute {
 
     }
-}
+} */

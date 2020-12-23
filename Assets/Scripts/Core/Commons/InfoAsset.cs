@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.Localization.Tables;
+/* using UnityEngine.Localization.Tables;
 
 namespace Reactics.Core.Commons {
     public abstract class InfoAsset : ScriptableObject {
@@ -18,4 +18,4 @@ namespace Reactics.Core.Commons {
 
 
     }
-}
+} */

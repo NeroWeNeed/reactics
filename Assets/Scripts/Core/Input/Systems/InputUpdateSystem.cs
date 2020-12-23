@@ -13,32 +13,22 @@ namespace Reactics.Core.Input {
 
         protected override void OnCreate() {
             base.OnCreate();
-            controls.Enable();
-            Debug.Log("x");
         }
+
         protected override void OnUpdate() {
+
             InputSystem.Update();
-            Entities.ForEach((Entity entity, in InputHandlerData handler, in InputControlSchemeData controlSchemeData, in InputActionMapData actionMapData) =>
+            Entities.ForEach((Entity entity, in InputHandlerData handler, in InputContext context) =>
                     {
-
                         var input = handler.PlayerInput;
-                        var controlSchemeDirty = controlSchemeData.name != input?.currentControlScheme;
-
-                                                var actionMapDirty = actionMapData.name != (input?.currentActionMap?.name);
-                                                InputHandlerState state = InputHandlerState.Clean;
-                                                if (controlSchemeDirty) {
-                                                    state |= InputHandlerState.ControlSchemeDirty;
-                                                    EntityManager.SetSharedComponentData(entity, new InputControlSchemeData { name = input?.currentControlScheme });
-                                                }
-                                                if (actionMapDirty) {
-                                                    state |= InputHandlerState.ActionMapDirty;
-                                                    EntityManager.SetSharedComponentData(entity, new InputActionMapData { name = input?.currentActionMap?.id.ToString() });
-                                                }
-                                                if (state != InputHandlerState.Clean) {
-                                                    EntityManager.SetComponentData(entity, new InputHandlerStateData { value = state });
-                                                }
+                        var controlSchemeDirty = context.controlSchemeName != input?.currentControlScheme;
+                        var actionMapDirty = context.actionMapName != (input?.currentActionMap?.name);
+                        //InputHandlerState state = InputHandlerState.Clean;
+                        var update = context.controlSchemeName != input?.currentControlScheme || context.actionMapName != (input?.currentActionMap?.name);
+                        if (update) {
+                            EntityManager.SetSharedComponentData(entity,new InputContext { actionMapName = input.currentActionMap.name, controlSchemeName = input.currentControlScheme });
+                        }
                     }).WithoutBurst().WithStructuralChanges().Run();
-
 
         }
         protected override void OnStartRunning() {

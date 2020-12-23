@@ -8,13 +8,9 @@ using NeroWeNeed.BehaviourGraph.Editor.Model;
 using NeroWeNeed.Commons;
 using NeroWeNeed.Commons.Editor;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
-using UnityEditor.AddressableAssets.Settings;
-using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEditor.Callbacks;
 using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 namespace NeroWeNeed.BehaviourGraph.Editor {
     public class BehaviourGraphSettings : CompileableTableObject {

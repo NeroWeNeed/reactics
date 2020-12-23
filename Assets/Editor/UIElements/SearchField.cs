@@ -228,7 +228,7 @@ namespace Reactics.Editor {
 
 
             }
-            catch (TaskCanceledException e) {
+            catch (TaskCanceledException) {
 
             }
             finally {

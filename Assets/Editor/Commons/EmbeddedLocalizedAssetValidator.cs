@@ -5,13 +5,13 @@ using System.Reflection;
 using Reactics.Core.Commons;
 using Reactics.Core.Commons.Reflection;
 using UnityEditor;
-using UnityEditor.Localization;
+//using UnityEditor.Localization;
 using UnityEngine;
-using UnityEngine.Localization;
+/* using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
-using UnityEngine.Localization.Tables;
+using UnityEngine.Localization.Tables; */
 
-namespace Reactics.Editor {
+namespace Reactics.Editor {/* 
     public static class EmbeddedLocalizedAssetValidator {
         public const string LOCALE_ASSET_PATH = "Assets/ResourceData/Locale/Assets";
         public const string LOCALE_PATH = "Assets/ResourceData/Locale";
@@ -108,5 +108,5 @@ namespace Reactics.Editor {
                 }
             }
         }
-    }
+    } */
 }

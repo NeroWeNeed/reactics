@@ -7,7 +7,7 @@ using System.Xml.Linq;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
+//using UnityEngine.AddressableAssets;
 
 namespace Reactics.Core.Commons {
     public static class GeneralCommons {
@@ -81,10 +81,10 @@ namespace Reactics.Core.Commons {
         public static float4 ToFloat4(this Color color) => new float4(color.r, color.g, color.b, color.a);
 
     }
-    [Serializable]
+/*     [Serializable]
     public class AssetReference<TAsset> : AssetReferenceT<TAsset> where TAsset : UnityEngine.Object {
         public AssetReference(string guid) : base(guid) {
         }
-    }
+    } */
 
 }

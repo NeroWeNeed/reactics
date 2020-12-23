@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
-using UnityEngine;
+using UnityEngine;/* 
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
-using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.AsyncOperations; */
 
 namespace Reactics.Core.Commons.Reflection {
     public static class EmbeddedLocalizedReferenceExtensions {
-        public static void ValidateEmbeddedLocalizedReferences(this UnityEngine.Object self, string identifier) {
+/*         public static void ValidateEmbeddedLocalizedReferences(this UnityEngine.Object self, string identifier) {
             var subAssets = AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GetAssetPath(self));
 
             foreach (var field in self.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)) {
@@ -20,10 +20,10 @@ namespace Reactics.Core.Commons.Reflection {
 
                 }
             }
-        }
+        } */
         public static string GetLocalizationTableName(this FieldInfo fieldInfo) => fieldInfo.GetCustomAttribute<LocalizationTableNameAttribute>()?.name ?? fieldInfo.Name;
 
-        private static async System.Threading.Tasks.Task EnsureValuesExistAsync<TObject>(EmbeddedLocalizedAsset<TObject> reference, string identifier, UnityEngine.Object rootAsset, UnityEngine.Object[] subAssets) where TObject : UnityEngine.Object {
+/*         private static async System.Threading.Tasks.Task EnsureValuesExistAsync<TObject>(EmbeddedLocalizedAsset<TObject> reference, string identifier, UnityEngine.Object rootAsset, UnityEngine.Object[] subAssets) where TObject : UnityEngine.Object {
 
             AssetTable assetTable = null;
 
@@ -46,7 +46,7 @@ namespace Reactics.Core.Commons.Reflection {
                 }
 
             }
-        }
+        } */
     }
 
     public static class ReflectionUtils {

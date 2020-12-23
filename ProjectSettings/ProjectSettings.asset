@@ -12,8 +12,8 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
-  productName: Project ATT
+  companyName: Nero & Co
+  productName: Project Reactics
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -129,7 +129,7 @@ PlayerSettings:
     Others: 1
   bundleVersion: 0.1
   preloadedAssets:
-  - {fileID: 11400000, guid: 17d203960df336b43b58344e230e82ee, type: 2}
+  - {fileID: 0}
   - {fileID: 11400000, guid: a9a96d3d310de604bbf796c19713ba5d, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
@@ -589,8 +589,10 @@ PlayerSettings:
   platformArchitecture: {}
   scriptingBackend:
     Standalone: 1
-  il2cppCompilerConfiguration: {}
-  managedStrippingLevel: {}
+  il2cppCompilerConfiguration:
+    Standalone: 1
+  managedStrippingLevel:
+    Standalone: 1
   incrementalIl2cppBuild: {}
   suppressCommonWarnings: 1
   allowUnsafeCode: 1

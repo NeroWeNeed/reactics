@@ -6,7 +6,7 @@ namespace NeroWeNeed.UIDots {
     [RequireComponent(typeof(Camera))]
     public class UICameraLayer : MonoBehaviour, IConvertGameObjectToEntity {
         private void Start() {
-            var uiCamera = this.GetComponent<Camera>();
+/*             var uiCamera = this.GetComponent<Camera>();
             var mainCamera = this.GetComponentInParent<Camera>();
             if (mainCamera == null || uiCamera == null)
                 return;
@@ -20,7 +20,7 @@ namespace NeroWeNeed.UIDots {
             uiCamera.transform.SetParent(mainCamera.transform, false);
             uiCamera.cullingMask = 1 << UICamera.UILayer;
             uiCamera.GetUniversalAdditionalCameraData().renderType = CameraRenderType.Overlay;
-            
+             */
         }
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {
             /*             GameObjectEntity.AddToEntity(dstManager, this.gameObject, entity);

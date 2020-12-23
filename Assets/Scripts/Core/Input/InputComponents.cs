@@ -27,32 +27,28 @@ namespace Reactics.Core.Input {
             return -1584136870 + EqualityComparer<GameObject>.Default.GetHashCode(value);
         }
     }
-    public struct InputActionMapData : ISharedComponentData, IEquatable<InputActionMapData> {
-        public string name;
-        public InputActionMapData(string id) {
-
-            this.name = id;
+    public struct InputContext : ISharedComponentData, IEquatable<InputContext> {
+        public string actionMapName;
+        public string controlSchemeName;
+        public InputContext(InputActionMap inputActions, InputControlScheme controlScheme) {
+            this.actionMapName = inputActions.name;
+            this.controlSchemeName = controlScheme.name;
+        }
+        public InputContext(string actionMapName, string controlSchemeName) {
+            this.actionMapName = actionMapName;
+            this.controlSchemeName = controlSchemeName;
         }
 
-        public bool Equals(InputActionMapData other) {
-            return EqualityComparer<string>.Default.Equals(name, other.name);
-        }
-
-        public override int GetHashCode() {
-            return -1721492029 + EqualityComparer<string>.Default.GetHashCode(name);
-        }
-    }
-    public struct InputControlSchemeData : ISharedComponentData, IEquatable<InputControlSchemeData> {
-        public string name;
-
-        public bool Equals(InputControlSchemeData other) {
-            return EqualityComparer<string>.Default.Equals(name, other.name);
+        public bool Equals(InputContext other) {
+            return actionMapName == other.actionMapName && controlSchemeName == other.controlSchemeName;
         }
 
         public override int GetHashCode() {
-            return 363513814 + EqualityComparer<string>.Default.GetHashCode(name);
+            int hashCode = 2076751591;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(actionMapName);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(controlSchemeName);
+            return hashCode;
         }
-        public static implicit operator InputControlSchemeData(string name) => new InputControlSchemeData { name = name };
     }
     public struct CameraDependent : IComponentData {
         public Entity cameraEntity;

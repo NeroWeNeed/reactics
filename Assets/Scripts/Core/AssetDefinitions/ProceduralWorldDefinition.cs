@@ -3,7 +3,7 @@ using Reactics.Core.Commons;
 using Unity.Entities;
 using Unity.Entities.Serialization;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
+//using UnityEngine.AddressableAssets;
 
 namespace Reactics.Core.AssetDefinitions {
 

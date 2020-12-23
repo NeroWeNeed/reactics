@@ -23,21 +23,24 @@ namespace Reactics.Core.Input {
         }
 
         protected override void OnUpdate() {
-            if (!Query.IsEmpty) {
-                Entities.ForEach((ref UICursorInput input,ref UICursorDirty dirtyState, in UICursor cursor) =>
-                {
-                    float2 dir = InputUpdateSystem.Controls.MenuControls.DirectionalNavigation.ReadValue<Vector2>();
-                    if (math.length(dir) != 0) {
 
-                        dirtyState.value = true;
-                        input.direction = quaternion.LookRotation(new float3(dir.x, dir.y, 0), math.back());
-                        
-                        
-                    }
-                }).WithoutBurst().Run();
-
+            Entities.WithSharedComponentFilter(InputContext).ForEach((ref UICursorInput input, ref UICursorDirty dirtyState, in UICursor cursor) =>
+            {
+                float2 dir = InputUpdateSystem.Controls.MenuControls.DirectionalNavigation.ReadValue<Vector2>();
                 
-            }
+                if (dir.Equals(float2.zero)) {
+                    input.direction = float.NaN;
+                }
+                else {
+                    Debug.Log(InputUpdateSystem.Controls.MenuControls.DirectionalNavigation.phase);
+                    input.direction = math.atan2(dir.y, dir.x);
+                }
+
+
+            }).WithoutBurst().Run();
+
+
+
         }
     }
 }

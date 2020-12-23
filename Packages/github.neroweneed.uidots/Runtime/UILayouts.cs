@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
+using AOT;
 using NeroWeNeed.BehaviourGraph;
 using NeroWeNeed.Commons;
 using TMPro;
@@ -11,7 +12,6 @@ using Unity.Entities.Serialization;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 [assembly: SearchableAssembly]
 namespace NeroWeNeed.UIDots {
@@ -66,7 +66,7 @@ namespace NeroWeNeed.UIDots {
                 var charInfo = textConfig->GetCharInfo(config, i - 1);
                 UnsafeUtility.WriteArrayElement(vertexPtr.ToPointer(), i * 4, new UIVertexData
                 {
-                    position = new float3(offsetX + (charInfo.metrics.horizontalBearingX * fontSizeScale), offsetY + (((height - (charInfo.metrics.height - charInfo.metrics.horizontalBearingY))) * fontSizeScale), 0),
+                    position = new float3(offsetX + (charInfo.metrics.horizontalBearingX * fontSizeScale), offsetY + (((height - (charInfo.metrics.height - charInfo.metrics.horizontalBearingY))) * fontSizeScale), -0.002f),
                     normals = new float3(0, 0, -1),
                     background = nullBg,
                     foreground = new float3(charInfo.uvs.x, charInfo.uvs.y, charInfo.index),
@@ -75,7 +75,7 @@ namespace NeroWeNeed.UIDots {
                 });
                 UnsafeUtility.WriteArrayElement(vertexPtr.ToPointer(), (i * 4) + 1, new UIVertexData
                 {
-                    position = new float3(offsetX + ((charInfo.metrics.horizontalBearingX + charInfo.metrics.width) * fontSizeScale), offsetY + (((height - (charInfo.metrics.height - charInfo.metrics.horizontalBearingY))) * fontSizeScale), 0),
+                    position = new float3(offsetX + ((charInfo.metrics.horizontalBearingX + charInfo.metrics.width) * fontSizeScale), offsetY + (((height - (charInfo.metrics.height - charInfo.metrics.horizontalBearingY))) * fontSizeScale), -0.002f),
                     normals = new float3(0, 0, -1),
                     background = nullBg,
                     foreground = new float3(charInfo.uvs.x + charInfo.uvs.z, charInfo.uvs.y, charInfo.index),
@@ -83,7 +83,7 @@ namespace NeroWeNeed.UIDots {
                 });
                 UnsafeUtility.WriteArrayElement(vertexPtr.ToPointer(), (i * 4) + 2, new UIVertexData
                 {
-                    position = new float3(offsetX + (charInfo.metrics.horizontalBearingX * fontSizeScale), offsetY + (((height - (charInfo.metrics.height - charInfo.metrics.horizontalBearingY) + charInfo.metrics.height)) * fontSizeScale), 0),
+                    position = new float3(offsetX + (charInfo.metrics.horizontalBearingX * fontSizeScale), offsetY + (((height - (charInfo.metrics.height - charInfo.metrics.horizontalBearingY) + charInfo.metrics.height)) * fontSizeScale), -0.002f),
                     normals = new float3(0, 0, -1),
                     background = nullBg,
                     foreground = new float3(charInfo.uvs.x, charInfo.uvs.y + charInfo.uvs.w, charInfo.index),
@@ -91,7 +91,7 @@ namespace NeroWeNeed.UIDots {
                 });
                 UnsafeUtility.WriteArrayElement(vertexPtr.ToPointer(), (i * 4) + 3, new UIVertexData
                 {
-                    position = new float3(offsetX + ((charInfo.metrics.horizontalBearingX + charInfo.metrics.width) * fontSizeScale), offsetY + (((height - (charInfo.metrics.height - charInfo.metrics.horizontalBearingY) + charInfo.metrics.height)) * fontSizeScale), 0),
+                    position = new float3(offsetX + ((charInfo.metrics.horizontalBearingX + charInfo.metrics.width) * fontSizeScale), offsetY + (((height - (charInfo.metrics.height - charInfo.metrics.horizontalBearingY) + charInfo.metrics.height)) * fontSizeScale), -0.002f),
                     normals = new float3(0, 0, -1),
                     background = nullBg,
                     foreground = new float3(charInfo.uvs.x + charInfo.uvs.z, charInfo.uvs.y + charInfo.uvs.w, charInfo.index),
@@ -110,7 +110,7 @@ namespace NeroWeNeed.UIDots {
             {
                 background = new float3(backgroundConfig->image.value.x, backgroundConfig->image.value.y - backgroundConfig->image.value.w, 0f),
                 color = backgroundConfig->color,
-                position = new float3(initialOffset.x, initialOffset.y + (textConfig->fontInfo.descentLine * fontSizeScale), 0),
+                position = new float3(initialOffset.x, initialOffset.y + (textConfig->fontInfo.descentLine * fontSizeScale), -0.001f),
                 normals = new float3(0, 0, -1),
                 border = new float3(math.atan2(borderConfig->width.top.Normalize(*context), borderConfig->width.left.Normalize(*context)), math.distance(float2.zero, new float2(borderConfig->width.left.Normalize(*context), borderConfig->width.top.Normalize(*context))), borderConfig->radius.topLeft.Normalize(*context)),
             });
@@ -118,7 +118,7 @@ namespace NeroWeNeed.UIDots {
             {
                 background = new float3(backgroundConfig->image.value.x + backgroundConfig->image.value.z, backgroundConfig->image.value.y - backgroundConfig->image.value.w, 0f),
                 color = backgroundConfig->color,
-                position = new float3(initialOffset.x + width, initialOffset.y + (textConfig->fontInfo.descentLine * fontSizeScale), 0),
+                position = new float3(initialOffset.x + width, initialOffset.y + (textConfig->fontInfo.descentLine * fontSizeScale), -0.001f),
                 normals = new float3(0, 0, -1),
                 border = new float3(math.atan2(borderConfig->width.top.Normalize(*context), borderConfig->width.right.Normalize(*context)), math.distance(float2.zero, new float2(borderConfig->width.right.Normalize(*context), borderConfig->width.top.Normalize(*context))), borderConfig->radius.topRight.Normalize(*context)),
             });
@@ -126,7 +126,7 @@ namespace NeroWeNeed.UIDots {
             {
                 background = new float3(backgroundConfig->image.value.x, backgroundConfig->image.value.y, 0f),
                 color = backgroundConfig->color,
-                position = new float3(initialOffset.x, initialOffset.y + height + (textConfig->fontInfo.descentLine * fontSizeScale) + state->globalBox.w, 0),
+                position = new float3(initialOffset.x, initialOffset.y + height + (textConfig->fontInfo.descentLine * fontSizeScale) + state->globalBox.w, -0.001f),
                 normals = new float3(0, 0, -1),
                 border = new float3(math.atan2(borderConfig->width.bottom.Normalize(*context), borderConfig->width.left.Normalize(*context)), math.distance(float2.zero, new float2(borderConfig->width.left.Normalize(*context), borderConfig->width.bottom.Normalize(*context))), borderConfig->radius.bottomLeft.Normalize(*context)),
             });
@@ -134,7 +134,7 @@ namespace NeroWeNeed.UIDots {
             {
                 background = new float3(backgroundConfig->image.value.x + backgroundConfig->image.value.z, backgroundConfig->image.value.y, 0f),
                 color = backgroundConfig->color,
-                position = new float3(initialOffset.x + width, initialOffset.y + height + (textConfig->fontInfo.descentLine * fontSizeScale) + state->globalBox.w, 0),
+                position = new float3(initialOffset.x + width, initialOffset.y + height + (textConfig->fontInfo.descentLine * fontSizeScale) + state->globalBox.w, -0.001f),
                 normals = new float3(0, 0, -1),
                 border = new float3(math.atan2(borderConfig->width.bottom.Normalize(*context), borderConfig->width.right.Normalize(*context)), math.distance(float2.zero, new float2(borderConfig->width.right.Normalize(*context), borderConfig->width.bottom.Normalize(*context))), borderConfig->radius.bottomRight.Normalize(*context)),
             });
@@ -167,6 +167,7 @@ namespace NeroWeNeed.UIDots {
         [BurstCompile]
         [UIDotsElement("Button", UIConfigLayout.NameConfig, UIConfigLayout.BackgroundConfig, UIConfigLayout.BorderConfig, UIConfigLayout.FontConfig, UIConfigLayout.BoxConfig, UIConfigLayout.TextConfig, UIConfigLayout.SizeConfig,UIConfigLayout.SelectableConfig)]
         [UIDotsRenderBoxHandler(nameof(TextElementRenderBoxHandler))]
+        [MonoPInvokeCallback(typeof(UIPass))]
         public static void ButtonElement(
         byte type,
         IntPtr configPtr,
@@ -205,6 +206,7 @@ namespace NeroWeNeed.UIDots {
         [BurstCompile]
         [UIDotsElement("TextElement", UIConfigLayout.NameConfig, UIConfigLayout.BackgroundConfig, UIConfigLayout.BorderConfig, UIConfigLayout.FontConfig, UIConfigLayout.BoxConfig, UIConfigLayout.TextConfig, UIConfigLayout.SizeConfig)]
         [UIDotsRenderBoxHandler(nameof(TextElementRenderBoxHandler))]
+        [MonoPInvokeCallback(typeof(UIPass))]
         public static void TextElement(
         byte type,
         IntPtr configPtr,
@@ -309,6 +311,7 @@ math.clamp(maxHeight, sizeConfig->minHeight.Normalize(*context), sizeConfig->max
         }
         [BurstCompile]
         [UIDotsElement("VBox", UIConfigLayout.NameConfig, UIConfigLayout.BackgroundConfig, UIConfigLayout.BorderConfig, UIConfigLayout.SequentialLayoutConfig, UIConfigLayout.BoxConfig, UIConfigLayout.SizeConfig)]
+        [MonoPInvokeCallback(typeof(UIPass))]
         public static void VBox(
         byte type,
         IntPtr configPtr,

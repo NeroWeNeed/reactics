@@ -15,9 +15,10 @@ namespace Reactics.Core.Map.Authoring {
     public class Map : MonoBehaviour, IConvertGameObjectToEntity {
         public static readonly float LAYER_OFFSET = 0.0001f;
 
-
         [SerializeField]
-        private AssetReference<Material> mapMaterial;
+        private Material mapMaterial;
+        /*         [SerializeField]
+                private AssetReference<Material> mapMaterial; */
 
         [SerializeField]
         public MapAsset map;
@@ -70,12 +71,8 @@ namespace Reactics.Core.Map.Authoring {
                 }
 
                 var layers = (MapLayer[])Enum.GetValues(typeof(MapLayer));
-                Material material;
-#if UNITY_EDITOR
-                material = mapMaterial.editorAsset;
-#else
-                material = await mapMaterial.LoadAssetAsync<Material>().Task;
-#endif
+                Material material = mapMaterial;
+
                 for (int i = 0; i < layers.Length; i++) {
 #if UNITY_EDITOR
                     dstManager.SetName(layerEntities[i], $"{this.name} ({layers[i]} Layer)");

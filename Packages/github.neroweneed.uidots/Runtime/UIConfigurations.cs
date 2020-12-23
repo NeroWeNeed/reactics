@@ -12,54 +12,42 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Entities.Serialization;
 using Unity.Mathematics;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 namespace NeroWeNeed.UIDots {
 
 
 
-    public struct UIPropertyWriterContext {
-#if UNITY_EDITOR
-        public UIAssetGroup group;
-        #endif
-    }
-    public interface IConfig {
-        void PreInit(ulong mask, UIPropertyWriterContext context);
-        void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context);
-    }
+
 
     //Static Layout to define config structure
-/*     public unsafe struct UIConfigLayoutSizes {
+    /*     public unsafe struct UIConfigLayoutSizes {
 
-        public fixed int sizes[10];
+            public fixed int sizes[10];
 
-        public int this[int key]
-        {
-            get => sizes[key];
-            set => sizes[key] = value;
-        }
-        public int Length { get => 10; }
-        public static UIConfigLayoutSizes Create() {
-            var sizes = new UIConfigLayoutSizes();
-            for (int i = 0; i < UIConfigLayout.ConfigTypes.Length; i++) {
-                sizes[i] = UnsafeUtility.SizeOf(UIConfigLayout.ConfigTypes[i]);
+            public int this[int key]
+            {
+                get => sizes[key];
+                set => sizes[key] = value;
             }
-                             sizes[0] = UnsafeUtility.SizeOf<NameConfig>();
-                        sizes[1] = UnsafeUtility.SizeOf<DisplayConfig>();
-                        sizes[2] = UnsafeUtility.SizeOf<PositionConfig>();
-                        sizes[3] = UnsafeUtility.SizeOf<SizeConfig>();
-                        sizes[4] = UnsafeUtility.SizeOf<BoxConfig>();
-                        sizes[5] = UnsafeUtility.SizeOf<FontConfig>();
-                        sizes[6] = UnsafeUtility.SizeOf<BackgroundConfig>();
-                        sizes[7] = UnsafeUtility.SizeOf<BorderConfig>();
-                        sizes[8] = UnsafeUtility.SizeOf<SequentialLayoutConfig>();
-                        sizes[9] = UnsafeUtility.SizeOf<TextConfig>(); 
-            return sizes;
-        }
-    } */
+            public int Length { get => 10; }
+            public static UIConfigLayoutSizes Create() {
+                var sizes = new UIConfigLayoutSizes();
+                for (int i = 0; i < UIConfigLayout.ConfigTypes.Length; i++) {
+                    sizes[i] = UnsafeUtility.SizeOf(UIConfigLayout.ConfigTypes[i]);
+                }
+                                 sizes[0] = UnsafeUtility.SizeOf<NameConfig>();
+                            sizes[1] = UnsafeUtility.SizeOf<DisplayConfig>();
+                            sizes[2] = UnsafeUtility.SizeOf<PositionConfig>();
+                            sizes[3] = UnsafeUtility.SizeOf<SizeConfig>();
+                            sizes[4] = UnsafeUtility.SizeOf<BoxConfig>();
+                            sizes[5] = UnsafeUtility.SizeOf<FontConfig>();
+                            sizes[6] = UnsafeUtility.SizeOf<BackgroundConfig>();
+                            sizes[7] = UnsafeUtility.SizeOf<BorderConfig>();
+                            sizes[8] = UnsafeUtility.SizeOf<SequentialLayoutConfig>();
+                            sizes[9] = UnsafeUtility.SizeOf<TextConfig>(); 
+                return sizes;
+            }
+        } */
     public static class UIConfigLayoutTypes {
         public static readonly Type[] ConfigTypes = new Type[] {
             typeof(NameConfig),
@@ -101,7 +89,7 @@ namespace NeroWeNeed.UIDots {
                     80,
                     12,
                     36,
-                    8
+                    12
                 };
 
         /*         public static readonly int[] ConfigLengths = new int[] {
@@ -116,7 +104,7 @@ namespace NeroWeNeed.UIDots {
                             UnsafeUtility.SizeOf<SequentialLayoutConfig>(),
                             UnsafeUtility.SizeOf<TextConfig>()
                         }; */
-        
+
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -178,12 +166,12 @@ namespace NeroWeNeed.UIDots {
             }
         }
         [BurstDiscard]
-        public unsafe static void CreateConfiguration(ulong mask, List<IConfig> configs) {
+        public unsafe static void CreateConfiguration(ulong mask, List<object> configs) {
             configs.Clear();
             int size = 0;
             for (int i = 0; i < UIConfigLayoutTypes.ConfigTypes.Length; i++) {
                 if (((byte)(mask >> i) & 1U) != 0) {
-                    var config = Activator.CreateInstance(UIConfigLayoutTypes.ConfigTypes[i]) as IConfig;
+                    var config = Activator.CreateInstance(UIConfigLayoutTypes.ConfigTypes[i]);
                     configs.Add(config);
                     size += ConfigLengths[i];
                 }
@@ -199,33 +187,19 @@ namespace NeroWeNeed.UIDots {
         }
     }
     [UIConfigBlock]
-    public struct NameConfig : IConfig {
+    public struct NameConfig {
         public LocalizedStringPtr name;
-
-        public void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-            
-        }
-
-        public void PreInit(ulong mask, UIPropertyWriterContext context) {
-            
-        }
     }
     [UIConfigBlock]
-    public struct BoxConfig : IConfig {
+    public struct BoxConfig {
         public BoxData<UILength> margin;
         public BoxData<UILength> padding;
 
-        public void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-            
-        }
 
-        public void PreInit(ulong mask, UIPropertyWriterContext context) {
-            
-        }
     }
 
     [UIConfigBlock]
-    public struct DisplayConfig : IConfig {
+    public struct DisplayConfig {
         public static readonly DisplayConfig DEFAULT = new DisplayConfig
         {
             opacity = 1f,
@@ -236,36 +210,19 @@ namespace NeroWeNeed.UIDots {
         public float opacity;
         public VisibilityStyle display, visibile, overflow;
 
-        public void PreInit(ulong mask, UIPropertyWriterContext context) {
-            display = VisibilityStyle.Visible;
-            visibile = VisibilityStyle.Visible;
-            overflow = VisibilityStyle.Visible;
-            opacity = 1f;
-        }
-        public void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-
-        }
-
     }
     [UIConfigBlock]
-    public struct PositionConfig : IConfig {
+    public struct PositionConfig {
         public static readonly PositionConfig DEFAULT = new PositionConfig
         {
             absolute = false
         };
         public bool absolute;
         public BoxData<UILength> position;
-        public void PreInit(ulong mask, UIPropertyWriterContext context) {
-
-        }
-        public void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-
-        }
-
 
     }
     [UIConfigBlock]
-    public struct SizeConfig : IConfig {
+    public struct SizeConfig {
         public static readonly SizeConfig DEFAULT = new SizeConfig
         {
             minWidth = new UILength(0, UILengthUnit.Px),
@@ -276,96 +233,45 @@ namespace NeroWeNeed.UIDots {
             maxHeight = new UILength(float.PositiveInfinity, UILengthUnit.Px),
         };
         public UILength minWidth, width, maxWidth, minHeight, height, maxHeight;
-
-        public void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-
-        }
-
-        public void PreInit(ulong mask, UIPropertyWriterContext context) {
-            minWidth = 0f.Px();
-            maxWidth = float.PositiveInfinity.Px();
-            width = float.NaN.Px();
-            height = float.NaN.Px();
-            minHeight = 0f.Px();
-            maxHeight = float.PositiveInfinity.Px();
-        }
     }
 
     [UIConfigBlock("font")]
-    public struct FontConfig : IConfig {
+    public struct FontConfig {
         [AssetReference]
         public BlittableAssetReference asset;
         public UILength size;
         public Color32 color;
         public bool wrap;
-
-        public void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-
-        }
-
-        public void PreInit(ulong mask, UIPropertyWriterContext context) {
-            size = 12f.Px();
-            color = Color.black;
-        }
     }
 
     [UIConfigBlock("background")]
-    public struct BackgroundConfig : IConfig {
+    public struct BackgroundConfig {
         public Color32 color;
         [AssetReference]
         public UVData image;
         public Color32 imageTint;
-
-        public void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-
-        }
-
-        public void PreInit(ulong mask, UIPropertyWriterContext context) {
-            color = Color.white;
-            imageTint = Color.white;
-        }
     }
     [UIConfigBlock("border")]
-    public struct BorderConfig : IConfig {
+    public struct BorderConfig {
         public BoxData<Color32> color;
         public BoxData<UILength> width;
         public BoxCornerData<UILength> radius;
-
-        public void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-
-        }
-
-        public void PreInit(ulong mask, UIPropertyWriterContext context) {
-
-        }
     }
-    public struct SequentialLayoutConfig : IConfig {
+    public struct SequentialLayoutConfig {
         public UILength spacing;
 
         public HorizontalAlignment horizontalAlign;
         public VerticalAlignment verticalAlign;
 
-        public void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-
-        }
-
-        public void PreInit(ulong mask, UIPropertyWriterContext context) {
-
-        }
     }
-    
-    public struct SelectableConfig : IConfig {
+
+    public struct SelectableConfig {
         public FunctionPointer<UISelectDelegate> onSelect;
         public int priority;
-        public void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
 
-        }
-        public void PreInit(ulong mask, UIPropertyWriterContext context) {
-
-        }
     }
 
-    public struct TextConfig : IConfig {
+    public struct TextConfig {
         public LocalizedStringPtr text;
         [HideInDecompositionAttribute]
         public FontInfo fontInfo;
@@ -377,45 +283,7 @@ namespace NeroWeNeed.UIDots {
             return UnsafeUtility.ReadArrayElement<CharInfo>((configPtr + charInfoOffset).ToPointer(), index);
         }
 
-        public void PreInit(ulong mask, UIPropertyWriterContext context) {
 
-        }
-        public unsafe void PostInit(IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
-#if UNITY_EDITOR
-            TMP_FontAsset fontAsset;
-            var fontConfigPtr = UIConfigLayout.GetConfig(mask, UIConfigLayout.FontConfig, config);
-            
-            
-            if (fontConfigPtr == IntPtr.Zero)
-                return;
-            FontConfig* fontConfig = ((FontConfig*)fontConfigPtr);
-            var guid = fontConfig->asset.ToHex();
-
-            fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(AssetDatabase.GUIDToAssetPath(guid));
-
-            var index = context.group.GetAtlasIndex(guid);
-            if (fontAsset != null && index >= 0) {
-
-                fontInfo = new FontInfo(fontAsset);
-                charInfoOffset = extraBytesStream.Length;
-                for (int charIndex = 0; charIndex < text.length; charIndex++) {
-                    UnsafeUtility.CopyPtrToStructure((((IntPtr)extraBytesStream.Data) + (text.offset - extraByteStreamOffset) + (charIndex * 2)).ToPointer(), out char character);
-                    var charInfo = fontAsset.characterLookupTable[character];
-                    var charInfoValue = new CharInfo
-                    {
-                        uvs = new float4(charInfo.glyph.glyphRect.x / (float)fontAsset.atlasWidth, charInfo.glyph.glyphRect.y / (float)fontAsset.atlasHeight, charInfo.glyph.glyphRect.width / (float)fontAsset.atlasWidth, charInfo.glyph.glyphRect.height / (float)fontAsset.atlasHeight),
-                        metrics = charInfo.glyph.metrics,
-                        index = (byte)index,
-                        unicode = charInfo.unicode
-                    };
-                    extraBytesStream.WriteBytes(UnsafeUtility.AddressOf(ref charInfoValue), UnsafeUtility.SizeOf<CharInfo>());
-                }
-                charInfoLength = (extraBytesStream.Length - charInfoOffset) / UnsafeUtility.SizeOf<CharInfo>();
-                charInfoOffset += extraByteStreamOffset;
-            }
-            #endif
-
-        }
 
     }
 

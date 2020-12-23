@@ -13,11 +13,17 @@ MonoBehaviour:
   m_Name: UISchema
   m_EditorClassIdentifier: 
   entries:
+  - identifier: Button
+    displayName: Button
+    mask: 1785
+    pass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: ButtonElement
   - identifier: TextElement
     displayName: TextElement
-    config:
-      assemblyQualifiedName: NeroWeNeed.UIDots.TextConfig, NeroWeNeed.UIDots.Runtime,
-        Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    mask: 761
     pass:
       container:
         assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
@@ -25,9 +31,7 @@ MonoBehaviour:
       name: TextElement
   - identifier: HBox
     displayName: HBox
-    config:
-      assemblyQualifiedName: NeroWeNeed.UIDots.BoxConfig, NeroWeNeed.UIDots.Runtime,
-        Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    mask: 473
     pass:
       container:
         assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
@@ -35,9 +39,7 @@ MonoBehaviour:
       name: HBox
   - identifier: VBox
     displayName: VBox
-    config:
-      assemblyQualifiedName: NeroWeNeed.UIDots.BoxConfig, NeroWeNeed.UIDots.Runtime,
-        Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    mask: 473
     pass:
       container:
         assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,

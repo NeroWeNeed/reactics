@@ -4,23 +4,23 @@ using System.Linq;
 using TMPro;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
-namespace NeroWeNeed.UIDots {
-    
+namespace NeroWeNeed.UIDots.Editor {
+
     [CreateAssetMenu(fileName = "UIAssetGroup", menuName = "UIDots/UI Asset Group", order = 0)]
     public class UIAssetGroup : ScriptableObject {
 #if UNITY_EDITOR
         public static UIAssetGroup Find(string name) {
-            return AssetDatabase.FindAssets($"t:{nameof(UIAssetGroup)}").Select(a => AssetDatabase.LoadAssetAtPath<UIAssetGroup>(AssetDatabase.GUIDToAssetPath(a))).FirstOrDefault(a => a.identifier == name);
+            Debug.Log("Searching...");
+            return UnityEditor.AssetDatabase.FindAssets($"t:{nameof(UIAssetGroup)}").Select(a =>
+            UnityEditor.AssetDatabase.LoadAssetAtPath<UIAssetGroup>(
+                UnityEditor.AssetDatabase.GUIDToAssetPath(a)
+                )
+                ).FirstOrDefault(a => a?.identifier == name);
         }
-
         public const string SHADER_ASSET = "Packages/github.neroweneed.uidots/Runtime/Resources/UIShader.shadergraph";
-
+#endif
         public string identifier;
         [SerializeField]
         private List<Reference> references = new List<Reference>();
@@ -67,18 +67,20 @@ namespace NeroWeNeed.UIDots {
         {
             get
             {
+#if UNITY_EDITOR
                 if (IsTextureDirty(out int _)) {
                     UpdateMaterial();
                 }
+#endif
                 return (uvs?.FirstOrDefault(uv => uv.guid == guid).rect) ?? default;
             }
         }
         public bool TryGetUVs(string guid, out Rect uv) {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (IsTextureDirty(out int _)) {
                 UpdateMaterial();
             }
-            #endif
+#endif
             var index = Array.FindIndex(uvs, uv => uv.guid == guid);
             if (index < 0) {
                 uv = default;
@@ -89,16 +91,17 @@ namespace NeroWeNeed.UIDots {
                 return true;
             }
         }
-        public void Add(UIModel source, params Texture2D[] textures) => Add(source, textures.Select(t => AssetDatabase.GetAssetPath(t)).Where(t => t != null).Select(t => AssetDatabase.GUIDFromAssetPath(t).ToString()));
+#if UNITY_EDITOR
+        public void Add(UIModel source, params Texture2D[] textures) => Add(source, textures.Select(t => UnityEditor.AssetDatabase.GetAssetPath(t)).Where(t => t != null).Select(t => UnityEditor.AssetDatabase.GUIDFromAssetPath(t).ToString()));
         public void Add(UIModel source, params string[] guids) => Add(source, guids.AsEnumerable());
-        public void Add(UIModel source, IEnumerable<string> guids) => Add(AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(source)).ToString(), guids);
+        public void Add(UIModel source, IEnumerable<string> guids) => Add(UnityEditor.AssetDatabase.GUIDFromAssetPath(UnityEditor.AssetDatabase.GetAssetPath(source)).ToString(), guids);
         public void Add(string modelGuid, IEnumerable<string> guids) {
             foreach (var guid in guids) {
                 var srcIndex = this.references.FindIndex(a => a?.guid == guid);
                 if (srcIndex < 0) {
                     var e = new Reference(guid);
                     e.referencedBy.Add(modelGuid);
-                    e.isAtlas = AssetDatabase.GetMainAssetTypeAtPath(AssetDatabase.GUIDToAssetPath(guid)) == typeof(TMP_FontAsset);
+                    e.isAtlas = UnityEditor.AssetDatabase.GetMainAssetTypeAtPath(UnityEditor.AssetDatabase.GUIDToAssetPath(guid)) == typeof(TMP_FontAsset);
                     this.references.Add(e);
                 }
                 else {
@@ -111,8 +114,7 @@ namespace NeroWeNeed.UIDots {
         }
         public void Remove(UIModel source, params string[] guids) => Remove(source, guids.AsEnumerable());
         public void Remove(UIModel source, IEnumerable<string> guids) {
-            var modelGuid = AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(source)).ToString();
-
+            var modelGuid = UnityEditor.AssetDatabase.GUIDFromAssetPath(UnityEditor.AssetDatabase.GetAssetPath(source)).ToString();
             foreach (var guid in guids) {
                 var srcIndex = this.references.FindIndex(a => a?.guid == guid);
                 if (srcIndex >= 0) {
@@ -126,7 +128,11 @@ namespace NeroWeNeed.UIDots {
             this.references.Sort();
         }
         public void Remove(UIModel source, params Texture2D[] textures) {
-            Remove(source, textures.Select(t => AssetDatabase.GetAssetPath(t)).Where(t => t != null).Select(t => AssetDatabase.GUIDFromAssetPath(t).ToString()));
+            Remove(source, textures.Select(t => UnityEditor.AssetDatabase.GetAssetPath(t)).Where(t => t != null).Select(t => UnityEditor.AssetDatabase.GUIDFromAssetPath(t).ToString()));
+        }
+        public Material Material
+        {
+            get => material;
         }
         public unsafe Material UpdateMaterial() {
             if (IsTextureDirty(out int hash)) {
@@ -134,7 +140,8 @@ namespace NeroWeNeed.UIDots {
                     this.sdfs = null;
                 }
                 bool reAddMaterial = true;
-                foreach (var subObj in AssetDatabase.LoadAllAssetRepresentationsAtPath(AssetDatabase.GetAssetPath(this))) {
+                bool saveAssets = false;
+                foreach (var subObj in UnityEditor.AssetDatabase.LoadAllAssetRepresentationsAtPath(UnityEditor.AssetDatabase.GetAssetPath(this))) {
                     if (subObj == null)
                         continue;
                     if (subObj is Material m) {
@@ -143,22 +150,22 @@ namespace NeroWeNeed.UIDots {
                         continue;
                     }
 
-                    AssetDatabase.RemoveObjectFromAsset(subObj);
+                    UnityEditor.AssetDatabase.RemoveObjectFromAsset(subObj);
                 }
                 if (this.material == null) {
                     this.material = null;
                 }
                 this.uvs = Array.Empty<UV>();
-                var mat = this.material ?? new Material(AssetDatabase.LoadAssetAtPath<Shader>(SHADER_ASSET));
+                var mat = this.material ?? new Material(UnityEditor.AssetDatabase.LoadAssetAtPath<Shader>(SHADER_ASSET));
                 mat.enableInstancing = true;
                 mat.name = "UI Material";
                 var looseTextures = new List<Texture2D>();
                 var atlases = new List<Texture2D>();
                 this.references?.Sort();
                 foreach (var reference in references) {
-                    var path = AssetDatabase.GUIDToAssetPath(reference.guid);
-                    var refType = AssetDatabase.GetMainAssetTypeAtPath(path);
-                    var asset = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(reference.guid));
+                    var path = UnityEditor.AssetDatabase.GUIDToAssetPath(reference.guid);
+                    var refType = UnityEditor.AssetDatabase.GetMainAssetTypeAtPath(path);
+                    var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(UnityEditor.AssetDatabase.GUIDToAssetPath(reference.guid));
                     if (asset == null)
                         continue;
                     if (refType == typeof(Texture2D)) {
@@ -176,12 +183,13 @@ namespace NeroWeNeed.UIDots {
                     var rects = texture.PackTextures(looseTextures.ToArray(), 0, maxSize);
                     var uvs = new UV[looseTextures.Count];
                     for (int i = 0; i < uvs.Length; i++) {
-                        uvs[i] = new UV(AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(looseTextures[i])).ToString(), rects[i]);
+                        uvs[i] = new UV(UnityEditor.AssetDatabase.GUIDFromAssetPath(UnityEditor.AssetDatabase.GetAssetPath(looseTextures[i])).ToString(), rects[i]);
                     }
                     this.uvs = uvs;
                     this.atlas = texture;
                     mat.SetTexture("_Atlas", texture);
-                    AssetDatabase.AddObjectToAsset(texture, AssetDatabase.GetAssetPath(this));
+                    UnityEditor.AssetDatabase.AddObjectToAsset(texture, UnityEditor.AssetDatabase.GetAssetPath(this));
+                    saveAssets = true;
                     this.hash = hash;
                 }
                 if (atlases.Count > 0) {
@@ -196,21 +204,28 @@ namespace NeroWeNeed.UIDots {
                             success = false;
                             break;
                         }
-                        Graphics.CopyTexture(atlases[i], 0,  arr, i);
+                        Graphics.CopyTexture(atlases[i], 0, arr, i);
                     }
                     if (success) {
                         this.sdfs = arr;
                         mat.SetTexture("_SDFs", arr);
                         this.material = mat;
-                        AssetDatabase.AddObjectToAsset(arr, AssetDatabase.GetAssetPath(this));
+                        UnityEditor.AssetDatabase.AddObjectToAsset(arr, UnityEditor.AssetDatabase.GetAssetPath(this));
+                        saveAssets = true;
                     }
                 }
                 if (reAddMaterial) {
-                    AssetDatabase.AddObjectToAsset(mat, AssetDatabase.GetAssetPath(this));
+                    UnityEditor.AssetDatabase.AddObjectToAsset(mat, UnityEditor.AssetDatabase.GetAssetPath(this));
+                    saveAssets = true;
+                    
                     this.material = mat;
                 }
+                if (saveAssets) {
+                    UnityEditor.AssetDatabase.SaveAssets();
+                }
                 this.hash = hash;
-                AssetDatabase.SaveAssets();
+
+                
                 return mat;
             }
             else {
@@ -219,7 +234,7 @@ namespace NeroWeNeed.UIDots {
 
 
         }
-        #endif
+#endif
         [Serializable]
         public class Reference : IComparable<Reference> {
             public string guid;

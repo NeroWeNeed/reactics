@@ -18,15 +18,12 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Entities.Serialization;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
-using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.Sprites;
 using UnityEditor.U2D;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.U2D;
 using static NeroWeNeed.UIDots.TypeDecomposer;
-using static NeroWeNeed.UIDots.UIModel;
+
 
 [assembly: SearchableAssembly]
 namespace NeroWeNeed.UIDots.Editor {
@@ -47,7 +44,8 @@ namespace NeroWeNeed.UIDots.Editor {
             InitModel(xmlReader, model, guid);
         }
         private static void InitModel(XmlReader reader, UIModel model, string guid) {
-            model.groupName = "default";
+            
+            var groupName = "default";
             var referencedAssets = new List<string>();
             var nodes = new List<UIGraphNode>();
             var context = new UIGraphContext();
@@ -57,7 +55,7 @@ namespace NeroWeNeed.UIDots.Editor {
             if (reader.Read() && IsRoot(reader)) {
                 if (reader.HasAttributes) {
                     if (reader.MoveToAttribute(GROUP_ATTRIBUTE)) {
-                        model.groupName = reader.Value;
+                        groupName = reader.Value;
                     }
                     reader.MoveToElement();
                 }
@@ -69,15 +67,15 @@ namespace NeroWeNeed.UIDots.Editor {
                 }
             }
             model.assets.AddRange(context.nodes.SelectMany(xmlNode => xmlNode.assetReferences).Distinct());
-            var group = UIAssetGroup.Find(model.groupName);
-            if (group != null) {
+            model.group = UIAssetGroup.Find(groupName);
+            if (model.group != null) {
                 var textures = model.assets.Where(a =>
                 {
                     var type = AssetDatabase.GetMainAssetTypeAtPath(AssetDatabase.GUIDToAssetPath(a));
                     return type == typeof(Texture2D) || type == typeof(TMP_FontAsset);
                 }).ToArray();
-                group.Add(guid, textures);
-                EditorUtility.SetDirty(group);
+                model.group.Add(guid, textures);
+                EditorUtility.SetDirty(model.group);
             }
             model.assets.Sort();
             model.nodes.AddRange(context.nodes.Select(node => node.ToNode()));
@@ -164,7 +162,7 @@ namespace NeroWeNeed.UIDots.Editor {
         public string name;
         public int configurationOffset;
         public int configurationLength;
-        public MethodInfo pass;
+        public SerializableMethod pass;
         public Dictionary<string, string> properties;
         public UISchema.Element element;
         public List<int> children;
@@ -174,13 +172,13 @@ namespace NeroWeNeed.UIDots.Editor {
         public override string ToString() {
             return string.IsNullOrEmpty(name) ? $"{identifier}" : $"{identifier} ({name})";
         }
-        public NeroWeNeed.UIDots.UIModel.Node ToNode() {
-            return new UIDots.UIModel.Node
+        public UIModel.Node ToNode() {
+            return new UIModel.Node
             {
                 identifier = identifier,
                 name = name,
                 pass = pass,
-                properties = properties?.Select(property => new NeroWeNeed.UIDots.UIModel.Node.Property { path = property.Key, value = property.Value })?.ToList(),
+                properties = properties?.Select(property => new UIModel.Node.Property { path = property.Key, value = property.Value })?.ToList(),
                 children = children,
                 parent = parent,
                 mask = element.mask

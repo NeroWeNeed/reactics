@@ -5,10 +5,10 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.AddressableAssets.ResourceLocators;
+/* using UnityEngine.AddressableAssets;
+using UnityEngine.AddressableAssets.ResourceLocators; *//* 
 using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.ResourceManagement.ResourceProviders;
+using UnityEngine.ResourceManagement.ResourceProviders; */
 using UnityEngine.SceneManagement;
 
 namespace Reactics.Core.Commons {
@@ -22,12 +22,12 @@ namespace Reactics.Core.Commons {
         }
     }
 
-    public interface IBlittableAssetReference : IKeyEvaluator { }
+    //public interface IBlittableAssetReference : IKeyEvaluator { }
 
     /// <summary>
     /// Blittable Asset Reference that supports SubObjects with names less than 31 characters.
     /// </summary>
-    [Serializable]
+/*     [Serializable]
     public unsafe struct BlittableAssetReference64 : IBlittableAssetReference {
         public const byte SubObjectNameOffset = 32;
         public const short SubObjectNameMaxLength = 31;
@@ -130,5 +130,5 @@ namespace Reactics.Core.Commons {
         }
 
 
-    }
+    } */
 }

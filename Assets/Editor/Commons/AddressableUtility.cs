@@ -3,13 +3,13 @@ using System.Linq;
 using Reactics.Core.Battle;
 using Reactics.Core.Commons;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
+//using UnityEditor.AddressableAssets;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
+//using UnityEngine.AddressableAssets;
 
 namespace Reactics.Editor {
 
-    public static class AddressableUtility {
+/*     public static class AddressableUtility {
         public static AssetReference GetAssetReference(this SerializedProperty property) {
             var guid = property.FindPropertyRelative("m_AssetGUID").stringValue;
             var subObjectName = property.FindPropertyRelative("m_SubObjectName").stringValue;
@@ -83,5 +83,5 @@ namespace Reactics.Editor {
             }
         }
 
-    }
+    } */
 }

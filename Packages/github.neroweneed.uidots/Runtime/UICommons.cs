@@ -159,7 +159,7 @@ namespace NeroWeNeed.UIDots {
     public unsafe struct BlittableAssetReference : IEquatable<BlittableAssetReference> {
         public fixed byte guid[16];
         public BlittableAssetReference(string guid) {
-            
+
             if (Guid.TryParse(guid, out Guid result)) {
                 fixed (byte* g = this.guid) {
                     UnsafeUtility.CopyStructureToPtr(ref result, g);
@@ -349,7 +349,8 @@ namespace NeroWeNeed.UIDots {
             var multiplier = ((alignment & 0b00000001) - ((alignment & 0b00000010) >> 1)) * 0.5f;
             var containerMultiplier = ((containerAlignment & 0b00000001) - ((containerAlignment & 0b00000010) >> 1)) * 0.5f;
             var objectMultiplier = ((objectAlignment & 0b00000001) - ((objectAlignment & 0b00000010) >> 1)) * 0.5f;
-            return (((multiplier) * containerSize) - (((multiplier) * objectSize))) + (objectSize * objectMultiplier) - (containerSize * containerMultiplier);
+            // + (objectSize * objectMultiplier) - (containerSize * containerMultiplier)
+            return ((multiplier+containerMultiplier) * containerSize) - ((multiplier+objectMultiplier) *objectSize);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float GetOffset(this HorizontalAlignment alignment, float objectSize, float containerSize, HorizontalAlignment containerAlignment = HorizontalAlignment.Center, HorizontalAlignment objectAlignment = HorizontalAlignment.Center) {
@@ -377,7 +378,7 @@ namespace NeroWeNeed.UIDots {
     }
     public static class UIJobUtility {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int GetConfigOffset(BlobAssetReference<UIGraph> graph, int index,out int length) {
+        public unsafe static int GetConfigOffset(BlobAssetReference<UIGraph> graph, int index, out int length) {
             int offset = 0;
             for (int currentIndex = 0; currentIndex < index; currentIndex++) {
                 var size = UnsafeUtility.AsRef<int>((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + offset).ToPointer());
@@ -455,10 +456,12 @@ namespace NeroWeNeed.UIDots {
                     }
                 }
             }
-            if (selectableIndices.Length < 0)
-                return -1;
-            selectableIndices.Sort();
-            return selectableIndices[0].index;
+            if (selectableIndices.Length > 0) {
+                selectableIndices.Sort();
+                return selectableIndices[0].index;
+            }
+            return -1;
+
 
         }
         private struct SelectableIndex : IComparable<SelectableIndex> {

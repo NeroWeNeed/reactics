@@ -7,7 +7,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 namespace NeroWeNeed.UIDots {
-    public struct UIConfiguration : IComponentData {
+    public struct UINodeInfo : IComponentData {
         public int index;
         public int submesh;
     }
@@ -53,7 +53,6 @@ namespace NeroWeNeed.UIDots {
     }
     public struct UINode : IBufferElementData {
         public Entity value;
-
         public UINode(Entity value) {
             this.value = value;
         }
@@ -93,8 +92,9 @@ namespace NeroWeNeed.UIDots {
         public int index;
     }
     public struct UICursorInput : IComponentData {
+        public double inputTime;
         public float3 startVector;
-        public quaternion direction;
+        public float direction;
         //Infinity/Nan will result in the cursor moving immediately.
         public float speed;
         public bool selected;

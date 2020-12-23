@@ -3,18 +3,18 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
+/* using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.GUI;
-using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.AddressableAssets.Settings; */
 using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
+//using UnityEngine.AddressableAssets;
 using UnityEngine.U2D;
 using UnityEngine.UIElements;
 
 namespace Reactics.Editor {
 
-    public class AssetReferenceSearchField : SearchField<AssetReference> {
+/*     public class AssetReferenceSearchField : SearchField<AssetReference> {
         internal const string IReferenceQualfiedName = "UnityEditor.AddressableAssets.Settings.IReferenceEntryData, Unity.Addressables.Editor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
         internal const string noAssetString = "None (AddressableAsset)";
         public override string NoValueDisplayText => noAssetString;
@@ -285,7 +285,7 @@ namespace Reactics.Editor {
             Debug.Log(path);
             return true;
         }
-    }
+    } */
     /*     [CustomPropertyDrawer(typeof(AssetReferenceT<>))]
         public class AssetReferenceSearchFieldDrawer : PropertyDrawer {
             public override VisualElement CreatePropertyGUI(SerializedProperty property) {

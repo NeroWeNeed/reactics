@@ -54,6 +54,7 @@ namespace NeroWeNeed.UIDots {
 
         }
         protected unsafe override void OnUpdate() {
+            //TODO: Convert to switch table generation method
             this.meshes.Clear();
             var entities = new NativeList<Entity>(8, Allocator.TempJob);
             var contexts = new NativeList<UIContext>(8, Allocator.TempJob);
@@ -71,7 +72,7 @@ namespace NeroWeNeed.UIDots {
                 }
                 entityUpdate.Add(index, ValueTuple.Create(entity, 0));
                 foreach (var node in nodes) {
-                    entityUpdate.Add(index, ValueTuple.Create(node.value, GetComponent<UIConfiguration>(node.value).submesh));
+                    entityUpdate.Add(index, ValueTuple.Create(node.value, GetComponent<UINodeInfo>(node.value).submesh));
                 }
             }).WithoutBurst().Run();
             this.CompleteDependency();

@@ -6,7 +6,8 @@
     "unity": "2020.1",
     "dependencies": {
         "com.unity.ui.builder": "1.0.0-preview.3",
-        "github.neroweneed.commons": "1.0.0"
+        "github.neroweneed.commons": "1.0.0",
+        "com.unity.code-analysis": "0.1.2-preview"
     },
     "author": {
         "name": "NeroWeNeed",

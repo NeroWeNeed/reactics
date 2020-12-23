@@ -31,7 +31,7 @@ namespace NeroWeNeed.UIDots {
             mainCamera = this.GetComponent<Camera>();
             var uiCameraObjects = this.GetComponentsInChildren<Camera>().Where(camera => camera.tag == UI_CAMERA_TAG).ToArray();
 
-            if (uiCameraObjects.Length == 0) {
+/*             if (uiCameraObjects.Length == 0) {
                 uiCameraGO = CreateUICamera(mainCamera, out uiCamera);
             }
             else if (uiCameraObjects.Length > 1) {
@@ -42,21 +42,21 @@ namespace NeroWeNeed.UIDots {
                 uiCamera = uiCameraObjects[0];
                 uiCameraGO = uiCamera.gameObject;
             }
-
+ */
         }
         public UIContext CreateContext() => new UIContext
         {
             dpi = Screen.dpi,
             size = new Unity.Mathematics.float2(uiCamera.orthographicSize * uiCamera.aspect * 2, uiCamera.orthographicSize * 2)
         };
-        private GameObject CreateUICamera(Camera mainCamera, out Camera uiCamera) {
+/*         private GameObject CreateUICamera(Camera mainCamera, out Camera uiCamera) {
             var uiCameraObject = new GameObject("UI Camera", typeof(Camera));
             uiCamera = uiCameraObject.GetComponent<Camera>();
             uiCameraObject.AddComponent<UICameraLayer>();
             mainCamera.cullingMask = (mainCamera.cullingMask & int.MaxValue) - (1 << UILayer);
             mainCamera.GetUniversalAdditionalCameraData().cameraStack.Add(uiCamera);
             return uiCameraObject;
-        }
+        } */
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {
             /*             var uiCameraEntity = conversionSystem.GetPrimaryEntity(uiCameraGO);
                         dstManager.AddComponentObject(entity, this);

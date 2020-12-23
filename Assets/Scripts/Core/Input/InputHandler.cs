@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using Reactics.Core.Battle;
 using Reactics.Core.Commons;
 using Unity.Entities;
@@ -53,10 +54,10 @@ namespace Reactics.Core.Input {
             if (playerInput != null) {
                 dstManager.AddSharedComponentData(entity, new InputHandlerData { value = this.gameObject });
 
-                dstManager.AddSharedComponentData(entity, new InputActionMapData { name = playerInput.defaultActionMap });
-                dstManager.AddSharedComponentData(entity, new InputControlSchemeData { name = playerInput.defaultControlScheme });
+                dstManager.AddSharedComponentData(entity, new InputContext { actionMapName = playerInput.defaultActionMap, controlSchemeName = playerInput.defaultControlScheme });
                 dstManager.AddComponentData(entity, new InputHandlerStateData { value = InputHandlerState.Clean });
                 dstManager.AddComponentData(entity, new PlayerIndexData { value = playerInput.playerIndex });
+                dstManager.AddComponentObject(entity, playerInput);
                 GameObjectEntity.AddToEntity(dstManager, this.gameObject, entity);
             }
             var cameraEntity = conversionSystem.TryGetPrimaryEntity(UnityEngine.Camera.main);

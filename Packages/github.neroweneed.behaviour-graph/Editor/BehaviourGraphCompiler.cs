@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using NeroWeNeed.BehaviourGraph.Editor.Model;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
-using UnityEditor.AddressableAssets.Settings;
-using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine;
 
 namespace NeroWeNeed.BehaviourGraph.Editor {
@@ -34,23 +31,23 @@ namespace NeroWeNeed.BehaviourGraph.Editor {
                     return;
                 }
                 var behaviourSettings = model.Settings;
-                var settings = AddressableAssetSettingsDefaultObject.Settings;
+/*                 var settings = AddressableAssetSettingsDefaultObject.Settings;
                 settings.AddLabel(behaviourSettings.behaviourName);
                 AddressableAssetGroup assetGroup = GetGroup();
                 var entry = settings.CreateOrMoveEntry(AssetDatabase.AssetPathToGUID(outputFile), assetGroup);
                 entry.address = $"Behaviour.{behaviourSettings.behaviourName}.{outputFileName}";
-                entry.labels.Add(behaviourSettings.behaviourName);
+                entry.labels.Add(behaviourSettings.behaviourName); */
                 AssetDatabase.Refresh();
                 model.upToDate = true;
             }
         }
         protected abstract bool Compile(BehaviourGraphModel model, string outputFile, out string error);
 
-        public AddressableAssetGroup GetGroup() => GetGroup(AddressableAssetSettingsDefaultObject.Settings);
+/*         public AddressableAssetGroup GetGroup() => GetGroup(AddressableAssetSettingsDefaultObject.Settings);
         private AddressableAssetGroup GetGroup(AddressableAssetSettings settings) {
             return settings.FindGroup("Behaviours") ?? settings.CreateGroup("Behaviours", false, false, true, new List<AddressableAssetGroupSchema>(), typeof(BundledAssetGroupSchema));
         }
-
+ */
         public virtual void Dispose() { }
     }
 }

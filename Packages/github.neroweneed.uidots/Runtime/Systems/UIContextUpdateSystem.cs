@@ -1,9 +1,9 @@
 using NeroWeNeed.Commons;
 using Unity.Burst;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
-using Unity.Mathematics;
 
 namespace NeroWeNeed.UIDots {
     [UpdateInGroup(typeof(UISystemGroup))]
@@ -16,10 +16,8 @@ namespace NeroWeNeed.UIDots {
             {
                 var parentCamera = EntityManager.GetComponentObject<Camera>(parent.Value);
                 camera.orthographicSize = parentCamera.pixelHeight / 2f;
+                //camera.orthographicSize = Screen.height / 2f;
             }).WithoutBurst().Run();
-
-
-
             Entities.ForEach((ref UICameraContext cameraContext, ref UIContext context, in UIContextSource source) =>
             {
                 var camera = EntityManager.GetComponentObject<Camera>(source.value);
@@ -30,8 +28,6 @@ namespace NeroWeNeed.UIDots {
                 cameraContext.clipPlane.x = camera.nearClipPlane;
                 cameraContext.clipPlane.y = camera.farClipPlane;
             }).WithoutBurst().Run();
-
-
         }
     }
 }
