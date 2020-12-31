@@ -79,6 +79,14 @@ namespace NeroWeNeed.Commons.Editor {
                 }
             }
         }
+        public static Type[] GetLoadableTypes(this Assembly assembly) {
+            try {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e) {
+                return e.Types.Where(t => t != null).ToArray();
+            }
+        }
     }
     [Serializable]
     public struct FieldOffsetInfo : IComparable<FieldOffsetInfo> {

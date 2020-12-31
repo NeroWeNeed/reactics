@@ -9,12 +9,9 @@ namespace NeroWeNeed.UIDots.Editor {
     public class UIModelImporter : ScriptedImporter {
         public override void OnImportAsset(AssetImportContext ctx) {
             var asset = ScriptableObject.CreateInstance<UIModel>();
-            UIGraphReader.InitModel(asset, new StringReader(File.ReadAllText(ctx.assetPath)), AssetDatabase.GUIDFromAssetPath(ctx.assetPath).ToString());
+            asset.Initialize(new StringReader(File.ReadAllText(ctx.assetPath)), AssetDatabase.GUIDFromAssetPath(ctx.assetPath).ToString(),ctx.assetPath);
             ctx.AddObjectToAsset("UI Model", asset);
             ctx.SetMainObject(asset);
-
-
-
         }
     }
 }

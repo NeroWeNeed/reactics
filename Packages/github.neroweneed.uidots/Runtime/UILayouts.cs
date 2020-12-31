@@ -144,7 +144,7 @@ namespace NeroWeNeed.UIDots {
     public unsafe static class UILayouts {
         [BurstCompile]
         public static int TextElementRenderBoxHandler(IntPtr configPtr, int configOffset, int configLength, ulong configurationMask) {
-            TextConfig* config = (TextConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.TextConfig, configPtr + configOffset).ToPointer();
+            TextConfig* config = (TextConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.TextConfig, configPtr + configOffset).ToPointer();
             return config->text.length + 1;
         }
         [BurstCompile]
@@ -165,7 +165,7 @@ namespace NeroWeNeed.UIDots {
             selfPtr->size = new float2(totalWidth + selfPtr->localBox.x + selfPtr->localBox.z, height + selfPtr->localBox.y + selfPtr->localBox.w);
         }
         [BurstCompile]
-        [UIDotsElement("Button", UIConfigLayout.NameConfig, UIConfigLayout.BackgroundConfig, UIConfigLayout.BorderConfig, UIConfigLayout.FontConfig, UIConfigLayout.BoxConfig, UIConfigLayout.TextConfig, UIConfigLayout.SizeConfig,UIConfigLayout.SelectableConfig)]
+        [UIDotsElement("Button", UIConfigLayoutTable.NameConfig, UIConfigLayoutTable.BackgroundConfig, UIConfigLayoutTable.BorderConfig, UIConfigLayoutTable.FontConfig, UIConfigLayoutTable.BoxConfig, UIConfigLayoutTable.TextConfig, UIConfigLayoutTable.SizeConfig,UIConfigLayoutTable.SelectableConfig)]
         [UIDotsRenderBoxHandler(nameof(TextElementRenderBoxHandler))]
         [MonoPInvokeCallback(typeof(UIPass))]
         public static void ButtonElement(
@@ -186,10 +186,10 @@ namespace NeroWeNeed.UIDots {
         ) {
             UIPassState* selfPtr = (UIPassState*)(statePtr + (UnsafeUtility.SizeOf<UIPassState>() * stateIndex)).ToPointer();
             IntPtr configSource = configPtr + configOffset;
-            TextConfig* textConfig = (TextConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.TextConfig, configSource).ToPointer();
-            BackgroundConfig* backgroundConfig = (BackgroundConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.BackgroundConfig, configSource).ToPointer();
-            FontConfig* fontConfig = (FontConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.FontConfig, configSource).ToPointer();
-            BorderConfig* borderConfig = (BorderConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.BorderConfig, configSource).ToPointer();
+            TextConfig* textConfig = (TextConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.TextConfig, configSource).ToPointer();
+            BackgroundConfig* backgroundConfig = (BackgroundConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.BackgroundConfig, configSource).ToPointer();
+            FontConfig* fontConfig = (FontConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.FontConfig, configSource).ToPointer();
+            BorderConfig* borderConfig = (BorderConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.BorderConfig, configSource).ToPointer();
             UIContext* context = (UIContext*)contextPtr.ToPointer();
             switch ((UIPassType)type) {
                 case UIPassType.Size:
@@ -204,7 +204,7 @@ namespace NeroWeNeed.UIDots {
             }
         }
         [BurstCompile]
-        [UIDotsElement("TextElement", UIConfigLayout.NameConfig, UIConfigLayout.BackgroundConfig, UIConfigLayout.BorderConfig, UIConfigLayout.FontConfig, UIConfigLayout.BoxConfig, UIConfigLayout.TextConfig, UIConfigLayout.SizeConfig)]
+        [UIDotsElement("TextElement", UIConfigLayoutTable.NameConfig, UIConfigLayoutTable.BackgroundConfig, UIConfigLayoutTable.BorderConfig, UIConfigLayoutTable.FontConfig, UIConfigLayoutTable.BoxConfig, UIConfigLayoutTable.TextConfig, UIConfigLayoutTable.SizeConfig)]
         [UIDotsRenderBoxHandler(nameof(TextElementRenderBoxHandler))]
         [MonoPInvokeCallback(typeof(UIPass))]
         public static void TextElement(
@@ -225,10 +225,10 @@ namespace NeroWeNeed.UIDots {
         ) {
             UIPassState* selfPtr = (UIPassState*)(statePtr + (UnsafeUtility.SizeOf<UIPassState>() * stateIndex)).ToPointer();
             IntPtr configSource = configPtr + configOffset;
-            TextConfig* textConfig = (TextConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.TextConfig, configSource).ToPointer();
-            BackgroundConfig* backgroundConfig = (BackgroundConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.BackgroundConfig, configSource).ToPointer();
-            FontConfig* fontConfig = (FontConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.FontConfig, configSource).ToPointer();
-            BorderConfig* borderConfig = (BorderConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.BorderConfig, configSource).ToPointer();
+            TextConfig* textConfig = (TextConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.TextConfig, configSource).ToPointer();
+            BackgroundConfig* backgroundConfig = (BackgroundConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.BackgroundConfig, configSource).ToPointer();
+            FontConfig* fontConfig = (FontConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.FontConfig, configSource).ToPointer();
+            BorderConfig* borderConfig = (BorderConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.BorderConfig, configSource).ToPointer();
             UIContext* context = (UIContext*)contextPtr.ToPointer();
             switch ((UIPassType)type) {
                 case UIPassType.Size:
@@ -244,7 +244,7 @@ namespace NeroWeNeed.UIDots {
         }
 
         [BurstCompile]
-        [UIDotsElement("HBox", UIConfigLayout.NameConfig, UIConfigLayout.BackgroundConfig, UIConfigLayout.BorderConfig, UIConfigLayout.SequentialLayoutConfig, UIConfigLayout.BoxConfig, UIConfigLayout.SizeConfig)]
+        [UIDotsElement("HBox", UIConfigLayoutTable.NameConfig, UIConfigLayoutTable.BackgroundConfig, UIConfigLayoutTable.BorderConfig, UIConfigLayoutTable.SequentialLayoutConfig, UIConfigLayoutTable.BoxConfig, UIConfigLayoutTable.SizeConfig)]
         public static void HBox(
         byte type,
         IntPtr configPtr,
@@ -263,11 +263,11 @@ namespace NeroWeNeed.UIDots {
             ) {
             UIPassState* selfPtr = (UIPassState*)(((IntPtr)statePtr) + (UnsafeUtility.SizeOf<UIPassState>() * stateIndex)).ToPointer();
             IntPtr configSource = configPtr + configOffset;
-            BoxConfig* boxConfig = (BoxConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.BoxConfig, configSource).ToPointer();
-            BackgroundConfig* backgroundConfig = (BackgroundConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.BackgroundConfig, configSource).ToPointer();
-            BorderConfig* borderConfig = (BorderConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.BorderConfig, configSource).ToPointer();
-            SizeConfig* sizeConfig = (SizeConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.SizeConfig, configSource).ToPointer();
-            SequentialLayoutConfig* sequentialLayoutConfig = (SequentialLayoutConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.SequentialLayoutConfig, configSource).ToPointer();
+            BoxConfig* boxConfig = (BoxConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.BoxConfig, configSource).ToPointer();
+            BackgroundConfig* backgroundConfig = (BackgroundConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.BackgroundConfig, configSource).ToPointer();
+            BorderConfig* borderConfig = (BorderConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.BorderConfig, configSource).ToPointer();
+            SizeConfig* sizeConfig = (SizeConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.SizeConfig, configSource).ToPointer();
+            SequentialLayoutConfig* sequentialLayoutConfig = (SequentialLayoutConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.SequentialLayoutConfig, configSource).ToPointer();
             UIContext* context = (UIContext*)contextPtr.ToPointer();
             switch ((UIPassType)type) {
                 case UIPassType.Constrain:
@@ -310,7 +310,7 @@ math.clamp(maxHeight, sizeConfig->minHeight.Normalize(*context), sizeConfig->max
             }
         }
         [BurstCompile]
-        [UIDotsElement("VBox", UIConfigLayout.NameConfig, UIConfigLayout.BackgroundConfig, UIConfigLayout.BorderConfig, UIConfigLayout.SequentialLayoutConfig, UIConfigLayout.BoxConfig, UIConfigLayout.SizeConfig)]
+        [UIDotsElement("VBox", UIConfigLayoutTable.NameConfig, UIConfigLayoutTable.BackgroundConfig, UIConfigLayoutTable.BorderConfig, UIConfigLayoutTable.SequentialLayoutConfig, UIConfigLayoutTable.BoxConfig, UIConfigLayoutTable.SizeConfig)]
         [MonoPInvokeCallback(typeof(UIPass))]
         public static void VBox(
         byte type,
@@ -330,11 +330,11 @@ math.clamp(maxHeight, sizeConfig->minHeight.Normalize(*context), sizeConfig->max
         ) {
             UIPassState* selfPtr = (UIPassState*)(((IntPtr)statePtr) + (UnsafeUtility.SizeOf<UIPassState>() * stateIndex)).ToPointer();
             IntPtr configSource = configPtr + configOffset;
-            BoxConfig* boxConfig = (BoxConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.BoxConfig, configSource).ToPointer();
-            BackgroundConfig* backgroundConfig = (BackgroundConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.BackgroundConfig, configSource).ToPointer();
-            BorderConfig* borderConfig = (BorderConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.BorderConfig, configSource).ToPointer();
-            SizeConfig* sizeConfig = (SizeConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.SizeConfig, configSource).ToPointer();
-            SequentialLayoutConfig* sequentialLayoutConfig = (SequentialLayoutConfig*)UIConfigLayout.GetConfig(configurationMask, UIConfigLayout.SequentialLayoutConfig, configSource).ToPointer();
+            BoxConfig* boxConfig = (BoxConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.BoxConfig, configSource).ToPointer();
+            BackgroundConfig* backgroundConfig = (BackgroundConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.BackgroundConfig, configSource).ToPointer();
+            BorderConfig* borderConfig = (BorderConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.BorderConfig, configSource).ToPointer();
+            SizeConfig* sizeConfig = (SizeConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.SizeConfig, configSource).ToPointer();
+            SequentialLayoutConfig* sequentialLayoutConfig = (SequentialLayoutConfig*)UIConfigUtility.GetConfig(configurationMask, UIConfigLayoutTable.SequentialLayoutConfig, configSource).ToPointer();
             UIContext* context = (UIContext*)contextPtr.ToPointer();
             switch ((UIPassType)type) {
                 case UIPassType.Constrain:

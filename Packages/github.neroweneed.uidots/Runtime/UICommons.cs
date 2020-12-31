@@ -396,7 +396,7 @@ namespace NeroWeNeed.UIDots {
             configLayout = new NativeArray<OffsetInfo>(graph.Value.nodes.Length, allocator);
             for (int currentIndex = 0; currentIndex < graph.Value.nodes.Length; currentIndex++) {
                 var size = UnsafeUtility.AsRef<int>((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + offset).ToPointer());
-                if (UIConfigLayout.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + UnsafeUtility.SizeOf<int>() + offset)) {
+                if (UIConfigUtility.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + UnsafeUtility.SizeOf<int>() + offset)) {
                     subMeshCount++;
                 }
                 offset += UnsafeUtility.SizeOf<int>();
@@ -449,7 +449,7 @@ namespace NeroWeNeed.UIDots {
             //Index, priority
             var selectableIndices = new NativeList<SelectableIndex>(8, Allocator.Temp);
             for (int currentIndex = 0; currentIndex < graph.Value.nodes.Length; currentIndex++) {
-                if (UIConfigLayout.TryGetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayout.SelectableConfig, ((IntPtr)graph.GetUnsafePtr()) + layout[currentIndex].offset, out IntPtr block)) {
+                if (UIConfigUtility.TryGetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayoutTable.SelectableConfig, ((IntPtr)graph.GetUnsafePtr()) + layout[currentIndex].offset, out IntPtr block)) {
                     SelectableConfig* selectableConfig = (SelectableConfig*)block;
                     if (selectableConfig->onSelect.IsCreated) {
                         selectableIndices.Add(new SelectableIndex(currentIndex, selectableConfig->priority));

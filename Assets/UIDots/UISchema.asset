@@ -15,7 +15,7 @@ MonoBehaviour:
   entries:
   - identifier: Button
     displayName: Button
-    mask: 1785
+    mask: 1779
     pass:
       container:
         assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
@@ -23,7 +23,7 @@ MonoBehaviour:
       name: ButtonElement
   - identifier: TextElement
     displayName: TextElement
-    mask: 761
+    mask: 1267
     pass:
       container:
         assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
@@ -31,7 +31,7 @@ MonoBehaviour:
       name: TextElement
   - identifier: HBox
     displayName: HBox
-    mask: 473
+    mask: 467
     pass:
       container:
         assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
@@ -39,7 +39,7 @@ MonoBehaviour:
       name: HBox
   - identifier: VBox
     displayName: VBox
-    mask: 473
+    mask: 467
     pass:
       container:
         assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,

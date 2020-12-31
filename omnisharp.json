@@ -54,4 +54,7 @@
         "NewLineForClausesInQuery": true,
         "OrganizeImports": true
     },
+    "msbuild": {
+        "useBundledOnly": true
+    }
 }

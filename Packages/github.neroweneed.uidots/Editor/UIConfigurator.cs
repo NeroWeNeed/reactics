@@ -94,7 +94,7 @@ namespace NeroWeNeed.UIDots.Editor {
     public unsafe class TextConfigurator : UIConfigurator<TextConfig> {
         public override unsafe void PostInit(TextConfig* value, IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, int extraByteStreamOffset, UIPropertyWriterContext context) {
             TMP_FontAsset fontAsset = null;
-            var fontConfigPtr = UIConfigLayout.GetConfig(mask, UIConfigLayout.FontConfig, config);
+            var fontConfigPtr = UIConfigUtility.GetConfig(mask, UIConfigLayoutTable.FontConfig, config);
 
 
             if (fontConfigPtr == IntPtr.Zero)

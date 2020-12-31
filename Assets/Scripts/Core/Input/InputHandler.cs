@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Linq;
+using NeroWeNeed.UIDots;
 using Reactics.Core.Battle;
 using Reactics.Core.Commons;
 using Unity.Entities;
@@ -11,7 +12,7 @@ using UnityEngine.InputSystem.Users;
 namespace Reactics.Core.Input {
     //TODO: Compact into a system. put playerinput data into a component. You can reference the camere with the CameraReference component, and the type with the CameraTag component.
 
-    [RequireComponent(typeof(UnityEngine.InputSystem.PlayerInput))]
+    //[RequireComponent(typeof(UnityEngine.InputSystem.PlayerInput))]
     [RequireComponent(typeof(GameObjectEntity))]
     public class InputHandler : MonoBehaviour, IConvertGameObjectToEntity {
 
@@ -59,6 +60,10 @@ namespace Reactics.Core.Input {
                 dstManager.AddComponentData(entity, new PlayerIndexData { value = playerInput.playerIndex });
                 dstManager.AddComponentObject(entity, playerInput);
                 GameObjectEntity.AddToEntity(dstManager, this.gameObject, entity);
+                var cursorComponent = GetComponent<UICursorObject>();
+                if (cursorComponent != null) {
+                    dstManager.AddComponent<MenuInputData>(entity);
+                }
             }
             var cameraEntity = conversionSystem.TryGetPrimaryEntity(UnityEngine.Camera.main);
             if (cameraEntity != Entity.Null) {

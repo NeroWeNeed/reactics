@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Unity.Burst;
@@ -13,7 +14,10 @@ using UnityEngine;
 namespace NeroWeNeed.UIDots.Editor {
     public unsafe static class UIModelUtility {
         public static Material GetMaterial(this UIModel model) => model.group?.Material;
-        public static BlobAssetReference<UIGraph> CreateGraphAsset(this UIModel model,Allocator allocator) {
+        public static void Write(this Stream stream, UIModel model) {
+
+        }
+        public static BlobAssetReference<UIGraph> CreateGraphAsset(this UIModel model, Allocator allocator) {
             BlobBuilder builder = new BlobBuilder(Allocator.Temp);
             ref UIGraph graph = ref builder.ConstructRoot<UIGraph>();
             var schema = UISchema.Default;
@@ -53,21 +57,14 @@ namespace NeroWeNeed.UIDots.Editor {
             var asset = builder.CreateBlobAssetReference<UIGraph>(allocator);
             builder.Dispose();
             return asset;
-
         }
 
-        private unsafe static ConfigData Configure(UIModel.Node node, MemoryBinaryWriter writer, UISchema schema, TypeDecomposer decomposer, UIPropertyWriterContext context, List<Type> types) {
-
-
+        private static ConfigData Configure(UIModel.Node node, MemoryBinaryWriter writer, UISchema schema, TypeDecomposer decomposer, UIPropertyWriterContext context, List<Type> types) {
             var configBlocks = new List<object>();
-
-
             var element = schema.entries.Find(x => x.identifier == node.identifier);
-            
-            UIConfigLayout.GetTypes(element.mask, types);
-            
-            UIConfigLayout.CreateConfiguration(element.mask, configBlocks);
-            var configSize = UIConfigLayout.GetLength(element.mask);
+            UIConfigUtility.GetTypes(element.mask, types);
+            UIConfigUtility.CreateConfiguration(element.mask, configBlocks);
+            var configSize = UIConfigUtility.GetLength(element.mask);
             using var extraBytesStream = new MemoryBinaryWriter();
             IntPtr configData = (IntPtr)UnsafeUtility.Malloc(configSize, 0, Allocator.Temp);
             int configOffset = 0;
@@ -78,12 +75,10 @@ namespace NeroWeNeed.UIDots.Editor {
                 StandardConfigurators.PreInit(configBlock.GetType(), configData + configOffset, element.mask, context);
                 configOffset += UnsafeUtility.SizeOf(configBlock.GetType());
             }
-
             foreach (var property in node.properties) {
                 if (configFields.TryGetValue(property.path, out TypeDecomposer.FieldData fieldData)) {
                     StandardPropertyWriters.writers.Write(property.Value, configData, fieldData, extraBytesStream, configSize, context);
                 }
-
             }
             configOffset = 0;
             foreach (var configBlockType in types) {
@@ -96,15 +91,12 @@ namespace NeroWeNeed.UIDots.Editor {
             };
             writer.Write(configSize + extraBytesStream.Length);
             writer.WriteBytes(configData.ToPointer(), configSize);
-
             if (extraBytesStream.Length > 0) {
                 writer.WriteBytes(extraBytesStream.Data, extraBytesStream.Length);
             }
             UnsafeUtility.Free(configData.ToPointer(), Allocator.Temp);
             config.length = writer.Length - config.length;
             return config;
-
-
         }
         public struct ConfigData {
             public int offset;

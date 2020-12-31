@@ -176,7 +176,7 @@ namespace NeroWeNeed.UIDots {
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void Decompose(BlobAssetReference<UIGraph> graph, int threadIndex, int currentIndex, NativeArray<OffsetInfo> configLayout, ref int currentSubmesh, NativeArray<NodeInfo> nodes, int subMeshCount) {
-            if (UIConfigLayout.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset)) {
+            if (UIConfigUtility.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset)) {
                 nodes[currentSubmesh] = new NodeInfo(threadIndex, configLayout[currentIndex], currentIndex, subMeshCount - (++currentSubmesh));
             }
             for (int i = 0; i < graph.Value.nodes[currentIndex].children.Length; i++) {
@@ -264,6 +264,7 @@ namespace NeroWeNeed.UIDots {
             if (graph.Value.nodes.Length <= 0)
                 return;
             var indices = meshData.GetIndexData<ushort>();
+            
             int submeshIndex = 0;
             int renderIndex = 0;
             float4 bounds = float4.zero;
@@ -382,7 +383,7 @@ namespace NeroWeNeed.UIDots {
             var box = stateLayout[currentIndex];
             box.globalBox = box.localBox;
             stateLayout[currentIndex] = box;
-            if (UIConfigLayout.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset)) {
+            if (UIConfigUtility.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset)) {
                 subMeshes[currentSubmesh] = new SubMeshInfo(++currentSubmesh, currentIndex);
                 RenderMesh(currentIndex, vertexPtr, context, indices, graph, configLayout, renderBoxLayout, stateLayout, subMeshes, false, true, true, ref currentSubmesh, ref renderIndex, ref bounds);
             }
@@ -450,7 +451,7 @@ namespace NeroWeNeed.UIDots {
                     box.globalBox = stateLayout[index].globalBox + box.localBox;
                     stateLayout[currentIndex] = box;
                 }
-                if (UIConfigLayout.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset)) {
+                if (UIConfigUtility.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset)) {
                     if (updateSubmeshCount) {
                         subMeshes[currentSubmesh] = new SubMeshInfo(++currentSubmesh, currentIndex);
                     }
@@ -498,7 +499,7 @@ namespace NeroWeNeed.UIDots {
             //var config = (UIConfig*)((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configLayout[currentIndex].offset).ToPointer());
             var state = (UIPassState*)(((IntPtr)stateLayout.GetUnsafePtr()) + (UnsafeUtility.SizeOf<UIPassState>() * currentIndex)).ToPointer();
             float4 padding = float4.zero;
-            if (UIConfigLayout.TryGetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayout.BoxConfig, configSource, out IntPtr boxConfig)) {
+            if (UIConfigUtility.TryGetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayoutTable.BoxConfig, configSource, out IntPtr boxConfig)) {
                 BoxConfig* boxConfigPtr = ((BoxConfig*)boxConfig.ToPointer());
                 state->localBox += boxConfigPtr->margin.Normalize(*context);
                 padding = boxConfigPtr->padding.Normalize(*context);
@@ -541,7 +542,7 @@ namespace NeroWeNeed.UIDots {
             );
             // + config->padding.left.Normalize(*context) + config->padding.right.Normalize(*context)
             // + config->padding.top.Normalize(*context) + config->padding.bottom.Normalize(*context)
-            if (UIConfigLayout.TryGetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayout.SizeConfig, configSource, out IntPtr sizeConfig)) {
+            if (UIConfigUtility.TryGetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayoutTable.SizeConfig, configSource, out IntPtr sizeConfig)) {
                 var sizeConfigPtr = ((SizeConfig*)sizeConfig.ToPointer());
                 state->size = new float2(
                     math.clamp(state->size.x, sizeConfigPtr->minWidth.Normalize(*context), sizeConfigPtr->maxWidth.Normalize(*context)),

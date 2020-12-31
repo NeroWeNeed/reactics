@@ -11,7 +11,6 @@ namespace NeroWeNeed.UIDots {
         public ulong configurationMask;
     }
     public struct UIGraph {
-        public BlittableAssetReference material;
         public BlobArray<UIGraphNode> nodes;
         public BlobArray<byte> initialConfiguration;
     }

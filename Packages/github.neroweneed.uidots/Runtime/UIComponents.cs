@@ -92,12 +92,23 @@ namespace NeroWeNeed.UIDots {
         public int index;
     }
     public struct UICursorInput : IComponentData {
-        public double inputTime;
-        public float3 startVector;
-        public float direction;
+        public float2 direction;
+        /// <summary>
+        /// Multiplied against all the axis involved (set the x or y to 0 to for vertical or horizontal navigation)
+        /// </summary>
+        public float2 multiplier;
+        public float accuracy;
         //Infinity/Nan will result in the cursor moving immediately.
         public float speed;
         public bool selected;
+
+        public UICursorInput(float2 direction, float2 multiplier, float accuracy = math.PI/6f, float speed = 1f) {
+            this.direction = direction;
+            this.multiplier = multiplier;
+            this.accuracy = accuracy;
+            this.speed = speed;
+            this.selected = false;
+        }
     }
     public struct UIOnSelect : IComponentData {
         public FunctionPointer<UISelectDelegate> value;

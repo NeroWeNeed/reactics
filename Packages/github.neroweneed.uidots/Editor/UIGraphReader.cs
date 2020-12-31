@@ -32,20 +32,16 @@ namespace NeroWeNeed.UIDots.Editor {
     public static class UIGraphReader {
         public const string ROOT_ELEMENT = "UIGraph";
         public const string GROUP_ATTRIBUTE = "group";
-        public const string CALLBACK_CONTAINER_ELEMENT = "Callbacks";
-        public const string CALLBACK_ELEMENT = "Callback";
+        public const string ADDRESS_ATTRIBUTE = "address";
 
-        public const string CALLBACK_TYPE_ATTRIBUTE = "type";
-
-        public const string CALLBACK_NAME_ATTRIBUTE = "name";
-
-        public static void InitModel(UIModel model, StringReader reader, string guid) {
+        internal static void Initialize(this UIModel model, StringReader reader, string guid,string path) {
             using XmlReader xmlReader = XmlReader.Create(reader);
-            InitModel(xmlReader, model, guid);
+            Initialize(model,xmlReader, guid,path);
         }
-        private static void InitModel(XmlReader reader, UIModel model, string guid) {
-            
+        internal static void Initialize(this UIModel model,XmlReader reader, string guid, string path) {
+
             var groupName = "default";
+            var address = path.Substring(0,path.LastIndexOf('.'));
             var referencedAssets = new List<string>();
             var nodes = new List<UIGraphNode>();
             var context = new UIGraphContext();
@@ -57,17 +53,20 @@ namespace NeroWeNeed.UIDots.Editor {
                     if (reader.MoveToAttribute(GROUP_ATTRIBUTE)) {
                         groupName = reader.Value;
                     }
+                    if (reader.MoveToAttribute(ADDRESS_ATTRIBUTE)) {
+                        address = reader.Value;
+                    }
                     reader.MoveToElement();
                 }
                 var childReader = reader.ReadSubtree();
                 var root = UIGraphXmlNode.Create(null, default, -1);
-
                 while (childReader.Read()) {
                     Parse(reader, root, -1, 0, schema, context, decomposer);
                 }
             }
             model.assets.AddRange(context.nodes.SelectMany(xmlNode => xmlNode.assetReferences).Distinct());
             model.group = UIAssetGroup.Find(groupName);
+            model.address = address;
             if (model.group != null) {
                 var textures = model.assets.Where(a =>
                 {
@@ -81,39 +80,12 @@ namespace NeroWeNeed.UIDots.Editor {
             model.nodes.AddRange(context.nodes.Select(node => node.ToNode()));
         }
         private static bool IsRoot(XmlReader reader) => reader.NodeType == XmlNodeType.Element && reader.Name == ROOT_ELEMENT;
-        public unsafe static void Parse(XmlReader reader, UIGraphXmlNode parent, int parentIndex, int depth, UISchema schema, UIGraphContext context, TypeDecomposer decomposer) {
+        private unsafe static void Parse(XmlReader reader, UIGraphXmlNode parent, int parentIndex, int depth, UISchema schema, UIGraphContext context, TypeDecomposer decomposer) {
             while (reader.Read()) {
-                /* if (reader.NodeType == XmlNodeType.Element && reader.Name == CALLBACK_CONTAINER_ELEMENT) {
-
-                    var callbackContainers = new List<CallbackContainer>();
-                    var callbackContainerDefinitionReader = reader.ReadSubtree();
-                    callbackContainerDefinitionReader.Read();
-                    while (callbackContainerDefinitionReader.Read()) {
-                        if (reader.NodeType == XmlNodeType.Element && reader.Name == CALLBACK_ELEMENT) {
-                            if (!reader.MoveToAttribute(CALLBACK_TYPE_ATTRIBUTE)) {
-                                continue;
-                            }
-                            Type type = Type.GetType(reader.Value);
-                            string name;
-                            if (reader.MoveToAttribute(CALLBACK_NAME_ATTRIBUTE)) {
-                                name = reader.Value;
-                            }
-                            else {
-                                name = type.FullName;
-                            }
-                            reader.MoveToElement();
-                            callbackContainers.Add(new CallbackContainer(name,new SerializableType(type)));
-                        }
-
-                    }
-                    context.callbackContainerDefinitions.AddRange(callbackContainers);
-
-                }
-                else  */
                 if (reader.NodeType == XmlNodeType.Element && schema.Entries.TryGetValue(reader.Name, out UISchema.Element element)) {
                     var node = UIGraphXmlNode.Create(reader.Name, element, parentIndex);
                     if (reader.HasAttributes) {
-                        UIConfigLayout.GetTypes(element.mask, context.typeBuffer);
+                        UIConfigUtility.GetTypes(element.mask, context.typeBuffer);
                         var fields = new Dictionary<string, FieldData>();
                         var configSize = 0;
                         foreach (var type in context.typeBuffer)

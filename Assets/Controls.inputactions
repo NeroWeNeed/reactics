@@ -2,7 +2,7 @@
     "name": "Controls",
     "maps": [
         {
-            "name": "Battle Controls",
+            "name": "Battle",
             "id": "641ba7d6-dd9b-4d9e-8421-13f05f1acd79",
             "actions": [
                 {
@@ -212,72 +212,7 @@
             ]
         },
         {
-            "name": "Command Controls",
-            "id": "e8bda7b3-d13a-4cab-8558-18646d3c8a9e",
-            "actions": [
-                {
-                    "name": "Select Action",
-                    "type": "Button",
-                    "id": "8d43677c-8bfd-4094-ba71-e607e0c1f774",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": ""
-                },
-                {
-                    "name": "Cancel Action",
-                    "type": "Button",
-                    "id": "52e2496c-b937-4e20-b252-56c869d39c87",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": ""
-                },
-                {
-                    "name": "Menu Movement",
-                    "type": "Value",
-                    "id": "2e7f531c-48ca-4a77-9bef-6190f8fd3ee5",
-                    "expectedControlType": "Vector2",
-                    "processors": "",
-                    "interactions": ""
-                }
-            ],
-            "bindings": [
-                {
-                    "name": "",
-                    "id": "93a1f3b7-df19-455d-9a40-e6b891fee339",
-                    "path": "<Gamepad>/buttonSouth",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Gamepad",
-                    "action": "Select Action",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "f4472526-84fa-4fec-ba8b-cab975c7f2c5",
-                    "path": "<Gamepad>/buttonEast",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Gamepad",
-                    "action": "Cancel Action",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "48225e54-0aae-4a18-bb7c-02f68eedde3d",
-                    "path": "<Gamepad>/dpad",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Gamepad",
-                    "action": "Menu Movement",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                }
-            ]
-        },
-        {
-            "name": "Menu Controls",
+            "name": "Menu",
             "id": "5703d1d3-8315-4905-9332-c9b7d4b21314",
             "actions": [
                 {
@@ -292,7 +227,7 @@
                     "name": "Select",
                     "type": "Button",
                     "id": "4174d118-1ea2-4ccd-b3f8-f9eb32741c65",
-                    "expectedControlType": "",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
                 },

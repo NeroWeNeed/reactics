@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using NeroWeNeed.Commons;
@@ -199,7 +199,7 @@ namespace NeroWeNeed.UIDots {
 
                     var nodeEntity = CreateAdditionalEntity(obj);
                     DstEntityManager.AddComponentData(nodeEntity, new UINodeInfo { index = nodeIter.Current.graphNodeIndex, submesh = nodeIter.Current.subMesh });
-                    var name = UIConfigLayout.GetName(graph.Value.nodes[nodeIter.Current.graphNodeIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + nodeIter.Current.location.offset);
+                    var name = UIConfigUtility.GetName(graph.Value.nodes[nodeIter.Current.graphNodeIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + nodeIter.Current.location.offset);
                     DstEntityManager.SetName(nodeEntity, $"{obj.name}[{name}]");
                     DstEntityManager.AddComponentData(nodeEntity, new UIParent { value = entity });
                     DstEntityManager.AddComponentData(nodeEntity, new Parent { Value = entity });
@@ -254,9 +254,9 @@ namespace NeroWeNeed.UIDots {
                     DstEntityManager.AddComponentData<UIScreenElement>(entity, new UIScreenElement { alignment = Alignment.Center });
                 }
             }
-            if (UIConfigLayout.HasConfigBlock(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayout.SelectableConfig)) {
+            if (UIConfigUtility.HasConfigBlock(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayoutTable.SelectableConfig)) {
                 var configOffset = UIJobUtility.GetConfigOffset(graph, currentIndex, out int configLength);
-                var selectable = (SelectableConfig*)UIConfigLayout.GetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayout.SelectableConfig, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configOffset);
+                var selectable = (SelectableConfig*)UIConfigUtility.GetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayoutTable.SelectableConfig, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + configOffset);
                 DstEntityManager.AddComponent<UISelectable>(entity);
                 if (selectable->onSelect.IsCreated) {
                     DstEntityManager.AddComponentData(entity, new UIOnSelect { value = selectable->onSelect });

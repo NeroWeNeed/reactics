@@ -12,7 +12,7 @@ namespace NeroWeNeed.UIDots {
         public ulong Mask { get; set; }
         public UIDotsElementAttribute(string identifier, params byte[] configs) {
             Identifier = identifier;
-            Mask = UIConfigLayout.CreateMask(configs);
+            Mask = UIConfigUtility.CreateMask(configs);
         }
     }
     [AttributeUsage(AttributeTargets.All)]
@@ -46,7 +46,7 @@ namespace NeroWeNeed.UIDots {
     public sealed class EmbedAttribute : System.Attribute {
 
     }
-    [AttributeUsage(AttributeTargets.Struct, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Assembly, AllowMultiple = false)]
     public sealed class UIConfigBlockAttribute : Attribute {
         public int Priority { get; }
 
