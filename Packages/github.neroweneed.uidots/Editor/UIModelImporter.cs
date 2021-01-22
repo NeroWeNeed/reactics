@@ -57,6 +57,7 @@ namespace NeroWeNeed.UIDots.Editor {
                     Parse(reader, root, -1, 0, settings, context, decomposer);
                 }
             }
+            Debug.Log(header.output);
             if (context.nodes.Count > 0) {
                 model.assets.AddRange(context.nodes.SelectMany(xmlNode => xmlNode.assetReferences).Distinct());
                 model.group = UIAssetGroup.Find(header.groupName);

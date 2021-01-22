@@ -18,6 +18,10 @@ namespace NeroWeNeed.UIDots.Editor {
     [UpdateInGroup(typeof(GameObjectConversionGroup))]
     public class UIConversionSystem : GameObjectConversionSystem {
         private List<Mesh> meshes = new List<Mesh>();
+        protected override void OnCreate() {
+            base.OnCreate();
+            InitEntityQueryCache(60);
+        }
         protected unsafe override void OnUpdate() {
             var contexts = new NativeList<UIContext>(8, Allocator.TempJob);
             var graphData = new NativeList<UIGraphData>(8, Allocator.TempJob);

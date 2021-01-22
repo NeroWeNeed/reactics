@@ -17,7 +17,7 @@ namespace NeroWeNeed.UIDots {
     public class UIGlobalSettings : ScriptableObject, IEnumerable<UIGlobalSettings.SchemaElement> {
         public const string ASSET_DIRECTORY = "Assets/Settings";
         public const string ASSET_LOCATION = ASSET_DIRECTORY + "/UISettings.asset";
-        public List<SchemaElement> elements;
+        public List<SchemaElement> elements = new List<SchemaElement>();
         public ReadOnlyDictionary<string, SchemaElement> entryView = null;
         public ReadOnlyDictionary<string, SchemaElement> Elements
         {
