@@ -9,40 +9,42 @@ using UnityEngine;
 using static UnityEngine.Mesh;
 
 namespace NeroWeNeed.UIDots {
+/// <summary>
+/// Delegate used for handling the layout pass phase.
+/// </summary>
+/// <param name="childIndex">Target child index. If this value is greater than or equal to 0, then this call is to be considered a constrain layout call and the index refers to the target child node. If this value is less than 0, then this call is to be considered a size layout call.</param>
+/// <param name="configPtr">Root pointer of the graph</param>
+/// <param name="nodeInfo">Current node info</param>
+/// <param name="statePtr">Root pointer of the layout state</param>
+/// <param name="context"></param>
+
+    public unsafe delegate void UILayoutPass(
+        int childIndex,
+        IntPtr configPtr,
+        NodeInfo* nodeInfo,
+        IntPtr statePtr,
+        UIContext* context
+    );
     /// <summary>
-    /// Pass Delegate
+    /// Delegate used for handling the render pass phase.
     /// </summary>
     /// <param name="configPtr"></param>
-    /// <param name="statePtr"></param>
-    /// <param name="vertexPtr"></param>
-    /// <param name="type"></param>
-    /// <param name="stateIndex">Represents the index in the State Array.</param>
-    /// <param name="stateParentIndex">Represents the parent index.</param>
-    /// <param name="layoutChildIndex">Represents the child being laid out. -1 during size pass</param>
-    /// <param name="node"></param>
-
-    public unsafe delegate void UIPass(
-        byte type,
+    /// <param name="nodeInfo"></param>
+    /// <param name="state"></param>
+    /// <param name="vertexDataPtr"></param>
+    /// <param name="context"></param>
+    public unsafe delegate void UIRenderPass(
         IntPtr configPtr,
-        IntPtr configOffsetLayoutPtr,
-        int configOffset,
-        int configLength,
-        ulong configurationMask,
-        IntPtr statePtr,
-        int* stateChildren,
-        int stateIndex,
-        int stateChildLocalIndex,
-        int stateChildCount,
-        IntPtr vertexDataPtr,
-        int vertexDataOffset,
-        IntPtr context
+        NodeInfo* nodeInfo,
+        UIPassState* state,
+        UIVertexData* vertexData,
+        UIContext* context
     );
     /// <summary>
     /// Optional delegate for determining how many render boxes are needed for each element. If not set, element will use 1.
     /// </summary>
     /// <param name="configPtr"></param>
-    /// <returns></returns>
-    public unsafe delegate int UIRenderBoxHandler(IntPtr configPtr, int configOffset, int configLength,ulong configurationMask);
+    public unsafe delegate int UIRenderBoxCounter(IntPtr configPtr, NodeInfo* nodeInfo);
     public struct UIPassState {
         public static readonly UIPassState DEFAULT = new UIPassState
         {

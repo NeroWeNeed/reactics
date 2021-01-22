@@ -27,9 +27,11 @@ namespace NeroWeNeed.UIDots {
         [SerializeField, HideInInspector]
         public Material cachedMaterial;
         [SerializeField, HideInInspector]
-        public BlobAssetReference<UIGraph> cachedBlob;
-        public List<UINodeDecompositionJob.NodeInfo> cachedNodeData = new List<UINodeDecompositionJob.NodeInfo>();
+        public BlobAssetReference<UIGraphOld> cachedBlob;
+        //public List<UINodeDecompositionJob.NodeInfo> cachedNodeData = new List<UINodeDecompositionJob.NodeInfo>();
         public Bounds Bounds { get => cachedMesh == null ? default : cachedMesh.bounds; }
         public Mesh CachedMesh { get => cachedMesh; }
+        [SerializeField, HideInInspector]
+        public string cachedGuid;
     }
 }

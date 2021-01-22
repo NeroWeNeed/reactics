@@ -28,15 +28,17 @@ namespace NeroWeNeed.UIDots {
         public int nodeCount;
     }
     public struct HeaderConfig {
-        public FunctionPointer<UIPass> pass;
-        public FunctionPointer<UIRenderBoxHandler> renderBoxHandler;
         public ulong configurationMask;
         /// <summary>
         /// Bit field for certain behaviour
         /// bit 1: whether to create dedicated entity for node or not.
         /// </summary>
         public byte flags;
+        public FunctionPointer<UILayoutPass> layoutPass;
+        public FunctionPointer<UIRenderPass> renderPass;
+        public FunctionPointer<UIRenderBoxCounter> renderBoxCounter;
         public int childCount;
+        public bool IsDedicatedNode { get => (flags & 0b00000001) != 0; }
 
     }
     [UIConfigBlock]
@@ -44,7 +46,7 @@ namespace NeroWeNeed.UIDots {
         public LocalizedStringPtr name;
     }
     [UIConfigBlock]
-    public struct BoxConfig {
+    public struct BoxModelConfig {
         public BoxData<UILength> margin;
         public BoxData<UILength> padding;
 
@@ -53,13 +55,6 @@ namespace NeroWeNeed.UIDots {
 
     [UIConfigBlock]
     public struct DisplayConfig {
-        public static readonly DisplayConfig DEFAULT = new DisplayConfig
-        {
-            opacity = 1f,
-            display = VisibilityStyle.Visible,
-            visibile = VisibilityStyle.Visible,
-            overflow = VisibilityStyle.Visible
-        };
         public float opacity;
         public VisibilityStyle display, visibile, overflow;
 
@@ -76,15 +71,6 @@ namespace NeroWeNeed.UIDots {
     }
     [UIConfigBlock]
     public struct SizeConfig {
-        public static readonly SizeConfig DEFAULT = new SizeConfig
-        {
-            minWidth = new UILength(0, UILengthUnit.Px),
-            maxWidth = new UILength(float.PositiveInfinity, UILengthUnit.Px),
-            width = new UILength(float.NaN, UILengthUnit.Px),
-            height = new UILength(float.NaN, UILengthUnit.Px),
-            minHeight = new UILength(0, UILengthUnit.Px),
-            maxHeight = new UILength(float.PositiveInfinity, UILengthUnit.Px),
-        };
         public UILength minWidth, width, maxWidth, minHeight, height, maxHeight;
     }
 
@@ -111,9 +97,9 @@ namespace NeroWeNeed.UIDots {
         public BoxCornerData<UILength> radius;
     }
     [UIConfigBlock]
-    public struct SequentialLayoutConfig {
+    public struct BoxLayoutConfig {
         public UILength spacing;
-
+        public Direction direction;
         public HorizontalAlignment horizontalAlign;
         public VerticalAlignment verticalAlign;
 
@@ -127,18 +113,15 @@ namespace NeroWeNeed.UIDots {
     [UIConfigBlock]
     public struct TextConfig {
         public LocalizedStringPtr text;
-        [HideInDecompositionAttribute]
+        [HideInDecomposition]
         public FontInfo fontInfo;
-        [HideInDecompositionAttribute]
-        public int charInfoOffset;
-        [HideInDecompositionAttribute]
+        [HideInDecomposition]
+        public long charInfoOffset;
+        [HideInDecomposition]
         public int charInfoLength;
         public unsafe CharInfo GetCharInfo(IntPtr configPtr, int index) {
-            return UnsafeUtility.ReadArrayElement<CharInfo>((configPtr + charInfoOffset).ToPointer(), index);
+            return UnsafeUtility.ReadArrayElement<CharInfo>((configPtr + ((int)charInfoOffset)).ToPointer(), index);
         }
-
-
-
     }
 
 }

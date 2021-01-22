@@ -10,6 +10,7 @@ namespace NeroWeNeed.UIDots {
         [HideInInspector]
         public List<Node> nodes = new List<Node>();
         public string address;
+        public string output;
         public UIAssetGroup group;
         private void OnDestroy() {
 #if UNITY_EDITOR
@@ -19,8 +20,9 @@ namespace NeroWeNeed.UIDots {
         [Serializable]
         public struct Node {
             public string identifier;
-            public string name;
-            public SerializableMethod pass;
+            public SerializableMethod layoutPass;
+            public SerializableMethod renderPass;
+            public SerializableMethod renderBoxCounter;
             public List<Property> properties;
             public List<int> children;
             public int parent;

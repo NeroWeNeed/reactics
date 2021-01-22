@@ -32,7 +32,6 @@ namespace NeroWeNeed.UIDots {
         public static int GetOffset(ulong mask, byte config) {
             if ((mask & (ulong)math.pow(2, config)) == 0)
                 return -1;
-            //int offset = UnsafeUtility.SizeOf<HeaderConfig>();
             int offset = 0;
             for (int i = 0; i < config; i++) {
                 offset += (int)((byte)(mask >> i) & 1u) * UIConfigLayoutTable.Lengths[i];

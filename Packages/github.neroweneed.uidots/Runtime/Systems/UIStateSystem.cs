@@ -41,13 +41,14 @@ namespace NeroWeNeed.UIDots {
     [UpdateInGroup(typeof(SimulationSystemGroup))] */
     [UpdateInGroup(typeof(UISystemGroup))]
     [UpdateAfter(typeof(UIContextUpdateSystem))]
+    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.Editor)]
     public class UIStateSystem : SystemBase {
         private EntityCommandBufferSystem entityCommandBufferSystem;
         private EntityQuery query;
         public List<Mesh> meshes;
         protected override void OnCreate() {
             entityCommandBufferSystem = World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>();
-            query = GetEntityQuery(ComponentType.ReadOnly<UIRoot>(), ComponentType.ReadOnly<UINode>(), ComponentType.ReadWrite<UIDirtyState>());
+            query = GetEntityQuery(ComponentType.ReadOnly<UIGraphData>(), ComponentType.ReadOnly<UINode>(), ComponentType.ReadWrite<UIDirtyState>());
             query.SetSharedComponentFilter<UIDirtyState>(true);
             this.RequireForUpdate(query);
             this.meshes = new List<Mesh>();
@@ -58,16 +59,16 @@ namespace NeroWeNeed.UIDots {
             this.meshes.Clear();
             var entities = new NativeList<Entity>(8, Allocator.TempJob);
             var contexts = new NativeList<UIContext>(8, Allocator.TempJob);
-            var referencedGraphs = new NativeList<BlobAssetReference<UIGraph>>(8, Allocator.TempJob);
+            var referencedGraphs = new NativeList<UIGraphData>(8, Allocator.TempJob);
             var entityUpdate = new NativeMultiHashMap<int, ValueTuple<Entity, int>>(8, Allocator.Temp);
-            Entities.WithSharedComponentFilter<UIDirtyState>(true).ForEach((Entity entity, DynamicBuffer<UINode> nodes, in UIRoot root, in UIContext context, in RenderMesh renderMesh) =>
+            Entities.WithSharedComponentFilter<UIDirtyState>(true).ForEach((Entity entity, DynamicBuffer<UINode> nodes, in UIGraphData graphData, in UIContext context, in RenderMesh renderMesh) =>
             {
                 int index = meshes.IndexOf(renderMesh.mesh);
                 if (index < 0) {
                     index = meshes.Count;
                     meshes.Add(renderMesh.mesh);
                     entities.Add(entity);
-                    referencedGraphs.Add(root.graph);
+                    referencedGraphs.Add(graphData);
                     contexts.Add(context);
                 }
                 entityUpdate.Add(index, ValueTuple.Create(entity, 0));
@@ -79,6 +80,7 @@ namespace NeroWeNeed.UIDots {
             if (entities.Length > 0) {
                 var ecb = entityCommandBufferSystem.CreateCommandBuffer();
                 var meshData = Mesh.AllocateWritableMeshData(entities.Length);
+
                 var layoutJob = new UILayoutJob
                 {
                     meshDataArray = meshData,

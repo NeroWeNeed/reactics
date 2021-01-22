@@ -13,12 +13,15 @@ namespace NeroWeNeed.Commons {
 
         [NonSerialized]
         private Type type;
-        public Type Value => type ??= assemblyQualifiedName == null ? null : Type.GetType(assemblyQualifiedName);
-
+        public Type Value => type ??= string.IsNullOrEmpty(assemblyQualifiedName) ? null : Type.GetType(assemblyQualifiedName);
+        public bool IsCreated { get => !string.IsNullOrEmpty(assemblyQualifiedName); }
         public SerializableType(Type type) {
             assemblyQualifiedName = type?.AssemblyQualifiedName;
             this.type = type;
         }
+
+
+        
         public static implicit operator SerializableType(Type type) => new SerializableType(type);
 
         public static bool operator ==(SerializableType self, Type type) {

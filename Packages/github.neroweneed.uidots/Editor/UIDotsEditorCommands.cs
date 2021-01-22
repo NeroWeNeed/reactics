@@ -10,10 +10,7 @@ using UnityEngine;
 namespace NeroWeNeed.UIDots.Editor {
     public static class UIDotsEditorCommands {
         private const string CONFIG_LAYOUT_PATH = "Packages/github.neroweneed.uidots/Runtime/UIConfigTables.cs";
-        [MenuItem("DOTS/UI Dots/Refresh Schema")]
-        public static void RefreshData() {
-            UISchema.Default.Refresh();
-        }
+
 
         [MenuItem("DOTS/UI Dots/Generate Config Layout")]
         public static void GenerateConfigLayout() {

@@ -6,15 +6,42 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace NeroWeNeed.UIDots {
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public sealed class UIDotsElementAttribute : Attribute {
+        public const string DefaultLayoutPass = "Layout";
+        public const string DefaultRenderPass = "Render";
+        public const string DefaultRenderBoxCountPass = "RenderBoxCount";
         public string Identifier { get; set; }
+        public string LayoutPass { get; set; }
+        public string RenderPass { get; set; }
+        public string RenderBoxCounter { get; set; }
         public ulong Mask { get; set; }
         public UIDotsElementAttribute(string identifier, params byte[] configs) {
             Identifier = identifier;
+            RenderBoxCounter = DefaultRenderBoxCountPass;
+            LayoutPass = DefaultLayoutPass;
+            RenderPass = DefaultRenderPass;
             Mask = UIConfigUtility.CreateMask(configs);
         }
+
     }
+    /*     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
+        public sealed class UIDotsElementAttribute : Attribute {
+            public string Identifier { get; set; }
+            public string RenderBoxCounter { get; set; }
+            public string 
+            public ulong Mask { get; set; }
+            public UIDotsElementAttribute(string identifier, params byte[] configs) {
+                Identifier = identifier;
+                RenderBoxCounter = null;
+                Mask = UIConfigUtility.CreateMask(configs);
+            }
+            public UIDotsElementAttribute(string identifier,string renderBoxHandlerer, params byte[] configs) {
+                Identifier = identifier;
+                RenderBoxCounter = renderBoxHandlerer;
+                Mask = UIConfigUtility.CreateMask(configs);
+            }
+        } */
     [AttributeUsage(AttributeTargets.All)]
     public sealed class HideInDecompositionAttribute : Attribute {
 
@@ -62,7 +89,7 @@ namespace NeroWeNeed.UIDots {
         public string Identifier { get; }
 
         public UICallbackAttribute(string name = null) {
-            
+
             Identifier = name;
         }
     }

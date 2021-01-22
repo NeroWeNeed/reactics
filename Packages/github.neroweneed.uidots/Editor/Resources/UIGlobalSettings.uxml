@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement style="margin-left: 9px; margin-top: 2px;">
+        <ui:Label text="UI Dots Settings" display-tooltip-when-elided="false" style="-unity-font-style: bold; font-size: 19px; margin-bottom: 12px;" />
+        <uie:PropertyField binding-path="outputPath" tooltip="Path to compile UI Models." />
+        <uie:PropertyField binding-path="assetGroupCachePath" tooltip="Path to store Asset Groups" />
+        <ui:Button text="Refresh Schema" display-tooltip-when-elided="True" tooltip="Scans Project for any UI Elements." name="refresh-schema" />
+    </ui:VisualElement>
+</ui:UXML>

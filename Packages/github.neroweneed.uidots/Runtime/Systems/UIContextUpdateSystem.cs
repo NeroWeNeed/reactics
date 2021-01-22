@@ -7,11 +7,13 @@ using UnityEngine;
 
 namespace NeroWeNeed.UIDots {
     [UpdateInGroup(typeof(UISystemGroup))]
+    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.Editor)]
     public class UIContextUpdateSystem : SystemBase {
         protected override void OnCreate() {
-
+            base.OnCreate();
         }
         protected override void OnUpdate() {
+            
             Entities.WithAll<UICameraLayer>().ForEach((Camera camera, in Parent parent) =>
             {
                 var parentCamera = EntityManager.GetComponentObject<Camera>(parent.Value);

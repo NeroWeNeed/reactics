@@ -13,7 +13,7 @@
       "dependencies": {}
     },
     "com.unity.addressables": {
-      "version": "1.17.0-preview",
+      "version": "1.17.2-preview",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -403,7 +403,7 @@
       }
     },
     "com.unity.ui.builder": {
-      "version": "1.0.0-preview.9",
+      "version": "1.0.0-preview.12",
       "depth": 0,
       "source": "registry",
       "dependencies": {},

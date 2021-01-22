@@ -12,7 +12,6 @@ namespace NeroWeNeed.UIDots.Editor {
     public class UIAssetGroup : ScriptableObject {
 #if UNITY_EDITOR
         public static UIAssetGroup Find(string name) {
-            Debug.Log("Searching...");
             return UnityEditor.AssetDatabase.FindAssets($"t:{nameof(UIAssetGroup)}").Select(a =>
             UnityEditor.AssetDatabase.LoadAssetAtPath<UIAssetGroup>(
                 UnityEditor.AssetDatabase.GUIDToAssetPath(a)

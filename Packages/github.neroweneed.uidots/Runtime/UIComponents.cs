@@ -7,6 +7,25 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 namespace NeroWeNeed.UIDots {
+    public struct UIGraph : IComponentData {
+        public BlittableAssetReference value;
+    }
+    public struct UIGraphHandleData : ISystemStateComponentData {
+        public int id;
+    }
+    public struct UIGraphData : ISystemStateComponentData {
+        public IntPtr value;
+        public long allocatedLength;
+        public bool IsCreated { get => allocatedLength > 0; }
+    }
+    public struct UIHandle : IComponentData {
+        public int handle;
+
+        public UIHandle(int handle) {
+            this.handle = handle;
+        }
+    }
+
     public struct UINodeInfo : IComponentData {
         public int index;
         public int submesh;
@@ -25,10 +44,10 @@ namespace NeroWeNeed.UIDots {
     }
 
     public unsafe struct UIRoot : IComponentData {
-        public BlobAssetReference<UIGraph> graph;
+        public BlobAssetReference<UIGraphOld> graph;
         public Entity contextSource;
 
-        public UIRoot(BlobAssetReference<UIGraph> graph, Entity contextSource) {
+        public UIRoot(BlobAssetReference<UIGraphOld> graph, Entity contextSource) {
             this.graph = graph;
             this.contextSource = contextSource;
         }
@@ -102,7 +121,7 @@ namespace NeroWeNeed.UIDots {
         public float speed;
         public bool selected;
 
-        public UICursorInput(float2 direction, float2 multiplier, float accuracy = math.PI/6f, float speed = 1f) {
+        public UICursorInput(float2 direction, float2 multiplier, float accuracy = math.PI / 6f, float speed = 1f) {
             this.direction = direction;
             this.multiplier = multiplier;
             this.accuracy = accuracy;

@@ -9,15 +9,13 @@ namespace NeroWeNeed.UIDots {
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem) {
             if (target != null) {
                 Entity uiGraphEntity;
-                BlobAssetReference<UIGraph> graph;
+                BlobAssetReference<UIGraphOld> graph;
                 uiGraphEntity = conversionSystem.GetPrimaryEntity(target);
                 graph = dstManager.GetComponentData<UIRoot>(uiGraphEntity).graph;
-                dstManager.AddComponentData(entity, new UICursor { target = uiGraphEntity, index = UIGraphUtility.GetFirstSelectableIndex(graph) });
+                //dstManager.AddComponentData(entity, new UICursor { target = uiGraphEntity, index = graph.GetFirstSelectableIndex(); });
                 dstManager.AddComponent<UICursorInput>(entity);
                 dstManager.AddComponent<UICursorDirty>(entity);
             }
-
-
         }
     }
 }

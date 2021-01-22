@@ -13,35 +13,52 @@ MonoBehaviour:
   m_Name: UISchema
   m_EditorClassIdentifier: 
   entries:
-  - identifier: Button
-    displayName: Button
-    mask: 1779
-    pass:
-      container:
-        assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      name: ButtonElement
-  - identifier: TextElement
-    displayName: TextElement
-    mask: 1267
-    pass:
-      container:
-        assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      name: TextElement
   - identifier: HBox
-    displayName: HBox
     mask: 467
-    pass:
+    layoutPass:
       container:
-        assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.HBoxElement, NeroWeNeed.UIDots.Runtime,
           Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      name: HBox
+      name: Layout
+    renderPass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.HBoxElement, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: Render
+    renderBoxCounter:
+      container:
+        assemblyQualifiedName: 
+      name: 
   - identifier: VBox
-    displayName: VBox
     mask: 467
-    pass:
+    layoutPass:
       container:
-        assemblyQualifiedName: NeroWeNeed.UIDots.UILayouts, NeroWeNeed.UIDots.Runtime,
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.VBoxElement, NeroWeNeed.UIDots.Runtime,
           Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      name: VBox
+      name: Layout
+    renderPass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.VBoxElement, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: Render
+    renderBoxCounter:
+      container:
+        assemblyQualifiedName: 
+      name: 
+  - identifier: Text
+    mask: 1779
+    layoutPass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.TextElement, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: Layout
+    renderPass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.TextElement, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: Render
+    renderBoxCounter:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.TextElement, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: RenderBoxCount

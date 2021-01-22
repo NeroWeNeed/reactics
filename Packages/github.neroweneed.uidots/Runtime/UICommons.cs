@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
@@ -21,12 +22,6 @@ namespace NeroWeNeed.UIDots {
         /// Stored x,y,width,height
         /// </summary>
         public float4 value;
-    }
-    public struct Box {
-        public float4 value;
-        public float Width { get => value.x + value.z; }
-        public float Height { get => value.y + value.w; }
-        public static implicit operator Box(float4 value) => new Box { value = value };
     }
     [Terminal]
     public struct UILength {
@@ -144,14 +139,17 @@ namespace NeroWeNeed.UIDots {
 
     [Terminal]
     public struct LocalizedStringPtr {
-        public int offset;
+        /// <summary>
+        /// Offset of the string relative to the start of the Config Block section of a node.
+        /// </summary>
+        public long offset;
         public int length;
         public bool IsCreated { get => length > 0; }
         public unsafe char GetChar(void* configPtr, int index) {
-            return UnsafeUtility.ReadArrayElement<char>((((IntPtr)configPtr) + offset).ToPointer(), index);
+            return UnsafeUtility.ReadArrayElement<char>(new IntPtr(((IntPtr)configPtr).ToInt64() + offset).ToPointer(), index);
         }
         public unsafe string ToString(void* configPtr) {
-            var chars = (byte*)(((IntPtr)configPtr) + offset).ToPointer();
+            var chars = (byte*)new IntPtr(((IntPtr)configPtr).ToInt64() + offset).ToPointer();
             return Encoding.Unicode.GetString(chars, length * 2);
         }
     }
@@ -159,26 +157,22 @@ namespace NeroWeNeed.UIDots {
     public unsafe struct BlittableAssetReference : IEquatable<BlittableAssetReference> {
         public fixed byte guid[16];
         public BlittableAssetReference(string guid) {
-
-            if (Guid.TryParse(guid, out Guid result)) {
+#if UNITY_EDITOR
+            if (UnityEditor.GUID.TryParse(guid, out UnityEditor.GUID result)) {
                 fixed (byte* g = this.guid) {
                     UnsafeUtility.CopyStructureToPtr(ref result, g);
                 }
             }
+#endif
         }
-        public BlittableAssetReference(Guid guid) {
-            fixed (byte* g = this.guid) {
-                UnsafeUtility.CopyStructureToPtr(ref guid, g);
-            }
-        }
+
 
         public bool Equals(BlittableAssetReference other) {
             fixed (byte* thisGuidPtr = guid) {
                 return UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref other), thisGuidPtr, 16) == 0;
             }
-
         }
-        public static implicit operator BlittableAssetReference(Guid guid) => new BlittableAssetReference(guid);
+
         public string ToHex() {
             var sb = new StringBuilder(32);
             char t;
@@ -192,13 +186,16 @@ namespace NeroWeNeed.UIDots {
         }
 
 
-    }
-    public struct LocalizedTextPtr {
-        public FontInfo fontInfo;
-        public int offset;
-        public int length;
-        public unsafe CharInfo GetCharInfo(void* configPtr, int index) {
-            return UnsafeUtility.ReadArrayElement<CharInfo>((((IntPtr)configPtr) + offset).ToPointer(), index);
+        public override string ToString() {
+            return ToHex();
+        }
+
+        public override int GetHashCode() {
+            int hashCode = -780628215;
+            for (int i = 0; i < 16; i++) {
+                hashCode = hashCode * -1521134295 + guid[i].GetHashCode();
+            }
+            return hashCode;
         }
     }
     public struct CharInfo {
@@ -338,6 +335,9 @@ namespace NeroWeNeed.UIDots {
     public enum HorizontalAlignment : byte {
         Center = 0, Left = 2, Right = 1
     }
+    public enum Direction : byte {
+        Left = 0, Top = 1,Right = 2,Bottom = 3
+    }
     public enum VerticalAlignment : byte {
         Center = 0, Top = 1, Bottom = 2
 
@@ -350,7 +350,7 @@ namespace NeroWeNeed.UIDots {
             var containerMultiplier = ((containerAlignment & 0b00000001) - ((containerAlignment & 0b00000010) >> 1)) * 0.5f;
             var objectMultiplier = ((objectAlignment & 0b00000001) - ((objectAlignment & 0b00000010) >> 1)) * 0.5f;
             // + (objectSize * objectMultiplier) - (containerSize * containerMultiplier)
-            return ((multiplier+containerMultiplier) * containerSize) - ((multiplier+objectMultiplier) *objectSize);
+            return ((multiplier + containerMultiplier) * containerSize) - ((multiplier + objectMultiplier) * objectSize);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float GetOffset(this HorizontalAlignment alignment, float objectSize, float containerSize, HorizontalAlignment containerAlignment = HorizontalAlignment.Center, HorizontalAlignment objectAlignment = HorizontalAlignment.Center) {
@@ -378,7 +378,7 @@ namespace NeroWeNeed.UIDots {
     }
     public static class UIJobUtility {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int GetConfigOffset(BlobAssetReference<UIGraph> graph, int index, out int length) {
+        public unsafe static int GetConfigOffset(BlobAssetReference<UIGraphOld> graph, int index, out int length) {
             int offset = 0;
             for (int currentIndex = 0; currentIndex < index; currentIndex++) {
                 var size = UnsafeUtility.AsRef<int>((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + offset).ToPointer());
@@ -390,17 +390,20 @@ namespace NeroWeNeed.UIDots {
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int GetConfigLayout(BlobAssetReference<UIGraph> graph, out NativeArray<OffsetInfo> configLayout, Allocator allocator) {
-            var offset = 0;
+        public unsafe static int GetConfigLayout(UIGraphData graph, out NativeArray<OffsetInfo> configLayout, Allocator allocator) {
+            var offset = sizeof(ulong) + sizeof(int);
             int subMeshCount = 0;
-            configLayout = new NativeArray<OffsetInfo>(graph.Value.nodes.Length, allocator);
-            for (int currentIndex = 0; currentIndex < graph.Value.nodes.Length; currentIndex++) {
-                var size = UnsafeUtility.AsRef<int>((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + offset).ToPointer());
-                if (UIConfigUtility.HasName(graph.Value.nodes[currentIndex].configurationMask, ((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + UnsafeUtility.SizeOf<int>() + offset)) {
+            configLayout = new NativeArray<OffsetInfo>(graph.GetNodeCount(), allocator);
+            for (int currentIndex = 0; currentIndex < graph.GetNodeCount(); currentIndex++) {
+                //var size = UnsafeUtility.AsRef<int>((((IntPtr)graph.Value.initialConfiguration.GetUnsafePtr()) + offset).ToPointer());
+                var size = *(int*)(graph.value + offset);
+                var header = (HeaderConfig*)(graph.value + offset + sizeof(int));
+                //var size = graph.GetNodeLength(currentIndex);
+                if (header->IsDedicatedNode) {
                     subMeshCount++;
                 }
                 offset += UnsafeUtility.SizeOf<int>();
-                configLayout[currentIndex] = new OffsetInfo(offset, size);
+                configLayout[currentIndex] = new OffsetInfo(offset, size, header->configurationMask);
                 offset += size;
             }
             return subMeshCount;
@@ -418,7 +421,7 @@ namespace NeroWeNeed.UIDots {
             return new float2(float.IsPositiveInfinity(widthConstraints.y) ? math.max(size.x, widthConstraints.x) : math.max(size.x, widthConstraints.y), float.IsPositiveInfinity(heightConstraints.y) ? math.max(size.y, heightConstraints.x) : math.max(size.y, heightConstraints.y));
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void AdjustPosition(float2 size, SequentialLayoutConfig* boxConfig, UIPassState* selfPtr, IntPtr statePtr, int stateChildCount, void* stateChildren) {
+        public unsafe static void AdjustPosition(float2 size, BoxLayoutConfig* boxConfig, UIPassState* selfPtr, IntPtr statePtr, int stateChildCount, void* stateChildren) {
             var outer = UIJobUtility.Maximize(selfPtr->widthConstraint, selfPtr->heightConstraint, size);
             /*             float width = 0f;
                         float height = 0f;
@@ -441,44 +444,8 @@ namespace NeroWeNeed.UIDots {
             return new float2(float.IsPositiveInfinity(widthConstraints.y) ? size.x : math.max(size.x, widthConstraints.y), float.IsPositiveInfinity(widthConstraints.y) ? size.y : math.max(size.y, heightConstraints.y));
         }
     }
-    public unsafe static class UIGraphUtility {
-        public static int GetFirstSelectableIndex(BlobAssetReference<UIGraph> graph) {
-            if (!graph.IsCreated)
-                return -1;
-            UIJobUtility.GetConfigLayout(graph, out NativeArray<OffsetInfo> layout, Allocator.Temp);
-            //Index, priority
-            var selectableIndices = new NativeList<SelectableIndex>(8, Allocator.Temp);
-            for (int currentIndex = 0; currentIndex < graph.Value.nodes.Length; currentIndex++) {
-                if (UIConfigUtility.TryGetConfig(graph.Value.nodes[currentIndex].configurationMask, UIConfigLayoutTable.SelectableConfig, ((IntPtr)graph.GetUnsafePtr()) + layout[currentIndex].offset, out IntPtr block)) {
-                    SelectableConfig* selectableConfig = (SelectableConfig*)block;
-                    if (selectableConfig->onSelect.IsCreated) {
-                        selectableIndices.Add(new SelectableIndex(currentIndex, selectableConfig->priority));
-                    }
-                }
-            }
-            if (selectableIndices.Length > 0) {
-                selectableIndices.Sort();
-                return selectableIndices[0].index;
-            }
-            return -1;
 
 
-        }
-        private struct SelectableIndex : IComparable<SelectableIndex> {
-            public int index, priority;
-
-            public SelectableIndex(int index, int priority) {
-                this.index = index;
-                this.priority = priority;
-            }
-
-            public int CompareTo(SelectableIndex other) {
-                var c1 = priority.CompareTo(other.priority);
-                var c2 = index.CompareTo(other.index);
-                return c1 != 0 ? c1 : c2;
-            }
-        }
-    }
     public enum VisibilityStyle : byte {
         Hidden = 0, Visible = 1
     }

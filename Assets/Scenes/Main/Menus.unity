@@ -566,6 +566,7 @@ MonoBehaviour:
   cachedMesh: {fileID: 585582097}
   cachedMaterial: {fileID: -238581412132155580, guid: 2cb105619d729af48be8f01a5f5e49e0,
     type: 2}
+  cachedGuid: 942b50b30312b06438388e419047dfad
 --- !u!4 &976626317
 Transform:
   m_ObjectHideFlags: 0
@@ -573,13 +574,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 976626315}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6.4267616, y: 0.8922701, z: -6.825814}
+  m_LocalRotation: {x: 0.4280602, y: -0, z: -0, w: 0.90375024}
+  m_LocalPosition: {x: 8.407, y: 6.13, z: -6.825814}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 3
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 50.689, y: 0, z: 0}
 --- !u!1 &1656531606
 GameObject:
   m_ObjectHideFlags: 0
@@ -671,7 +672,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 23
+    m_Bits: 4294967295
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -690,8 +691,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1656531606}
-  m_LocalRotation: {x: -0.0047987797, y: -0.0009009039, z: 0.000005326794, w: -0.9999881}
-  m_LocalPosition: {x: 2.590337, y: 1.355551, z: -3.464125}
+  m_LocalRotation: {x: -0.15714087, y: 0.1349304, z: -0.021733085, w: -0.9780737}
+  m_LocalPosition: {x: 8.53, y: 7.17, z: -10.75}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 743286209}
@@ -827,7 +828,7 @@ MonoBehaviour:
     m_ActionName: Menu Controls/PointerNavigation[/Mouse/position]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: Keyboard + Mouse
-  m_DefaultActionMap: 5703d1d3-8315-4905-9332-c9b7d4b21314
+  m_DefaultActionMap: Menu
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
 --- !u!4 &1996617692
