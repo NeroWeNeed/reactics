@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 
@@ -50,6 +51,13 @@ namespace NeroWeNeed.UIDots.Editor {
                 writer.WriteLine($"            typeof({configBlocks[i].Name}){(i + 1 < configBlocks.Length ? "," : string.Empty)}");
             }
             writer.WriteLine("        };");
+            writer.WriteLine("    }");
+            writer.WriteLine("    [Flags]");
+            writer.WriteLine("    public enum UIConfigBlock : ulong {");
+            writer.WriteLine($"        Empty = 0{(configBlocks.Length > 0 ? "," : string.Empty)}");
+            for (int i = 0; i < configBlocks.Length; i++) {
+                writer.WriteLine($"        {configBlocks[i].Name} = {math.pow(2,i)}{(i + 1 < configBlocks.Length ? "," : string.Empty)}");
+            }
             writer.WriteLine("    }");
             writer.WriteLine("}");
 

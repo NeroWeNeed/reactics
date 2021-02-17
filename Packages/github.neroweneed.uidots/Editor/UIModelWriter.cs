@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Unity.Burst;
@@ -16,30 +17,38 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace NeroWeNeed.UIDots.Editor {
-    public unsafe static class UIModelExtensions {
+    public unsafe static class UIModelWriter {
 
         //TODO: Global Settings
         public const string UI_ADDRESSABLES_GROUP = "User Interfaces";
         public const string UI_OUTPUT_PATH = "Assets/ResourceData/UI";
-        private static AddressableAssetGroup Group { get => AddressableAssetSettingsDefaultObject.Settings.FindGroup(UI_ADDRESSABLES_GROUP) ?? AddressableAssetSettingsDefaultObject.Settings.CreateGroup(UI_ADDRESSABLES_GROUP, false, false, false, null); }
         public static Material GetMaterial(this UIModel model) => model.group?.Material;
         public static string GetOutputGuid(this UIModel model) => AssetDatabase.GUIDFromAssetPath(model.output).ToString();
-        
+
         public static string Write(this UIModel model) {
             var fi = new FileInfo(model.output);
             fi.Directory.Create();
             using (var fs = fi.Create()) {
-                Write(model, fs);
+                Write(model, fs, UIGlobalSettings.GetOrCreateSettings().schema);
             }
-            AssetDatabase.ImportAsset(model.output);
-            return AssetDatabase.GUIDFromAssetPath(model.output).ToString();
 
-            /* var entry = AddressableAssetSettingsDefaultObject.Settings.CreateOrMoveEntry(AssetDatabase.GUIDFromAssetPath(model.output).ToString(), Group);
-            Debug.Log(entry.guid);
-            if (!string.IsNullOrEmpty(model.address)) {
+
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.ImportAsset(model.output);
+            AssetDatabase.Refresh();
+            //return AssetDatabase.GUIDFromAssetPath(model.output).ToString();
+            var settings = AddressableAssetSettingsDefaultObject.GetSettings(false);
+            var guid = AssetDatabase.GUIDFromAssetPath(model.output).ToString();
+            if (settings != null && !string.IsNullOrEmpty(model.address)) {
+                var entry = settings.FindAssetEntry(guid);
+                if (entry == null) {
+                    entry = settings.CreateOrMoveEntry(guid, settings.FindGroup(UI_ADDRESSABLES_GROUP) ?? AddressableAssetSettingsDefaultObject.Settings.CreateGroup(UI_ADDRESSABLES_GROUP, false, false, false, null));
+                }
                 entry.SetAddress(model.address);
             }
-            return entry.guid; */
+            return guid;
+
         }
         /// <summary>
         /// Serializes a UIModel in the following format:
@@ -51,7 +60,7 @@ namespace NeroWeNeed.UIDots.Editor {
         /// Children: int[], total length of children array can be found inside the HeaderConfig.
         /// ConfigBlocks: Which config blocks are present can be found by querying the configuration mask in the headerconfig
         /// </summary>
-        public static void Write(this UIModel model, Stream stream) {
+        public static void Write(this UIModel model, Stream stream, UISchema schema) {
             Contract.Assert(model.group != null);
             using var modelWriter = new MemoryBinaryWriter();
             modelWriter.Write(0UL);
@@ -63,38 +72,43 @@ namespace NeroWeNeed.UIDots.Editor {
             var decomposer = new TypeDecomposer();
             var types = new List<Type>();
             long totalSize = UnsafeUtility.SizeOf<int>();
-            for (int i = 0; i < model.nodes.Count; i++) {
+            Configure(model, -1, 0, schema, modelWriter, decomposer, context, types, ref totalSize);
+            /* for (int i = 0; i < model.nodes.Count; i++) {
                 totalSize += Configure(model.nodes[i], modelWriter, decomposer, context, types) + UnsafeUtility.SizeOf<int>();
-            }
+            } */
             UnsafeUtility.MemCpy(modelWriter.Data, UnsafeUtility.AddressOf(ref totalSize), UnsafeUtility.SizeOf<ulong>());
             using var modelStream = new UnmanagedMemoryStream(modelWriter.Data, modelWriter.Length);
             modelStream.CopyTo(stream);
         }
-        private static int Configure(UIModel.Node node, MemoryBinaryWriter writer, TypeDecomposer decomposer, UIPropertyWriterContext context, List<Type> types) {
+        private static void Configure(UIModel model, int parent, int index, UISchema schema, MemoryBinaryWriter modelWriter, TypeDecomposer decomposer, UIPropertyWriterContext context, List<Type> types, ref long totalSize) {
+            var node = model.nodes[index];
             var header = new HeaderConfig
             {
                 configurationMask = node.mask,
-                layoutPass = BurstCompiler.CompileFunctionPointer(node.layoutPass.Value.CreateDelegate(typeof(UILayoutPass)) as UILayoutPass),
-                renderPass = BurstCompiler.CompileFunctionPointer(node.renderPass.Value.CreateDelegate(typeof(UIRenderPass)) as UIRenderPass),
-                renderBoxCounter = node.renderBoxCounter.IsCreated ? BurstCompiler.CompileFunctionPointer<UIRenderBoxCounter>(node.renderBoxCounter.Value.CreateDelegate(typeof(UIRenderBoxCounter)) as UIRenderBoxCounter) : default,
+                schemaIndex = schema.elements.FindIndex((element) => element.identifier == node.identifier),
                 flags = 0,
-                childCount = node.children.Count
+                childCount = node.children.Count,
+                parent = parent
             };
-            var sizeOffset = writer.Length;
-            var headerOffset = writer.Length + sizeof(int);
+            var sizeOffset = modelWriter.Length;
+            var headerOffset = modelWriter.Length + sizeof(int);
             int size = 0;
-            writer.Write(0);
-            writer.WriteBytes(UnsafeUtility.AddressOf(ref header), UnsafeUtility.SizeOf<HeaderConfig>());
+            modelWriter.Write(0);
+            modelWriter.WriteBytes(UnsafeUtility.AddressOf(ref header), UnsafeUtility.SizeOf<HeaderConfig>());
             foreach (var child in node.children) {
-                writer.Write(child);
+                modelWriter.Write(child);
             }
+
             size += UnsafeUtility.SizeOf<HeaderConfig>() + (UnsafeUtility.SizeOf<int>() * node.children.Count);
-            size += ConfigureBlocks(node, writer, decomposer, context, types, size, out header.flags);
-            UnsafeUtility.MemCpy((((IntPtr)writer.Data) + sizeOffset).ToPointer(), UnsafeUtility.AddressOf(ref size), UnsafeUtility.SizeOf<int>());
-            UnsafeUtility.MemCpy((((IntPtr)writer.Data) + headerOffset).ToPointer(), UnsafeUtility.AddressOf(ref header), UnsafeUtility.SizeOf<HeaderConfig>());
-            return size;
+            size += ConfigureBlocks(node, modelWriter, decomposer,ref context, types, size, out header.flags);
+            UnsafeUtility.MemCpy((((IntPtr)modelWriter.Data) + sizeOffset).ToPointer(), UnsafeUtility.AddressOf(ref size), UnsafeUtility.SizeOf<int>());
+            UnsafeUtility.MemCpy((((IntPtr)modelWriter.Data) + headerOffset).ToPointer(), UnsafeUtility.AddressOf(ref header), UnsafeUtility.SizeOf<HeaderConfig>());
+            totalSize += UnsafeUtility.SizeOf<int>() + size;
+            foreach (var child in node.children) {
+                Configure(model,index,child, schema, modelWriter, decomposer, context, types, ref totalSize);
+            }
         }
-        private static int ConfigureBlocks(UIModel.Node node, MemoryBinaryWriter writer, TypeDecomposer decomposer, UIPropertyWriterContext context, List<Type> types, int headerSize, out byte flags) {
+        private static int ConfigureBlocks(UIModel.Node node, MemoryBinaryWriter writer, TypeDecomposer decomposer, ref UIPropertyWriterContext context, List<Type> types, int headerSize, out byte flags) {
             var configBlocks = new List<object>();
             UIConfigUtility.GetTypes(node.mask, types);
             UIConfigUtility.CreateConfiguration(node.mask, configBlocks);
@@ -107,7 +121,7 @@ namespace NeroWeNeed.UIDots.Editor {
             foreach (var configBlock in configBlocks) {
                 decomposer.Decompose(configBlock.GetType(), configFields, configBlock.GetType().GetCustomAttribute<UIConfigBlockAttribute>()?.Name, configBlockOffset, '-');
                 Marshal.StructureToPtr(configBlock, configData + configBlockOffset, true);
-                flags |= StandardConfigurationHandlers.PreInit(configBlock.GetType(), configData + configBlockOffset, node.mask, context);
+                flags |= StandardConfigurationHandlers.PreInit(configBlock.GetType(), configData + configBlockOffset, node.mask,ref context);
                 configBlockOffset += UnsafeUtility.SizeOf(configBlock.GetType());
             }
             foreach (var property in node.properties) {

@@ -1,0 +1,135 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35be53fa28806c1438483b2c8c9f16b3, type: 3}
+  m_Name: UISchema
+  m_EditorClassIdentifier: 
+  elements:
+  - identifier: Box
+    requiredBlockMask: 723
+    optionalBlockMask: 256
+    layoutPass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.BoxElement, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: Layout
+    renderPass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.BoxElement, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: Render
+    renderBoxCounter:
+      container:
+        assemblyQualifiedName: 
+      name: 
+  - identifier: Text
+    requiredBlockMask: 3319
+    optionalBlockMask: 256
+    layoutPass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.TextElement, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: Layout
+    renderPass:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.TextElement, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: Render
+    renderBoxCounter:
+      container:
+        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.TextElement, NeroWeNeed.UIDots.Runtime,
+          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      name: RenderBoxCount
+  inheritableFields:
+  - config: 1
+    offset: 0
+    length: 8
+  - config: 1
+    offset: 8
+    length: 8
+  - config: 1
+    offset: 16
+    length: 8
+  - config: 1
+    offset: 24
+    length: 8
+  - config: 1
+    offset: 32
+    length: 8
+  - config: 1
+    offset: 40
+    length: 8
+  - config: 1
+    offset: 48
+    length: 8
+  - config: 1
+    offset: 56
+    length: 8
+  - config: 3
+    offset: 4
+    length: 8
+  - config: 3
+    offset: 12
+    length: 8
+  - config: 3
+    offset: 20
+    length: 8
+  - config: 3
+    offset: 28
+    length: 8
+  - config: 4
+    offset: 0
+    length: 8
+  - config: 4
+    offset: 8
+    length: 8
+  - config: 4
+    offset: 16
+    length: 8
+  - config: 4
+    offset: 24
+    length: 8
+  - config: 4
+    offset: 32
+    length: 8
+  - config: 4
+    offset: 40
+    length: 8
+  - config: 5
+    offset: 16
+    length: 8
+  - config: 7
+    offset: 16
+    length: 8
+  - config: 7
+    offset: 24
+    length: 8
+  - config: 7
+    offset: 32
+    length: 8
+  - config: 7
+    offset: 40
+    length: 8
+  - config: 7
+    offset: 48
+    length: 8
+  - config: 7
+    offset: 56
+    length: 8
+  - config: 7
+    offset: 64
+    length: 8
+  - config: 7
+    offset: 72
+    length: 8
+  - config: 9
+    offset: 0
+    length: 8

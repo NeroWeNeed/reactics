@@ -66,6 +66,13 @@ namespace NeroWeNeed.UIDots {
             }
         }
         [BurstDiscard]
+        public static ulong GetMask(Type type) {
+            var index = Array.IndexOf(UIConfigTypeTable.Types, type);
+            if (index < 0)
+                return 0;
+            return (ulong)math.pow(2, index);
+        }
+        [BurstDiscard]
         public unsafe static void CreateConfiguration(ulong mask, List<object> configs) {
             configs.Clear();
             int size = 0;

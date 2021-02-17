@@ -6,7 +6,7 @@ namespace NeroWeNeed.UIDots {
     [UpdateInGroup(typeof(UISystemGroup))]
     public class UIFaceScreenSystem : SystemBase {
         protected override void OnUpdate() {
-            Entities.WithAll<UIFaceScreen>().ForEach((Entity entity, ref LocalToWorld ltw, in UICameraContext contextData) =>
+            Entities.WithAll<UIFaceScreen>().ForEach((Entity entity, ref LocalToWorld ltw, in LocalToCamera contextData) =>
             {
                 var cameraPosition = math.transform(contextData.cameraLTW, float3.zero);
                 var cameraRotation = new quaternion(contextData.cameraLTW);

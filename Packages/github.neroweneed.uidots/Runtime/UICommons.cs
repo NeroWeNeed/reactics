@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
@@ -24,6 +25,7 @@ namespace NeroWeNeed.UIDots {
         public float4 value;
     }
     [Terminal]
+    [Serializable]
     public struct UILength {
         private static readonly Regex regex = new Regex("(NAN|[-]?INF(INITY)?|[-]?[0-9]+(?:\\.[0-9]+)?)([a-zA-Z%]*)?", RegexOptions.IgnoreCase);
         public float value;
@@ -52,16 +54,16 @@ namespace NeroWeNeed.UIDots {
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public float Normalize(UIContext context) {
+        public float Normalize(UIContextData context) {
             switch (unit) {
                 case UILengthUnit.Auto:
                     break;
                 case UILengthUnit.Px:
                     return value * context.pixelScale;
                 case UILengthUnit.Cm:
-                    return value * context.pixelScale * context.dpi * 2.54f;
+                    return value * context.pixelScale * context.dpi / 2.54f;
                 case UILengthUnit.Mm:
-                    return value * context.pixelScale * context.dpi * 25.4f;
+                    return value * context.pixelScale * context.dpi / 25.4f;
                 case UILengthUnit.In:
                     return value * context.pixelScale * context.dpi;
                 case UILengthUnit.Pt:
@@ -105,22 +107,7 @@ namespace NeroWeNeed.UIDots {
         public float RelativeTo { get; set; }
 
     }
-    public struct UIContext : IComponentData {
-        public float dpi;
-        public float pixelScale;
-        public float2 size;
-        public float relativeTo;
 
-        public static UIContext CreateContext(UICamera camera = null) {
-            return new UIContext
-            {
-                dpi = Screen.dpi,
-                pixelScale = camera == null ? 0.001f : 0.01f,
-                size = camera == null ? new float2(float.PositiveInfinity, float.PositiveInfinity) : new float2(camera.UILayerCamera.orthographicSize * camera.UILayerCamera.aspect * 2, camera.UILayerCamera.orthographicSize * 2)
-            };
-        }
-
-    }
     public struct FontInfo {
         public float lineHeight;
         public float baseline;
@@ -135,7 +122,6 @@ namespace NeroWeNeed.UIDots {
             descentLine = font.faceInfo.descentLine;
         }
     }
-
 
     [Terminal]
     public struct LocalizedStringPtr {
@@ -209,7 +195,7 @@ namespace NeroWeNeed.UIDots {
     /// </summary>
     public enum UILengthUnit : byte {
         Px = 0b00000000, Cm = 0b00000010, Mm = 0b00000100, In = 0b00000110, Pt = 0b00001000, Pc = 0b00001010,
-        Em = 0b00000001, Ex = 0b00000011, Ch = 0b00000101, Rem = 0b00000111, Vw = 0b00001001, Vh = 0b00001011, Vmin = 0b00001101, Vmax = 0b00001111, Percent = 0b00010001, Auto = 0b00010011
+        Em = 0b00000001, Ex = 0b00000011, Ch = 0b00000101, Rem = 0b00000111, Vw = 0b00001001, Vh = 0b00001011, Vmin = 0b00001101, Vmax = 0b00001111, Percent = 0b00010001, Auto = 0b00010011, Inherit = 0b00010101
     }
 
 
@@ -230,13 +216,13 @@ namespace NeroWeNeed.UIDots {
         public static bool AllRelative<TComposite>(this TComposite self) where TComposite : struct, ICompositeData<UILength> {
             return self.X.IsRelative() && self.Y.IsRelative() && self.Z.IsRelative() && self.W.IsRelative();
         }
-        public static float NormalizedWidth<TComposite>(this TComposite self, UIContext context) where TComposite : struct, ICompositeData<UILength> {
+        public static float NormalizedWidth<TComposite>(this TComposite self, UIContextData context) where TComposite : struct, ICompositeData<UILength> {
             return self.X.Normalize(context) + self.Z.Normalize(context);
         }
-        public static float NormalizedHeight<TComposite>(this TComposite self, UIContext context) where TComposite : struct, ICompositeData<UILength> {
+        public static float NormalizedHeight<TComposite>(this TComposite self, UIContextData context) where TComposite : struct, ICompositeData<UILength> {
             return self.Y.Normalize(context) + self.W.Normalize(context);
         }
-        public static float4 Normalize<TComposite>(this TComposite self, UIContext context) where TComposite : struct, ICompositeData<UILength> {
+        public static float4 Normalize<TComposite>(this TComposite self, UIContextData context) where TComposite : struct, ICompositeData<UILength> {
             return new float4(self.X.Normalize(context), self.Y.Normalize(context), self.Z.Normalize(context), self.W.Normalize(context));
         }
 
@@ -300,80 +286,70 @@ namespace NeroWeNeed.UIDots {
 
         public TValue W { get => bottomLeft; set => bottomLeft = value; }
     }
-    //TODO: Temporary fix until generics in queries are supported
-    public struct GameObjectUICameraData : ISharedComponentData, IEquatable<GameObjectUICameraData> {
-        public GameObject value;
+    public struct UICameraLayer : IComponentData {
 
-        public UICamera Component;
-
-        public GameObjectUICameraData(GameObject value) {
-            this.value = value;
-            Component = value.GetComponent<UICamera>();
-        }
-        public bool Equals(GameObjectUICameraData other) {
-            return (value?.GetInstanceID() ?? 0) == (other.value?.GetInstanceID() ?? 0);
-        }
-
-        public override int GetHashCode() {
-            int hashCode = -865696550;
-            hashCode = hashCode * -1521134295 + EqualityComparer<GameObject>.Default.GetHashCode(value);
-            return hashCode;
-        }
     }
     [Flags]
     public enum Alignment : byte {
         Center = 0b00000000,
         Left = 0b00000001,
         Right = 0b00000010,
-        Top = 0b00000100,
-        Bottom = 0b00001000,
+        Top = 0b00001000,
+        Bottom = 0b00000100,
         TopLeft = Top | Left,
         TopRight = Top | Right,
         BottomLeft = Bottom | Left,
         BottomRight = Bottom | Right
     }
     public enum HorizontalAlignment : byte {
-        Center = 0, Left = 2, Right = 1
+        Center = 0, Left = 1, Right = 2
     }
     public enum Direction : byte {
-        Left = 0, Top = 1,Right = 2,Bottom = 3
+        Left = 0, Up = 1, Right = 2, Down = 3
     }
     public enum VerticalAlignment : byte {
-        Center = 0, Top = 1, Bottom = 2
+        Center = 0, Top = 2, Bottom = 1
 
     }
     public static class AlignmentUtil {
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float GetOffset(byte alignment, float objectSize, float containerSize, byte containerAlignment = 0, byte objectAlignment = 0) {
-            var multiplier = ((alignment & 0b00000001) - ((alignment & 0b00000010) >> 1)) * 0.5f;
-            var containerMultiplier = ((containerAlignment & 0b00000001) - ((containerAlignment & 0b00000010) >> 1)) * 0.5f;
-            var objectMultiplier = ((objectAlignment & 0b00000001) - ((objectAlignment & 0b00000010) >> 1)) * 0.5f;
+        private static float GetOffset(byte alignment, float objectSize, float containerSize, byte objectAlignment = 0) {
+            var alignmentMultiplier = (((alignment & 2) >> 1) - (alignment & 1));
+            var initialAlignmentMultiplier = (((objectAlignment & 2) >> 1) - (objectAlignment & 1));
+            var diff = math.abs(containerSize - objectSize);
             // + (objectSize * objectMultiplier) - (containerSize * containerMultiplier)
-            return ((multiplier + containerMultiplier) * containerSize) - ((multiplier + objectMultiplier) * objectSize);
+            return diff * ((alignmentMultiplier - initialAlignmentMultiplier) * 0.5f);
+        }
+
+        /*         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                private static float GetOffset(byte alignment, float objectSize, float containerSize, byte containerAlignment = 0, byte objectAlignment = 0) {
+                    var multiplier = ((alignment & 1) - ((alignment & 2) >> 1)) * 0.5f;
+                    var containerMultiplier = ((containerAlignment & 1)  - ((containerAlignment & 2) >> 1)) * 0.5f;
+                    var objectMultiplier = ((objectAlignment & 1) - ((objectAlignment & 2) >> 1)) * 0.5f;
+                    // + (objectSize * objectMultiplier) - (containerSize * containerMultiplier)
+                    return ((multiplier + containerMultiplier) * containerSize) - ((multiplier + objectMultiplier) * objectSize);
+                } */
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float GetOffset(this HorizontalAlignment alignment, float objectSize, float containerSize, HorizontalAlignment objectAlignment = HorizontalAlignment.Center) {
+            return GetOffset((byte)alignment, objectSize, containerSize, (byte)objectAlignment);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float GetOffset(this HorizontalAlignment alignment, float objectSize, float containerSize, HorizontalAlignment containerAlignment = HorizontalAlignment.Center, HorizontalAlignment objectAlignment = HorizontalAlignment.Center) {
-            return GetOffset((byte)alignment, objectSize, containerSize, (byte)containerAlignment, (byte)objectAlignment);
+        public static float GetOffset(this VerticalAlignment alignment, float objectSize, float containerSize, VerticalAlignment objectAlignment = VerticalAlignment.Center) {
+            return GetOffset((byte)alignment, objectSize, containerSize, (byte)objectAlignment);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float GetOffset(this VerticalAlignment alignment, float objectSize, float containerSize, VerticalAlignment containerAlignment = VerticalAlignment.Center, VerticalAlignment objectAlignment = VerticalAlignment.Center) {
-            return GetOffset((byte)alignment, objectSize, containerSize, (byte)containerAlignment, (byte)objectAlignment);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float2 GetOffset(this Alignment alignment, float2 objectSize, float2 containerSize, Alignment containerAlignment = Alignment.Center, Alignment objectAlignment = Alignment.Center) {
+        public static float2 GetOffset(this Alignment alignment, float2 objectSize, float2 containerSize, Alignment objectAlignment = Alignment.Center) {
             var a = (byte)alignment;
-            var c = (byte)containerAlignment;
             var o = (byte)objectAlignment;
             return new float2(
-                GetOffset((byte)alignment, objectSize.x, containerSize.x, (byte)containerAlignment, (byte)objectAlignment),
-                GetOffset((byte)(a >> 2), objectSize.y, containerSize.y, (byte)(c >> 2), (byte)(o >> 2))
+                GetOffset((byte)alignment, objectSize.x, containerSize.x, o),
+                GetOffset((byte)(a >> 2), objectSize.y, containerSize.y, (byte)(o >> 2))
             );
         }
         public static HorizontalAlignment AsHorizontal(this Alignment alignment) => (HorizontalAlignment)(((byte)alignment) & 0b00000011);
         public static HorizontalAlignment AsVertical(this Alignment alignment) => (HorizontalAlignment)(((byte)alignment >> 2) & 0b00000011);
-        public static Alignment As2D(this HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment = VerticalAlignment.Center) => (Alignment)((((byte)horizontalAlignment) & 0b00000011) | (((byte)verticalAlignment) & 0b00001100));
-        public static Alignment As2D(this VerticalAlignment verticalAlignment, HorizontalAlignment horizontalAlignment = HorizontalAlignment.Center) => (Alignment)((((byte)horizontalAlignment) & 0b00000011) | (((byte)verticalAlignment) & 0b00001100));
+        public static Alignment As2D(this HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment = VerticalAlignment.Center) => (Alignment)((((byte)horizontalAlignment) & 0b00000011) | (((byte)verticalAlignment << 2) & 0b00001100));
+        public static Alignment As2D(this VerticalAlignment verticalAlignment, HorizontalAlignment horizontalAlignment = HorizontalAlignment.Center) => (Alignment)((((byte)horizontalAlignment) & 0b00000011) | (((byte)verticalAlignment << 2) & 0b00001100));
 
     }
     public static class UIJobUtility {
@@ -409,35 +385,23 @@ namespace NeroWeNeed.UIDots {
             return subMeshCount;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float2 GetAlignmentAdjustment(Alignment alignment, float2 outer, float2 inner) {
-            return alignment.GetOffset(inner, outer, Alignment.Left, Alignment.Left);
-            //return math.max(outer - inner, float2.zero) * new float2(((byte)horizontal) * 0.5f, ((byte)vertical) * 0.5f);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float2 Constrain(float2 widthConstraints, float2 heightConstraints, float2 size) {
             return new float2(float.IsPositiveInfinity(widthConstraints.y) ? math.max(size.x, widthConstraints.x) : math.clamp(size.x, widthConstraints.x, widthConstraints.y), float.IsPositiveInfinity(heightConstraints.y) ? math.max(size.y, heightConstraints.x) : math.clamp(size.y, heightConstraints.x, heightConstraints.y));
         }
-        public static float2 Maximize(float2 widthConstraints, float2 heightConstraints, float2 size) {
-            return new float2(float.IsPositiveInfinity(widthConstraints.y) ? math.max(size.x, widthConstraints.x) : math.max(size.x, widthConstraints.y), float.IsPositiveInfinity(heightConstraints.y) ? math.max(size.y, heightConstraints.x) : math.max(size.y, heightConstraints.y));
-        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void AdjustPosition(float2 size, BoxLayoutConfig* boxConfig, UIPassState* selfPtr, IntPtr statePtr, int stateChildCount, void* stateChildren) {
-            var outer = UIJobUtility.Maximize(selfPtr->widthConstraint, selfPtr->heightConstraint, size);
-            /*             float width = 0f;
-                        float height = 0f;
-                        for (int i = 0; i < stateChildCount; i++) {
-                            var childState = (UIPassState*)(statePtr + (UnsafeUtility.SizeOf<UIPassState>() * (UnsafeUtility.ReadArrayElement<int>(stateChildren, i)))).ToPointer();
-                            width += childState->size.x + childState->localBox.x + childState->localBox.z;
-                            height += childState->size.y + childState->localBox.y + childState->localBox.w;
-                        } */
-            //var adjustment = UIJobUtility.GetAlignmentAdjustment(boxConfig->horizontalAlign, boxConfig->verticalAlign, outer, new float2(width,height));
+        public unsafe static void AdjustPosition(float2 size, float4 constraints, BoxLayoutConfig* boxConfig, UIPassState* selfPtr, IntPtr statePtr, int stateChildCount, void* stateChildren, int4 multiplier) {
+
+            var outer = new float2(math.max(size.x, float.IsPositiveInfinity(constraints.y) ? constraints.x : constraints.y), math.max(size.y, float.IsPositiveInfinity(constraints.w) ? constraints.z : constraints.w));
+            var alignment = boxConfig->horizontalAlign.As2D(boxConfig->verticalAlign);
+            float2 minorAdjustment;
+            float2 majorAdjustment = alignment.GetOffset(size, outer, Alignment.BottomLeft);
             for (int i = 0; i < stateChildCount; i++) {
                 var childState = (UIPassState*)(statePtr + (UnsafeUtility.SizeOf<UIPassState>() * (UnsafeUtility.ReadArrayElement<int>(stateChildren, i)))).ToPointer();
-                var adjustment = UIJobUtility.GetAlignmentAdjustment(boxConfig->horizontalAlign.As2D(boxConfig->verticalAlign), outer, new float2(childState->size.x, childState->size.y));
-                childState->localBox.x += adjustment.x;
-                childState->localBox.y += adjustment.y;
+                minorAdjustment = alignment.GetOffset(childState->size, outer, Alignment.BottomLeft);
+                childState->localBox.x += minorAdjustment.x * multiplier.z + majorAdjustment.x * multiplier.x;
+                childState->localBox.y += minorAdjustment.y * multiplier.w + majorAdjustment.y * multiplier.y;
             }
-            selfPtr->size = outer;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float2 ConstrainOuterBox(float2 widthConstraints, float2 heightConstraints, float2 size) {
@@ -449,5 +413,13 @@ namespace NeroWeNeed.UIDots {
     public enum VisibilityStyle : byte {
         Hidden = 0, Visible = 1
     }
+
+    public struct CompiledUISchema {
+
+        public BlobArray<UISchema.CompiledElement> elements;
+        public BlobArray<UISchema.InheritableField> inheritableFields;
+
+    }
+
 
 }

@@ -34,9 +34,13 @@ namespace NeroWeNeed.UIDots {
         /// bit 1: whether to create dedicated entity for node or not.
         /// </summary>
         public byte flags;
+        public int schemaIndex;
+        public int parent;
+
+        /* 
         public FunctionPointer<UILayoutPass> layoutPass;
         public FunctionPointer<UIRenderPass> renderPass;
-        public FunctionPointer<UIRenderBoxCounter> renderBoxCounter;
+        public FunctionPointer<UIRenderBoxCounter> renderBoxCounter; */
         public int childCount;
         public bool IsDedicatedNode { get => (flags & 0b00000001) != 0; }
 
@@ -56,15 +60,11 @@ namespace NeroWeNeed.UIDots {
     [UIConfigBlock]
     public struct DisplayConfig {
         public float opacity;
-        public VisibilityStyle display, visibile, overflow;
+        public VisibilityStyle display, visible, overflow;
 
     }
     [UIConfigBlock]
     public struct PositionConfig {
-        public static readonly PositionConfig DEFAULT = new PositionConfig
-        {
-            absolute = false
-        };
         public bool absolute;
         public BoxData<UILength> position;
 
@@ -96,6 +96,11 @@ namespace NeroWeNeed.UIDots {
         public BoxData<UILength> width;
         public BoxCornerData<UILength> radius;
     }
+    [UIConfigBlock]
+    public struct MaterialConfig {
+        public BlittableAssetReference material;
+    }
+
     [UIConfigBlock]
     public struct BoxLayoutConfig {
         public UILength spacing;

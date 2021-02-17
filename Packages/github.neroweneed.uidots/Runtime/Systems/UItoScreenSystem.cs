@@ -9,10 +9,9 @@ namespace NeroWeNeed.UIDots {
     [UpdateInGroup(typeof(UISystemGroup))]
     [UpdateAfter(typeof(UIContextUpdateSystem))]
     public class UIToScreenSystem : SystemBase {
-
         protected override void OnUpdate() {
 
-            Entities.ForEach((Entity entity, ref LocalToWorld ltw, in UIScreenElement screen, in RenderBounds bounds,in UIContext context, in UICameraContext cameraContext) =>
+            Entities.ForEach((Entity entity, ref LocalToWorld ltw, in UIScreenElement screen, in RenderBounds bounds,in UIContextData context, in LocalToCamera cameraContext) =>
             {
                  var rotation = new quaternion(cameraContext.cameraLTW);
 

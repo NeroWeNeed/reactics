@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -124,6 +125,23 @@ namespace NeroWeNeed.UIDots {
             }
         }
         /// <summary>
+        /// Determines if a config block is present in the node.
+        /// </summary>
+        /// <param name="index">Index of node</param>
+        /// <param name="config">Config Block ID. Config Block IDs can be found in <see cref="UIConfigLayoutTable"/></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool HasConfigBlock(this UIGraphData self, int index, byte config) {
+            HeaderConfig* header = (HeaderConfig*)(GetNodePointer(self, index) + sizeof(int)).ToPointer();
+            var childCount = header->childCount;
+            var offset = UIConfigUtility.GetOffset(header->configurationMask, config);
+            if (offset < 0) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        /// <summary>
         /// Returns the start location of a given Config Block.
         /// </summary>
         /// <param name="index">Index of node</param>
@@ -143,7 +161,7 @@ namespace NeroWeNeed.UIDots {
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static GraphInfo GetGraphInfo(this UIGraphData graph, out NativeArray<NodeInfo> configLayout, Allocator allocator) {
+        public static GraphInfo GetGraphInfo(this UIGraphData graph,BlobAssetReference<CompiledUISchema> schema, out NativeArray<NodeInfo> configLayout, Allocator allocator) {
             var offset = sizeof(ulong) + sizeof(int);
 
             configLayout = new NativeArray<NodeInfo>(graph.GetNodeCount(), allocator);
@@ -166,14 +184,15 @@ namespace NeroWeNeed.UIDots {
                     length = size,
                     index = currentIndex
                 };
-                info.renderBoxCount = header->renderBoxCounter.IsCreated ? header->renderBoxCounter.Invoke(graph.value, (NodeInfo*)UnsafeUtility.AddressOf(ref info)) : 1;
+                var call = header->schemaIndex >= 0 ? schema.Value.elements[header->schemaIndex].renderBoxCounter : default;
+                info.renderBoxCount = call.IsCreated ? call.Invoke(graph.value, (NodeInfo*)UnsafeUtility.AddressOf(ref info)) : 1;
                 configLayout[currentIndex] = info;
                 graphInfo.renderBoxCount += info.renderBoxCount;
                 offset += size;
             }
             return graphInfo;
         }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+/*         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static GraphInfo GetGraphInfo(this UIGraphData graph) {
             var offset = sizeof(ulong) + sizeof(int);
             var graphInfo = new GraphInfo();
@@ -199,14 +218,15 @@ namespace NeroWeNeed.UIDots {
                 offset += size;
             }
             return graphInfo;
-        }
+        } */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int CountRenderBoxes(this UIGraphData graph, NativeArray<NodeInfo> configLayout) {
+        public static int CountRenderBoxes(this UIGraphData graph, NativeArray<NodeInfo> configLayout,NativeArray<UISchema.CompiledElement> schema) {
             int count = 0;
             for (int currentIndex = 0; currentIndex < configLayout.Length; currentIndex++) {
                 var info = configLayout[currentIndex];
                 var header = (HeaderConfig*)(graph.value + info.nodeOffset);
-                count += header->renderBoxCounter.IsCreated ? header->renderBoxCounter.Invoke(graph.value, (NodeInfo*)UnsafeUtility.AddressOf(ref info)) : 1;
+                var call = header->schemaIndex >= 0 ? schema[header->schemaIndex].renderBoxCounter : default;
+                count += call.IsCreated ? call.Invoke(graph.value, (NodeInfo*)UnsafeUtility.AddressOf(ref info)) : 1;
             }
             return count;
         }

@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.Transforms;
+using UnityEngine;
 
 namespace NeroWeNeed.UIDots {
     public struct UIGraph : IComponentData {
@@ -18,29 +21,15 @@ namespace NeroWeNeed.UIDots {
         public long allocatedLength;
         public bool IsCreated { get => allocatedLength > 0; }
     }
-    public struct UIHandle : IComponentData {
-        public int handle;
-
-        public UIHandle(int handle) {
-            this.handle = handle;
-        }
+    public struct UIPixelScale : IComponentData {
+        public float value;
     }
+
+
 
     public struct UINodeInfo : IComponentData {
         public int index;
         public int submesh;
-    }
-    public struct UIByteData : IBufferElementData {
-        public byte value;
-
-        public override bool Equals(object obj) {
-            return obj is UIByteData data &&
-                   value == data.value;
-        }
-
-        public override int GetHashCode() {
-            return -1584136870 + value.GetHashCode();
-        }
     }
 
     public unsafe struct UIRoot : IComponentData {
@@ -89,12 +78,93 @@ namespace NeroWeNeed.UIDots {
         public UILength x, y;
         public Alignment alignment;
     }
-    public struct UICameraContext : IComponentData {
+    public struct UICameraContextDirty : ISharedComponentData {
+        public bool value;
+
+        public UICameraContextDirty(bool value) {
+            this.value = value;
+        }
+
+        public static implicit operator UICameraContextDirty(bool value) => new UICameraContextDirty(value);
+    }
+    [WriteGroup(typeof(LocalToWorld))]
+    public struct LocalToCamera : IComponentData, IEquatable<LocalToCamera> {
         public float4x4 cameraLTW;
         public float2 clipPlane;
+        public UILength offsetX, offsetY;
+        public Alignment alignment;
+
+        public override bool Equals(object obj) {
+            return obj is LocalToCamera camera &&
+                   cameraLTW.Equals(camera.cameraLTW) &&
+                   clipPlane.Equals(camera.clipPlane) &&
+                   EqualityComparer<UILength>.Default.Equals(offsetX, camera.offsetX) &&
+                   EqualityComparer<UILength>.Default.Equals(offsetY, camera.offsetY) &&
+                   alignment == camera.alignment;
+        }
+        public bool Equals(LocalToCamera other) {
+            return cameraLTW.Equals(other.cameraLTW) &&
+                    clipPlane.Equals(other.clipPlane) &&
+                    EqualityComparer<UILength>.Default.Equals(offsetX, other.offsetX) &&
+                    EqualityComparer<UILength>.Default.Equals(offsetY, other.offsetY) &&
+                    alignment == other.alignment;
+        }
+
+        public override int GetHashCode() {
+            int hashCode = -1241407421;
+            hashCode = hashCode * -1521134295 + cameraLTW.GetHashCode();
+            hashCode = hashCode * -1521134295 + clipPlane.GetHashCode();
+            hashCode = hashCode * -1521134295 + offsetX.GetHashCode();
+            hashCode = hashCode * -1521134295 + offsetY.GetHashCode();
+            hashCode = hashCode * -1521134295 + alignment.GetHashCode();
+            return hashCode;
+        }
+    }
+    public struct UISchemaData : ISharedComponentData, IEquatable<UISchemaData> {
+        public UISchema value;
+
+        public override bool Equals(object obj) {
+            return obj is UISchemaData data &&
+                   EqualityComparer<UISchema>.Default.Equals(value, data.value);
+        }
+
+        public bool Equals(UISchemaData other) {
+            return EqualityComparer<UISchema>.Default.Equals(value, other.value);
+        }
+
+        public override int GetHashCode() {
+            return -1584136870 + EqualityComparer<UISchema>.Default.GetHashCode(value);
+        }
+    }
+    public struct UICompiledSchemaData : ISystemStateComponentData {
+        public BlobAssetReference<CompiledUISchema> value;
+    }
+    public struct UIInheritableFieldData : IBufferElementData {
+        public UISchema.InheritableField field;
+        public int index;
+    }
+    public struct UIContext : IComponentData { }
+    public struct UIContextData : IComponentData, ISystemStateComponentData {
+        public const float WORLD_PIXEL_SCALE = 0.001f;
+        public float dpi;
+        public float pixelScale;
+        public float2 size;
+        public float relativeTo;
+
+        public static UIContextData CreateContext(Camera camera = null) {
+
+            return new UIContextData
+            {
+                dpi = Screen.dpi,
+                pixelScale = camera == null ? WORLD_PIXEL_SCALE : 1f,
+                size = camera == null ? new float2(float.PositiveInfinity, float.PositiveInfinity) : new float2(camera.orthographicSize * camera.aspect * 2, camera.orthographicSize * 2)
+            };
+        }
 
     }
-    public struct UIContextProvider : IComponentData { }
+    public struct FollowCameraData : IComponentData {
+        public Entity value;
+    }
     public struct UIContextSource : IComponentData {
         public Entity value;
 
@@ -102,6 +172,7 @@ namespace NeroWeNeed.UIDots {
             this.value = value;
         }
     }
+
     public struct UIFaceScreen : IComponentData { }
     public struct UICameraLayerData : IComponentData {
 

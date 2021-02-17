@@ -23,7 +23,7 @@ namespace NeroWeNeed.UIDots {
         IntPtr configPtr,
         NodeInfo* nodeInfo,
         IntPtr statePtr,
-        UIContext* context
+        UIContextData* context
     );
     /// <summary>
     /// Delegate used for handling the render pass phase.
@@ -38,7 +38,7 @@ namespace NeroWeNeed.UIDots {
         NodeInfo* nodeInfo,
         UIPassState* state,
         UIVertexData* vertexData,
-        UIContext* context
+        UIContextData* context
     );
     /// <summary>
     /// Optional delegate for determining how many render boxes are needed for each element. If not set, element will use 1.
@@ -46,13 +46,14 @@ namespace NeroWeNeed.UIDots {
     /// <param name="configPtr"></param>
     public unsafe delegate int UIRenderBoxCounter(IntPtr configPtr, NodeInfo* nodeInfo);
     public struct UIPassState {
-        public static readonly UIPassState DEFAULT = new UIPassState
+        public static readonly UIPassState Null = new UIPassState
         {
             widthConstraint = new float2(0, float.PositiveInfinity),
             heightConstraint = new float2(0, float.PositiveInfinity)
         };
         public float2 widthConstraint;
         public float2 heightConstraint;
+        public float4 outer, inner;
         public float4 globalBox;
         public float4 localBox;
         public float2 size;

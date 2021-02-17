@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement>
+        <uie:PropertyField binding-path="model" />
+        <uie:PropertyField binding-path="pixelScale" />
+        <uie:PropertyField name="camera" binding-path="camera" />
+        <uie:PropertyField class="require-camera" binding-path="alignment" />
+        <NeroWeNeed.UIDots.Editor.UILengthField class="require-camera" value="0" label="X Offset" binding-path="offsetX" />
+        <NeroWeNeed.UIDots.Editor.UILengthField class="require-camera" value="0 Px" binding-path="offsetY" label="Y Offset" />
+    </ui:VisualElement>
+</ui:UXML>

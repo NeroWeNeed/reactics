@@ -8,6 +8,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Rendering;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.Rendering;
 
 namespace NeroWeNeed.UIDots {
@@ -41,7 +42,7 @@ namespace NeroWeNeed.UIDots {
     [UpdateInGroup(typeof(SimulationSystemGroup))] */
     [UpdateInGroup(typeof(UISystemGroup))]
     [UpdateAfter(typeof(UIContextUpdateSystem))]
-    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.Editor)]
+    [WorldSystemFilter(WorldSystemFilterFlags.Default)]
     public class UIStateSystem : SystemBase {
         private EntityCommandBufferSystem entityCommandBufferSystem;
         private EntityQuery query;
@@ -51,6 +52,7 @@ namespace NeroWeNeed.UIDots {
             query = GetEntityQuery(ComponentType.ReadOnly<UIGraphData>(), ComponentType.ReadOnly<UINode>(), ComponentType.ReadWrite<UIDirtyState>());
             query.SetSharedComponentFilter<UIDirtyState>(true);
             this.RequireForUpdate(query);
+            this.RequireSingletonForUpdate<UICompiledSchemaData>();
             this.meshes = new List<Mesh>();
 
         }
@@ -58,10 +60,11 @@ namespace NeroWeNeed.UIDots {
             //TODO: Convert to switch table generation method
             this.meshes.Clear();
             var entities = new NativeList<Entity>(8, Allocator.TempJob);
-            var contexts = new NativeList<UIContext>(8, Allocator.TempJob);
+            var contexts = new NativeList<UIContextData>(8, Allocator.TempJob);
             var referencedGraphs = new NativeList<UIGraphData>(8, Allocator.TempJob);
             var entityUpdate = new NativeMultiHashMap<int, ValueTuple<Entity, int>>(8, Allocator.Temp);
-            Entities.WithSharedComponentFilter<UIDirtyState>(true).ForEach((Entity entity, DynamicBuffer<UINode> nodes, in UIGraphData graphData, in UIContext context, in RenderMesh renderMesh) =>
+            var schema = GetSingleton<UICompiledSchemaData>();
+            Entities.WithSharedComponentFilter<UIDirtyState>(true).ForEach((Entity entity, DynamicBuffer<UINode> nodes, in UIGraphData graphData, in UIContextData context, in RenderMesh renderMesh) =>
             {
                 int index = meshes.IndexOf(renderMesh.mesh);
                 if (index < 0) {
@@ -83,6 +86,7 @@ namespace NeroWeNeed.UIDots {
 
                 var layoutJob = new UILayoutJob
                 {
+                    schema = schema.value,
                     meshDataArray = meshData,
                     graphs = referencedGraphs.AsArray(),
                     contexts = contexts.AsArray()

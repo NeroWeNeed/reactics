@@ -19,7 +19,8 @@ namespace NeroWeNeed.UIDots.Editor {
         public const string ADDRESS_ATTRIBUTE = "address";
         public const string OUTPUT_ATTRIBUTE = "output";
         public const string DEFAULT_GROUP_NAME = "default";
-        [UnityEditor.Callbacks.DidReloadScripts]
+/*         [UnityEditor.Callbacks.DidReloadScripts]
+        [InitializeOnLoadMethod] */
         private static void DirtyModelsOnScriptReload() {
             foreach (var modelGuid in AssetDatabase.FindAssets($"t:{nameof(UIModel)}")) {
                 var model = AssetDatabase.LoadAssetAtPath<UIModel>(AssetDatabase.GUIDToAssetPath(modelGuid));
@@ -33,9 +34,9 @@ namespace NeroWeNeed.UIDots.Editor {
         public override void OnImportAsset(AssetImportContext ctx) {
             var model = ScriptableObject.CreateInstance<UIModel>();
             InitializeModel(model, new StringReader(File.ReadAllText(ctx.assetPath)), AssetDatabase.GUIDFromAssetPath(ctx.assetPath).ToString(), ctx.assetPath);
+            model.Write();
             ctx.AddObjectToAsset("UI Model", model);
             ctx.SetMainObject(model);
-            model.Write();
         }
         private static bool IsRoot(XmlReader reader) => reader.NodeType == XmlNodeType.Element && reader.Name == ROOT_ELEMENT;
         private static void InitializeModel(UIModel model, StringReader reader, string guid, string path) {
@@ -57,7 +58,6 @@ namespace NeroWeNeed.UIDots.Editor {
                     Parse(reader, root, -1, 0, settings, context, decomposer);
                 }
             }
-            Debug.Log(header.output);
             if (context.nodes.Count > 0) {
                 model.assets.AddRange(context.nodes.SelectMany(xmlNode => xmlNode.assetReferences).Distinct());
                 model.group = UIAssetGroup.Find(header.groupName);
@@ -78,28 +78,47 @@ namespace NeroWeNeed.UIDots.Editor {
         }
         private unsafe static void Parse(XmlReader reader, Node parent, int parentIndex, int depth, UIGlobalSettings settings, Context context, TypeDecomposer decomposer) {
             while (reader.Read()) {
-                if (reader.NodeType == XmlNodeType.Element && settings.Elements.TryGetValue(reader.Name, out UIGlobalSettings.SchemaElement element)) {
+                if (reader.NodeType == XmlNodeType.Element && settings.Elements.TryGetValue(reader.Name, out UISchema.Element element)) {
                     var node = Node.Create(element, parentIndex);
+                    ulong mask = element.requiredBlockMask;
                     if (reader.HasAttributes) {
-                        UIConfigUtility.GetTypes(element.mask, context.typeBuffer);
-                        var fields = new Dictionary<string, FieldData>();
-                        var configSize = 0;
-                        foreach (var type in context.typeBuffer) {
-                            decomposer.Decompose(type, fields, type.GetCustomAttribute<UIConfigBlockAttribute>()?.Name, configSize, '-');
-                            configSize += UnsafeUtility.SizeOf(type);
+                        UIConfigUtility.GetTypes(element.optionalBlockMask, context.optionalTypeBuffer);
+                        var optionalPaths = new Dictionary<string, Type>();
+                        
+                        foreach (var type in context.optionalTypeBuffer) {
+                            foreach (var path in decomposer.DecomposePath(type, '-')) {
+                                optionalPaths[path] = type;
+                            }
                         }
                         for (int i = 0; i < reader.AttributeCount; i++) {
                             reader.MoveToAttribute(i);
                             node.properties[reader.Name] = reader.Value;
-                            if (fields.TryGetValue(reader.Name, out FieldData data) && data.isAssetReference) {
-                                var guid = reader.Value.StartsWith("guid:") ? reader.Value.Substring(5) : AssetDatabase.GUIDFromAssetPath(reader.Value).ToString();
-                                if (!node.assetReferences.Contains(guid))
-                                    node.assetReferences.Add(guid);
-                                node.properties[reader.Name] = guid;
+                            if (optionalPaths.TryGetValue(reader.Name, out Type configType)) {
+                                Debug.Log(UIConfigUtility.GetMask(configType));
+                                mask |= UIConfigUtility.GetMask(configType);
                             }
                         }
                         reader.MoveToElement();
+                        UIConfigUtility.GetTypes(mask, context.maskBuffer);
+
+                        var fields = new Dictionary<string, FieldData>();
+                        var configSize = 0;
+
+                        foreach (var type in context.maskBuffer) {
+                            decomposer.Decompose(type, fields, type.GetCustomAttribute<UIConfigBlockAttribute>()?.Name, configSize, '-');
+                            configSize += UnsafeUtility.SizeOf(type);
+                        }
+                        foreach (var key in node.properties.Keys.ToArray()) {
+                            var value = node.properties[key];
+                            if (fields.TryGetValue(key, out FieldData data) && data.isAssetReference) {
+                                var guid = value.StartsWith("guid:") ? value.Substring(5) : AssetDatabase.GUIDFromAssetPath(value).ToString();
+                                if (!node.assetReferences.Contains(guid))
+                                    node.assetReferences.Add(guid);
+                                node.properties[key] = guid;
+                            }
+                        }
                     }
+                    node.mask = mask;
                     var index = context.nodes.Count;
                     parent.children.Add(index);
                     context.nodes.Add(node);
@@ -112,7 +131,8 @@ namespace NeroWeNeed.UIDots.Editor {
         }
         private class Context {
             public List<Node> nodes = new List<Node>();
-            public List<Type> typeBuffer = new List<Type>();
+            public List<Type> maskBuffer = new List<Type>();
+            public List<Type> optionalTypeBuffer = new List<Type>();
         }
         private struct Header {
             public string groupName;
@@ -130,12 +150,13 @@ namespace NeroWeNeed.UIDots.Editor {
             }
         }
         private struct Node {
+            public ulong mask;
             public Dictionary<string, string> properties;
-            public UIGlobalSettings.SchemaElement element;
+            public UISchema.Element element;
             public List<int> children;
             public List<string> assetReferences;
             public int parent;
-            public static Node Create(UIGlobalSettings.SchemaElement element, int parentIndex) => new Node { children = new List<int>(), properties = new Dictionary<string, string>(), element = element, parent = parentIndex, assetReferences = new List<string>() };
+            public static Node Create(UISchema.Element element, int parentIndex) => new Node { children = new List<int>(), properties = new Dictionary<string, string>(), element = element, parent = parentIndex, assetReferences = new List<string>() };
             public UIModel.Node ToNode() {
                 return new UIModel.Node
                 {
@@ -146,7 +167,7 @@ namespace NeroWeNeed.UIDots.Editor {
                     properties = properties?.Select(property => new UIModel.Node.Property { path = property.Key, value = property.Value })?.ToList(),
                     children = children,
                     parent = parent,
-                    mask = element.mask
+                    mask = mask
                 };
             }
         }

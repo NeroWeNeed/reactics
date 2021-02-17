@@ -16,12 +16,13 @@ namespace NeroWeNeed.UIDots.Editor {
             {typeof(FontConfig),new FontConfigurationHandler()},
             {typeof(BackgroundConfig),new BackgroundConfigurationHandler()},
             {typeof(TextConfig),new TextConfigurationHandler()},
-            {typeof(NameConfig),new NameConfigurationHandler() }
+            {typeof(NameConfig),new NameConfigurationHandler() },
+            {typeof(MaterialConfig),new CustomShaderConfigurationHandler() }
         };
 
-        public static byte PreInit(Type type, IntPtr value, ulong mask, UIPropertyWriterContext context) {
+        public static byte PreInit(Type type, IntPtr value, ulong mask, ref UIPropertyWriterContext context) {
             if (configurators.TryGetValue(type, out UIConfigurationHandler configurator)) {
-                return configurator.PreInit(value, mask, context);
+                return configurator.PreInit(value, mask, ref context);
             }
             else {
                 return 0;
@@ -42,13 +43,13 @@ namespace NeroWeNeed.UIDots.Editor {
 
     }
     public unsafe abstract class UIConfigurationHandler {
-        public virtual byte PreInit(IntPtr value, ulong mask, UIPropertyWriterContext context) { return 0; }
+        public virtual byte PreInit(IntPtr value, ulong mask, ref UIPropertyWriterContext context) { return 0; }
         public virtual byte PostInit(IntPtr value, IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, long extraByteStreamOffset, UIPropertyWriterContext context) { return 0; }
     }
     public unsafe abstract class UIConfigurationHandler<TValue> : UIConfigurationHandler where TValue : unmanaged {
-        public abstract byte PreInit(TValue* value, ulong mask, UIPropertyWriterContext context);
+        public abstract byte PreInit(TValue* value, ulong mask, ref UIPropertyWriterContext context);
         public abstract byte PostInit(TValue* value, IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, long extraByteStreamOffset, UIPropertyWriterContext context);
-        public override byte PreInit(IntPtr value, ulong mask, UIPropertyWriterContext context) => PreInit((TValue*)value.ToPointer(), mask, context);
+        public override byte PreInit(IntPtr value, ulong mask, ref UIPropertyWriterContext context) => PreInit((TValue*)value.ToPointer(), mask, ref context);
         public override byte PostInit(IntPtr value, IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, long extraByteStreamOffset, UIPropertyWriterContext context) => PostInit((TValue*)value.ToPointer(), config, mask, extraBytesStream, extraByteStreamOffset, context);
     }
 
@@ -57,12 +58,21 @@ namespace NeroWeNeed.UIDots.Editor {
             return 0;
         }
 
-        public override unsafe byte PreInit(DisplayConfig* value, ulong mask, UIPropertyWriterContext context) {
+        public override unsafe byte PreInit(DisplayConfig* value, ulong mask, ref UIPropertyWriterContext context) {
             value->display = VisibilityStyle.Visible;
-            value->visibile = VisibilityStyle.Visible;
+            value->visible = VisibilityStyle.Visible;
             value->overflow = VisibilityStyle.Visible;
             value->opacity = 1f;
             return 0;
+        }
+    }
+    public unsafe class CustomShaderConfigurationHandler : UIConfigurationHandler<MaterialConfig> {
+        public override unsafe byte PostInit(MaterialConfig* value, IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, long extraByteStreamOffset, UIPropertyWriterContext context) {
+            return 1;
+        }
+
+        public override unsafe byte PreInit(MaterialConfig* value, ulong mask, ref UIPropertyWriterContext context) {
+            return 1;
         }
     }
     public unsafe class SizeConfigurationHandler : UIConfigurationHandler<SizeConfig> {
@@ -70,7 +80,7 @@ namespace NeroWeNeed.UIDots.Editor {
             return 0;
         }
 
-        public override unsafe byte PreInit(SizeConfig* value, ulong mask, UIPropertyWriterContext context) {
+        public override unsafe byte PreInit(SizeConfig* value, ulong mask, ref UIPropertyWriterContext context) {
             value->minWidth = 0f.Px();
             value->maxWidth = float.PositiveInfinity.Px();
             value->width = float.NaN.Px();
@@ -85,7 +95,7 @@ namespace NeroWeNeed.UIDots.Editor {
             return 0;
         }
 
-        public override unsafe byte PreInit(FontConfig* value, ulong mask, UIPropertyWriterContext context) {
+        public override unsafe byte PreInit(FontConfig* value, ulong mask, ref UIPropertyWriterContext context) {
             value->size = 12f.Px();
             value->color = Color.black;
             return 0;
@@ -96,7 +106,7 @@ namespace NeroWeNeed.UIDots.Editor {
             return 0;
         }
 
-        public override unsafe byte PreInit(BackgroundConfig* value, ulong mask, UIPropertyWriterContext context) {
+        public override unsafe byte PreInit(BackgroundConfig* value, ulong mask, ref UIPropertyWriterContext context) {
             value->color = Color.white;
             value->imageTint = Color.white;
             return 0;
@@ -106,7 +116,7 @@ namespace NeroWeNeed.UIDots.Editor {
         public override unsafe byte PostInit(NameConfig* value, IntPtr config, ulong mask, MemoryBinaryWriter extraBytesStream, long extraByteStreamOffset, UIPropertyWriterContext context) {
             return (byte)(value->name.IsCreated ? 1 : 0);
         }
-        public override unsafe byte PreInit(NameConfig* value, ulong mask, UIPropertyWriterContext context) {
+        public override unsafe byte PreInit(NameConfig* value, ulong mask, ref UIPropertyWriterContext context) {
             return 0;
         }
     }
@@ -151,7 +161,7 @@ namespace NeroWeNeed.UIDots.Editor {
             return 0;
         }
 
-        public override unsafe byte PreInit(TextConfig* value, ulong mask, UIPropertyWriterContext context) {
+        public override unsafe byte PreInit(TextConfig* value, ulong mask, ref UIPropertyWriterContext context) {
             return 0;
         }
     }

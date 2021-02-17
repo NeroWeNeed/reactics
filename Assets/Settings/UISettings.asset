@@ -12,55 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c05ed58f5413c404baa04ed7c81e5b71, type: 3}
   m_Name: UISettings
   m_EditorClassIdentifier: 
-  elements:
-  - identifier: HBox
-    mask: 467
-    layoutPass:
-      container:
-        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.HBoxElement, NeroWeNeed.UIDots.Runtime,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      name: Layout
-    renderPass:
-      container:
-        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.HBoxElement, NeroWeNeed.UIDots.Runtime,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      name: Render
-    renderBoxCounter:
-      container:
-        assemblyQualifiedName: 
-      name: 
-  - identifier: VBox
-    mask: 467
-    layoutPass:
-      container:
-        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.VBoxElement, NeroWeNeed.UIDots.Runtime,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      name: Layout
-    renderPass:
-      container:
-        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.VBoxElement, NeroWeNeed.UIDots.Runtime,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      name: Render
-    renderBoxCounter:
-      container:
-        assemblyQualifiedName: 
-      name: 
-  - identifier: Text
-    mask: 1779
-    layoutPass:
-      container:
-        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.TextElement, NeroWeNeed.UIDots.Runtime,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      name: Layout
-    renderPass:
-      container:
-        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.TextElement, NeroWeNeed.UIDots.Runtime,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      name: Render
-    renderBoxCounter:
-      container:
-        assemblyQualifiedName: NeroWeNeed.UIDots.Layouts.TextElement, NeroWeNeed.UIDots.Runtime,
-          Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-      name: RenderBoxCount
   outputPath: Assets/Resources/UI
+  schema: {fileID: 11400000, guid: cf3f79e5bf3d04b4d8cb24f8f7641f01, type: 2}
   assetGroupCachePath: Assets/Resources/UI/AssetGroups

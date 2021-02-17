@@ -15,16 +15,16 @@ namespace NeroWeNeed.UIDots {
         public string LayoutPass { get; set; }
         public string RenderPass { get; set; }
         public string RenderBoxCounter { get; set; }
-        public ulong Mask { get; set; }
-        public UIDotsElementAttribute(string identifier, params byte[] configs) {
+        public UIConfigBlock ConfigBlocks { get; set; } = UIConfigBlock.Empty;
+        public UIConfigBlock OptionalConfigBlocks { get; set; }= UIConfigBlock.Empty;
+        public UIDotsElementAttribute(string identifier) {
             Identifier = identifier;
             RenderBoxCounter = DefaultRenderBoxCountPass;
             LayoutPass = DefaultLayoutPass;
             RenderPass = DefaultRenderPass;
-            Mask = UIConfigUtility.CreateMask(configs);
         }
-
     }
+    
     /*     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
         public sealed class UIDotsElementAttribute : Attribute {
             public string Identifier { get; set; }

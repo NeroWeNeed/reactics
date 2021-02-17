@@ -49,8 +49,13 @@ float closest(float3 values, float value) {
     }
 }
 void SDFSample_float(float SDF, float Offset,out float Out) {
-    Out = SDF - Offset;
-    Out = saturate(-Out / fwidth(Out));
+    float dist = Offset - SDF;
+    float2 ddist = float2(ddx(dist),ddy(dist));
+    float pdist = dist / length(ddist);
+    Out = saturate(0.5 - pdist);
+    /* Out = Offset - SDF;
+    Out = smoothstep(-0.1,0.1,Out); */
+    //Out = saturate(Out / fwidth(Out));
 }
 void SDFSampleStrip_float(float SDF, float2 Offset,out float Out) {
     Out = max(-(SDF - Offset.x), SDF - Offset.y);

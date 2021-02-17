@@ -8,6 +8,9 @@ using Unity.Jobs;
 
 namespace NeroWeNeed.UIDots {
     public struct UINodeDecompositionJob : IJobParallelFor {
+        [NativeDisableUnsafePtrRestriction]
+        public BlobAssetReference<CompiledUISchema> schema;
+
         [ReadOnly]
         [NativeDisableUnsafePtrRestriction]
         public NativeArray<UIGraphData> graphs;
@@ -20,10 +23,10 @@ namespace NeroWeNeed.UIDots {
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void DecomposeHead(UIGraphData graph, int threadIndex) {
-            var graphInfo = graph.GetGraphInfo(out NativeArray<NodeInfo> configLayout, Allocator.Temp);
+            var graphInfo = graph.GetGraphInfo(schema,out NativeArray<NodeInfo> configLayout, Allocator.Temp);
             int currentSubmesh = 0;
             var dedicatedNodeInfo = new NativeArray<DedicatedNodeInfo>(graphInfo.subMeshCount, Allocator.Temp);
-            Decompose(graph, threadIndex, 0, configLayout, ref currentSubmesh, dedicatedNodeInfo, graphInfo.subMeshCount+1);
+            Decompose(graph, threadIndex, 0, configLayout, ref currentSubmesh, dedicatedNodeInfo, graphInfo.subMeshCount + 1);
             nodes.BeginForEachIndex(threadIndex);
             this.submeshCount[threadIndex] = graphInfo.subMeshCount;
             for (int i = 0; i < graphInfo.subMeshCount; i++) {

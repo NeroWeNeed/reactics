@@ -14,26 +14,38 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace NeroWeNeed.UIDots.Editor {
+
     [WorldSystemFilter(WorldSystemFilterFlags.GameObjectConversion)]
     [UpdateInGroup(typeof(GameObjectConversionGroup))]
     public class UIConversionSystem : GameObjectConversionSystem {
+
+
+
         private List<Mesh> meshes = new List<Mesh>();
+        private UISchema schema;
+        private BlobAssetReference<CompiledUISchema> compiledSchema;
         protected override void OnCreate() {
             base.OnCreate();
-            InitEntityQueryCache(60);
+            schema = UIGlobalSettings.GetOrCreateSettings().schema;
+            compiledSchema = this.schema.Compile(Allocator.Persistent);
+        }
+        protected override void OnDestroy() {
+            compiledSchema.Dispose();
         }
         protected unsafe override void OnUpdate() {
-            var contexts = new NativeList<UIContext>(8, Allocator.TempJob);
+            var contexts = new NativeList<UIContextData>(8, Allocator.TempJob);
             var graphData = new NativeList<UIGraphData>(8, Allocator.TempJob);
+            Entity schemaEntity = Entity.Null;
             int nodeCount = 0;
             meshes.Clear();
             Entities.ForEach((UIObject obj) =>
             {
-                /*
-                TODO: Writes every conversion frame but will crash under certain conditions otherwise. Crashes observed involving opening and closing subscenes without modifying anything after script reload.
-                */
+
+                //TODO: Writes every conversion frame but will crash under certain conditions otherwise. Crashes observed involving opening and closing subscenes without modifying anything after script reload.
+
                 var guid = obj.model?.GetOutputGuid();
-                if (guid != null) {
+
+                if (!string.IsNullOrEmpty(guid)) {
                     IntPtr ptr;
                     long allocatedLength;
                     using (var fs = File.OpenRead(UnityEditor.AssetDatabase.GUIDToAssetPath(guid))) {
@@ -46,11 +58,18 @@ namespace NeroWeNeed.UIDots.Editor {
                     var gd = new UIGraphData { value = ptr, allocatedLength = allocatedLength };
                     graphData.Add(gd);
                     nodeCount += gd.GetNodeCount();
-                    contexts.Add(UIContext.CreateContext(obj.uiCamera));
+                    contexts.Add(UIContextData.CreateContext(obj.camera));
                     meshes.Add(new Mesh());
+                    if (schemaEntity == Entity.Null) {
+                        schemaEntity = CreateAdditionalEntity(obj);
+                        DstEntityManager.SetName(schemaEntity, "UI Schema");
+                        DstEntityManager.AddSharedComponentData(schemaEntity, new UISchemaData { value = schema });
+                    }
+                    DeclareAssetDependency(obj.gameObject, schema);
                 }
                 obj.cachedGuid = guid;
             });
+
             if (graphData.Length > 0) {
                 var graphDataArray = graphData.AsArray();
                 var meshData = Mesh.AllocateWritableMeshData(graphData.Length);
@@ -58,12 +77,14 @@ namespace NeroWeNeed.UIDots.Editor {
                 var stream = new NativeStream(nodeCount, Allocator.TempJob);
                 new UILayoutJob
                 {
+                    schema = compiledSchema,
                     graphs = graphDataArray,
                     contexts = contexts,
                     meshDataArray = meshData
                 }.Schedule(graphData.Length, 1).Complete();
                 new UINodeDecompositionJob
                 {
+                    schema = compiledSchema,
                     graphs = graphDataArray,
                     nodes = stream.AsWriter(),
                     submeshCount = submeshes
@@ -80,13 +101,26 @@ namespace NeroWeNeed.UIDots.Editor {
                 var nodeEntities = new NativeList<Entity>(Allocator.Temp);
                 Entities.ForEach((UIObject obj) =>
                 {
-                    if (obj.cachedGuid != null) {
+                    if (!string.IsNullOrEmpty(obj.cachedGuid)) {
                         var entity = GetPrimaryEntity(obj);
+                        var gd = graphDataArray[index];
                         DstEntityManager.AddComponentData(entity, new UIGraph { value = new BlittableAssetReference(obj.cachedGuid) });
                         DstEntityManager.AddSharedComponentData<UIDirtyState>(entity, false);
-                        var material = obj.model.GetMaterial();
+                        Material material;
+                        if (gd.TryGetConfigBlock(0, UIConfigLayoutTable.MaterialConfig, out IntPtr result)) {
+                            material = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(UnityEditor.AssetDatabase.GUIDToAssetPath(((MaterialConfig*)(result.ToPointer()))->material.ToHex()));                           
+                        }
+                        else {
+                            material = obj.model.GetMaterial();
+                        }
+
+
+
                         DeclareAssetDependency(obj.gameObject, obj.model);
+
+
                         DeclareAssetDependency(obj.gameObject, material);
+
                         DstEntityManager.AddSharedComponentData(entity, new RenderMesh
                         {
                             mesh = meshes[index],
@@ -97,27 +131,39 @@ namespace NeroWeNeed.UIDots.Editor {
                             needMotionVectorPass = false,
                             layer = obj.gameObject.layer
                         });
-                        DstEntityManager.AddComponentData(entity, new RenderBounds { Value = meshes[index].GetSubMesh(0).bounds.ToAABB() });
+                        DstEntityManager.AddComponentData(entity, new UIPixelScale { value = obj.pixelScale });
+                        var bounds = meshes[index].GetSubMesh(0).bounds.ToAABB();
+                        DstEntityManager.AddComponentData(entity, new RenderBounds { Value = bounds });
+
                         DstEntityManager.AddComponent<UIContext>(entity);
-                        DstEntityManager.AddComponentData(entity, new UIContextSource { value = obj.uiCamera == null ? Entity.Null : GetPrimaryEntity(obj.uiCamera) });
-                        UIContext uiContext = contexts[index];
-                        UICameraContext uiCameraContext = default;
-                        if (obj.uiCamera != null) {
-                            uiCameraContext = new UICameraContext
+
+                        if (obj.camera != null) {
+                            DstEntityManager.AddComponentData(entity, new UIContextSource { value = GetPrimaryEntity(obj.camera) });
+                            var ltc = new LocalToCamera
                             {
-                                cameraLTW = obj.uiCamera.UILayerCameraObject.transform.localToWorldMatrix,
-                                clipPlane = new float2(obj.uiCamera.UILayerCamera.nearClipPlane, obj.uiCamera.UILayerCamera.farClipPlane)
+                                cameraLTW = obj.camera.transform.localToWorldMatrix,
+                                clipPlane = new float2(obj.camera.nearClipPlane, obj.camera.farClipPlane),
+                                alignment = obj.alignment,
+                                offsetX = obj.offsetX,
+                                offsetY = obj.offsetY
                             };
+                            DstEntityManager.AddComponentData(entity, ltc);
+                            var rotation = quaternion.LookRotation(ltc.cameraLTW.c2.xyz, ltc.cameraLTW.c1.xyz);
+                            var translate = ltc.cameraLTW.c3.xyz + new float3(ltc.alignment.GetOffset(bounds.Size.xy, new float2(Screen.currentResolution.height * obj.camera.aspect, Screen.currentResolution.height)), 0) + math.mul(rotation, math.forward() * ltc.clipPlane.x * 2f) + (math.mul(rotation, math.right()) * ltc.offsetX.Normalize(contexts[index])) + (math.mul(rotation, math.up()) * ltc.offsetY.Normalize(contexts[index]));
+                            DstEntityManager.SetComponentData(entity, new LocalToWorld { Value = float4x4.TRS(translate, rotation, obj.pixelScale) });
+                            DeclareDependency(obj, obj.camera);
                         }
-                        DstEntityManager.AddComponentData(entity, uiContext);
-                        DstEntityManager.AddComponentData(entity, uiCameraContext);
+
                         DstEntityManager.AddComponent<PerInstanceCullingTag>(entity);
+
                         nodeEntities.Clear();
                         var nodeInfoIter = nodes.GetValuesForKey(index);
                         while (nodeInfoIter.MoveNext()) {
                             var nodeInfo = nodeInfoIter.Current;
                             var nodeEntity = CreateAdditionalEntity(obj);
-                            var name = graphData[index].GetNodeName(nodeInfo.nodeIndex) ?? $"Node#{nodeInfo.nodeIndex}";
+                            var name = graphData[index].GetNodeName(nodeInfo.nodeIndex);
+                            if (string.IsNullOrEmpty(name))
+                                name = $"Node#{nodeInfo.nodeIndex}";
                             DstEntityManager.SetName(nodeEntity, $"{DstEntityManager.GetName(entity)}[{name}]");
                             DstEntityManager.AddComponentData(nodeEntity, new UINodeInfo { index = nodeInfo.nodeIndex, submesh = nodeInfo.submesh });
                             DstEntityManager.AddComponentData(nodeEntity, new UIParent { value = entity });
@@ -126,6 +172,12 @@ namespace NeroWeNeed.UIDots.Editor {
                             DstEntityManager.AddComponentData(nodeEntity, new Rotation { Value = quaternion.identity });
                             DstEntityManager.AddComponentData(nodeEntity, new Scale { Value = 1f });
                             DstEntityManager.AddComponentData(nodeEntity, new LocalToParent { Value = float4x4.identity });
+                            if (gd.TryGetConfigBlock(0, UIConfigLayoutTable.MaterialConfig, out result)) {
+                                material = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(UnityEditor.AssetDatabase.GUIDToAssetPath(((MaterialConfig*)result.ToPointer())->material.ToHex()));
+                            }
+                            else {
+                                material = obj.model.GetMaterial();
+                            }
                             DstEntityManager.AddSharedComponentData(nodeEntity, new RenderMesh
                             {
                                 mesh = meshes[index],
@@ -143,10 +195,6 @@ namespace NeroWeNeed.UIDots.Editor {
                         }
                         var buffer = DstEntityManager.AddBuffer<UINode>(entity);
                         buffer.AddRange(nodeEntities.AsArray().Reinterpret<UINode>());
-                        if (nodeEntities.Length > 0) {
-                            var children = DstEntityManager.AddBuffer<Child>(entity);
-                            children.AddRange(nodeEntities.AsArray().Reinterpret<Child>());
-                        }
                         UnsafeUtility.Free(graphData[index].value.ToPointer(), Allocator.TempJob);
                         index++;
                         ConfigureEditorRenderData(entity, obj.gameObject, true);
@@ -158,5 +206,6 @@ namespace NeroWeNeed.UIDots.Editor {
             graphData.Dispose();
         }
     }
+
 
 }
